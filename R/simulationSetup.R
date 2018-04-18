@@ -19,7 +19,7 @@
 #' @keywords power simulation, parametric bootstrap, type 1 error simulations, null simulations
 #' @export
 #' @examples
-simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, smoutfiles=NULL, outfiles=NULL, sm=0, mc.cores = getOption("mc.cores", 2L)){
+simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, outfiles=NULL, smoutfiles=NULL, sm=0, mc.cores = getOption("mc.cores", 2L)){
   if(any( is.null(list(files, form, dat, mask,outfiles ) )))
     stop('One or more required arguments unspecified.')
 
@@ -37,24 +37,25 @@ simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, smoutfile
       y = do.call(abind::abind, list(y, along=4))
     }
   } else {
-    y = pbj::readNiftis(files, mc.cores)
+    cat('loading images.\n')
+    y = do.call(abind::abind, list(readNifti(files), along=4))
   }
 
     # run linear model to get residuals
-    X = pbj::getDesign(form)
-    y = apply(y, 1:3, c)
     if(is.character(mask)){
       mask = RNifti::readNifti(mask)
-      y = t(y[ mask==1,])
     }
+    y = t(apply(y, 4, function(x) x[mask==1]))
+    X = getDesign(form, data=dat)
+    cat('regressing out covariates.\n')
     y = qr.resid(qr(X), y)
 
   # assumes your putting all files in the same directory or that all directories exist
   dir.create(dirname(outfiles[1]), showWarnings=FALSE)
 
   # save out images
-  trash = mclapply(1:nrow(y), function(ind){ temp = mask
-                        temp[ temp==1] = y[ind,]
+  temp = mask
+  trash = parallel::mclapply(1:nrow(y), function(ind){ temp[ temp==1] = y[ind,]
                         RNifti::writeNifti(temp, outfiles[ind])
                         }, mc.cores=mc.cores)
   return(NULL)

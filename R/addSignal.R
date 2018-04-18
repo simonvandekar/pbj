@@ -27,7 +27,7 @@ addSignal = function(files=NULL, betaimg=NULL, X=NULL, Xred=NULL, outfiles=NULL)
   sdx = sd(x)
 
   # load in imaging data. Get voxelwise SD
-  y = neuroboot::readNiftis(files)
+  y = do.call(abind, list(RNifti::readNifti(files), along=4))
   sdy = apply(y, 1:3, sd)
 
   # load signal file

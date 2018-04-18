@@ -13,7 +13,7 @@ getDesign = function(eq=NULL, data=NULL){
   if(any(grepl("s\\(", eq))){
     # 1:n because you need to give gam an outcome to easily get the design matrix
     x = 1:nrow(data)
-    lmfull = if(is.formula(eq)) update.formula(eq, x ~ .) else paste('x', eq)
+    lmfull = if(class(eq)=='formula') update.formula(eq, x ~ .) else paste('x', eq)
     lmfull = model.matrix(mgcv::gam(as.formula(lmfull), data=data) )
 
   # else it's a linear model

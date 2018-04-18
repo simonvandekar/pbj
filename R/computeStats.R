@@ -37,7 +37,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     }
 
   # load images
-  res = pbj::readNiftis(files, mc.cores=mc.cores)
+  res = do.call(abind, list(RNifti::readNifti(files), along=4))
   res = apply(res, 4, function(x) x[mask==1])
 
   peind = which(!colnames(X) %in% colnames(Xred))
@@ -52,7 +52,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
   if(is.character(W)){
     cat('Weights are voxel-wise.\n')
     voxwts = TRUE
-    W = pbj::readNiftis(W, mc.cores=mc.cores)
+    W = do.call(abind, list(RNifti::readNifti(W), along=4))
     W = apply(W, 4, function(x) x[mask==1])
     W = sqrt(W)
   } else {
