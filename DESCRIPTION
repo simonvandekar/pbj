@@ -14,7 +14,7 @@ Description: The pbj package includes a set of parametric bootstrap joint (PBJ)
 Encoding: UTF-8
 License: GPL-3
 LazyData: true
-Depends: R(>=3.4.4)
+Depends: R (>= 3.4)
 Imports:
   abind,
   fslr,
@@ -23,3 +23,4 @@ Imports:
   pbapply,
   progress,
   RNifti
+RoxygenNote: 6.0.1.9000
