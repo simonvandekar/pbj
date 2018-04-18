@@ -1,0 +1,44 @@
+#' Loads NIfTI Images and Adds Synthetic Signal
+#'
+#' This function loads images specified in filelist and adds signal to the
+#'  images. The amount and structure of signal is determined by betaimg and X.
+#'  The output images are equal the images specified by filelist plus betaimg
+#'  times the column of X that is not in Xred. This column is first
+#'  residualized to Xred.
+#' @param files a vector of images.
+#' @param betaimg a parameter image that describes the association between X
+#'  and the images in filelist. The units of this are standardized so that it
+#'  is like effect size.
+#' @param X the design matrix for all covariates included in the simulation
+#'  model fit.
+#' @param Xred the design matrix for all covariates except the column that is
+#'  being multiplied by betaimg. Xred must have only one less column than X.
+#' @param outfiles a vector of images to save the output.
+#' @keywords power simulation
+#' @export
+#' @examples
+addSignal = function(files=NULL, betaimg=NULL, X=NULL, Xred=NULL, outfiles=NULL){
+  if(any(sapply(list(files, betaimg, X, Xred), is.null)))
+    stop('One or more required arguments are unspecified')
+  # get column of interest
+  nullinds = which(!colnames(X) %in% colnames(Xred))
+  # X residualized to covariates
+  x = qr.resid(qr(Xred), X[,nullinds, drop=FALSE])
+  sdx = sd(x)
+
+  # load in imaging data. Get voxelwise SD
+  y = neuroboot::readNiftis(files)
+  sdy = apply(y, 1:3, sd)
+
+  # load signal file
+  if(is.character(betaimg)) betaimg = RNifti::readNifti(betaimg)
+
+  # make images with signal
+  y = outer(betaimg * sdy/sdx, c(x)) + y
+
+  # write out images
+  if(is.character(outfiles[1]) & length(outfiles) == length(files))
+    trash=lapply(1:length(outfiles), function(ind) RNifti::writeNifti(y[,,,ind], outfiles[ind]) )
+  # return if requested
+  y = y
+}

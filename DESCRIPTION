@@ -1,0 +1,25 @@
+Package: pbj
+Type: Package
+Title: Parametric Bootstrap Joint Testing Procedures for Neuroimaging
+Version: 0.1.0
+Author: Simon Vandekar
+Maintainer: person("Simon", "Vandekar", email="simonv@pennmedicine.upenn.edu", role=c('aut', 'cre'))
+Description: The pbj package includes a set of parametric bootstrap joint (PBJ)
+    testing procedures designed for neuroimaging data. The statistical tools
+    are more generally applicable, but this package is designed to allow input
+    and output data for NIfTI images. The PBJ tools are designed for voxel-wise
+    and cluster-extent hypothesis testing methods and include semi-PBJ (sPBJ)
+    inference that is robust to variance misspecification using an estimating
+    equations approach.
+Encoding: UTF-8
+License: GPL-3
+LazyData: true
+Depends: R(>=3.4.4)
+Imports:
+  abind,
+  fslr,
+  mmand,
+  parallel,
+  pbapply,
+  progress,
+  RNifti
