@@ -116,13 +116,3 @@ regionmean = function(input=NULL, label=NULL){
 	vec = read.table(text=vec, strip.white=TRUE, skip=1)[-1,1:2]
 }
 
-# gets pvalues for null and alternative clusters
-randomise_getpvalues = function(randpvalues=NULL, sig=NULL ){
-	comps = components(randpvalues, shapeKernel(3, 3, type='box'))
-	altinds = na.omit(unique(comps[ sig>0 ]))
-	nullinds = na.omit(unique(c(comps)))
-	nullinds = nullinds[ !nullinds %in% altinds ]
-	altrandpvalues = if(length(altinds)==0) 1 else sort(1-sapply(altinds, function(x) randpvalues[ which(comps==x)][1]))
-	randpvalues = if(length(nullinds)==0) 1 else sort(1-sapply(nullinds, function(x) randpvalues[ which(comps==x)][1]))
-	list(altp = altrandpvalues, nullp = randpvalues)
-}

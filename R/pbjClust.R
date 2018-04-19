@@ -26,21 +26,20 @@
 #' @examples
 pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 
-  if(is.null(mask)){
+  if(is.null(mask))
     stop('Must specify mask.')
-  }
-  if(is.null(stat)){
+
+  if(is.null(stat))
     stop('Must pass stat map.')
-  }
-  if(is.null(res)){
+
+  if(is.null(res))
     stop('Must specify res matrix or images.')
-  }
-  if(is.character(mask)){
+
+  if(is.character(mask))
     mask=readNifti(mask)
-  }
-  if(is.character(stat)){
+
+  if(is.character(stat))
     stat = readNifti(stat)
-  }
 
   if(df==0){
     ts = qchisq(cfts, 1, lower.tail=FALSE)
@@ -94,18 +93,26 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
   Fs = apply(Fs, 2, ecdf)
   pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](stat[[ind]]) )
   names(pvals) = paste('cft', ts, sep='')
-  statmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
-    clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2]) * sign(stat)
+  if(df>0){
+    pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
+      clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2])
+    }
+      clustmaps[[ind]]
+    } )
+  } else {
+    pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
+      clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2]) * sgnstat
+    }
+      clustmaps[[ind]]
+    } )
   }
-    clustmaps[[ind]]
-  } )
-  names(pvals) <- names(statmaps) <- names(clustmaps) <- paste('cft', cfts, sep='')
+  names(pvals) <- names(pmaps) <- names(clustmaps) <- paste('cft', cfts, sep='')
 
   if(!is.null(statoutfiles)){
     for(cft in cfts){
-      RNifti::writeNifti(statmaps[[ paste('cft', cft, sep='') ]], file=paste(statoutfiles, '_cft', cft, '.nii.gz', sep='') )
+      RNifti::writeNifti(pmaps[[ paste('cft', cft, sep='') ]], file=paste(statoutfiles, '_cft', cft, '.nii.gz', sep='') )
     }
   }
 
-  list(pvalues=pvals, clustmaps=clustmaps, statmaps=statmaps)
+  list(pvalues=pvals, clustmaps=clustmaps, pmaps=pmaps)
 }

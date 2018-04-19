@@ -36,18 +36,19 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
       rm(files)
     }
 
+  # load mask
+  if(is.character(mask))
+    mask = RNifti::readNifti(mask)
+
   # load images
   res = do.call(abind, list(RNifti::readNifti(files), along=4))
-  res = apply(res, 4, function(x) x[mask==1])
+  res = t(apply(res, 4, function(x) x[mask==1]))
 
   peind = which(!colnames(X) %in% colnames(Xred))
   df = length(peind)
   rdf = n - ncol(X)
   if(df>1 & robust)
     stop('Robust covariance only available for testing a single parameter.')
-
-  if(is.character(mask))
-    mask = RNifti::readNifti(mask)
 
   if(is.character(W)){
     cat('Weights are voxel-wise.\n')
@@ -71,8 +72,8 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     cat('Running voxel-wise weighted linear models.\n')
 
     if(!robust){
-      nums = do.call(c, mclapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2), mc.cores=mc.cores) )
-      res = do.call(cbind, mclapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind]), mc.cores=mc.cores))
+      num = do.call(c, mclapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2), mc.cores=mc.cores) )
+      res = do.call(rbind, mclapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind]), mc.cores=mc.cores))
     }
 
     if(robust){
@@ -96,7 +97,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
   } else {
     if(!robust){
       num = colSums(qr.resid(qr(Xred * W), res)^2)
-      res = qr.resid(qr(X * W), res)
+      res = t(qr.resid(qr(X * W), res))
     }
 
     if(robust){
@@ -124,9 +125,9 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
 
   # compute statistical image
   if(!robust){
-    stattemp = colSums(res^2)
-    nums = nums - stattemp
-    stattemp = nums / denom * rdf/df
+    stattemp = rowSums(res^2)
+    num = num - stattemp
+    stattemp = num/stattemp * rdf/df
     stat = mask
     stat[ mask==1] = stattemp
   }
