@@ -20,7 +20,6 @@ Imports:
   fslr,
   mmand,
   parallel,
-  pbapply,
   progress,
   RNifti
 RoxygenNote: 6.0.1.9000

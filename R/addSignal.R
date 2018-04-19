@@ -27,7 +27,9 @@ addSignal = function(files=NULL, betaimg=NULL, X=NULL, Xred=NULL, outfiles=NULL)
   sdx = sd(x)
 
   # load in imaging data. Get voxelwise SD
+  cat('loading images.\n')
   y = do.call(abind, list(RNifti::readNifti(files), along=4))
+  cat('computing standard deviation.\n')
   sdy = apply(y, 1:3, sd)
 
   # load signal file
@@ -37,6 +39,7 @@ addSignal = function(files=NULL, betaimg=NULL, X=NULL, Xred=NULL, outfiles=NULL)
   y = outer(betaimg * sdy/sdx, c(x)) + y
 
   # write out images
+  cat('writing output images.\n')
   if(is.character(outfiles[1]) & length(outfiles) == length(files))
     trash=lapply(1:length(outfiles), function(ind) RNifti::writeNifti(y[,,,ind], outfiles[ind]) )
   # return if requested
