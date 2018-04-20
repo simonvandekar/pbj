@@ -10,12 +10,12 @@ getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 1
 	# get betamap components
 	betacomp = mmand::components(sig, mmand::shapeKernel(3, 3, type='box'))
 	clustsize = sort(table(c(betacomp)))
-	names(clustsize) = 1:length(clustsize)
 
 	# renumber components smallest to largest
 	for(i in 1:length(clustsize)){
 		betacomp[ which(betacomp==as.numeric(names(clustsize))[i]) ] = i + length(clustsize)
 	}
+	names(clustsize) = 1:length(clustsize)
 	betacomp = betacomp - length(clustsize)
 
 	comps = mmand::components(pmap, mmand::shapeKernel(3, 3, type=kernel))
@@ -34,5 +34,5 @@ getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 1
 	nullinds = na.omit(unique(c(comps)))
 	nullinds = nullinds[ !nullinds %in% unlist(allaltinds) ]
 	nullp = if(length(nullinds)==0) 1 else sort(pfunc(sapply(nullinds, function(x) pmap[ which(comps==x)[1] ] )) )
-	list(altp = altp, clustsize = clustsize, nullp = nullp, altinds = allaltinds, componentmap=comps)
+	list(altp = altp, clustsize = clustsize, nullp = nullp, altinds = allaltinds, nullinds=nullinds, componentmap=updateNifti(comps, betamap))
 }

@@ -101,13 +101,18 @@ easythresh = function(pstat=NULL, mask=NULL, cthresh=0.01, pthresh=0.15, bgimg=m
 		} else {
 			pvalues = ptab[,'P']
 			clustermask = readNifti(paste('cluster_mask_', basename(outroot0), '.nii.gz', sep='') )
+			pmap = clustermask
+			Max = max(clustermask)
+			for(clind in 1:Max){
+				pmap[ pmap==(Max - clind+1) ] = pvalues[ clind]
+			}
 		}
 	setwd(here)
 	}
 	if(is.null(outroot)){
 		unlink(dirname(outroot0), recursive=TRUE)
 	}
-	out = list(pvalues=pvalues, cmd = etcmd, clustermask=clustermask)
+	out = list(pvalues=pvalues, cmd = etcmd, clustermask=clustermask, pmap=pmap)
 }
 
 regionmean = function(input=NULL, label=NULL){
