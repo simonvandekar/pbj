@@ -72,8 +72,16 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     cat('Running voxel-wise weighted linear models.\n')
 
     if(!robust){
-      num = do.call(c, mclapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2), mc.cores=mc.cores) )
-      res = do.call(rbind, mclapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind]), mc.cores=mc.cores))
+      if(df==1){
+        qrs = mclapply(1:ncol(res), function(ind) qr(X * W[,ind]), mc.cores=mc.cores)
+        seX1 = sqrt(do.call(c, mclapply(1:ncol(res), function(ind) chol2inv(qr.R(qrs[[ind]]))[peind,peind], mc.cores=mc.cores)))
+        num = do.call(c, mclapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind], mc.cores=mc.cores) )
+        res = do.call(rbind, mclapply(1:ncol(res), function(ind) qr.resid(qrs[[ind]], res[,ind]), mc.cores=mc.cores))
+        rm(qrs)
+      } else {
+        num = do.call(c, mclapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2), mc.cores=mc.cores) )
+        res = do.call(rbind, mclapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind]), mc.cores=mc.cores))
+      }
     }
 
     if(robust){
@@ -96,8 +104,16 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
   # else weights are the same for all voxels
   } else {
     if(!robust){
-      num = colSums(qr.resid(qr(Xred * W), res)^2)
-      res = t(qr.resid(qr(X * W), res))
+      if(df==1){
+	QR = qr(X * W)
+        num = qr.coef(QR, res)[peind,]
+        seX1 = sqrt(chol2inv(qr.R(QR))[peind,peind])
+        res = t(qr.resid(QR, res))
+	rm(QR)
+      } else {
+        num = colSums(qr.resid(qr(Xred * W), res)^2)
+        res = t(qr.resid(qr(X * W), res))
+      }
     }
 
     if(robust){
@@ -126,8 +142,18 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
   # compute statistical image
   if(!robust){
     stattemp = rowSums(res^2)
-    num = num - stattemp
-    stattemp = num/stattemp * rdf/df
+    # assume t-statistics if df==1
+    if(df==1){
+      stattemp = sqrt(stattemp/rdf)
+      stattemp = num/stattemp / seX1
+      # convert to z-statistics
+      stattemp = qnorm(pt(stattemp, df=rdf))
+    } else {
+      num = num - stattemp
+      stattemp = num/stattemp * rdf/df
+      # convert to chisquared
+      stattemp = qchisq(pf(stattemp, df1=df, df2=rdf), df=df)
+    }
     stat = mask
     stat[ mask==1] = stattemp
   }
