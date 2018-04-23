@@ -96,8 +96,7 @@ easythresh = function(pstat=NULL, mask=NULL, cthresh=0.01, pthresh=0.15, bgimg=m
 		system(etcmd)
 		ptab = read.table(paste('cluster_',basename(outroot0), '.txt', sep=''), header=TRUE, sep='\t')
 		if(nrow(ptab)==0){
-			pvalues=NA
-			clustermask=NA
+			pvalues <- clustermask <- pmap <- NULL
 		} else {
 			pvalues = ptab[,'P']
 			clustermask = readNifti(paste('cluster_mask_', basename(outroot0), '.nii.gz', sep='') )
@@ -112,7 +111,7 @@ easythresh = function(pstat=NULL, mask=NULL, cthresh=0.01, pthresh=0.15, bgimg=m
 	if(is.null(outroot)){
 		unlink(dirname(outroot0), recursive=TRUE)
 	}
-	out = list(pvalues=pvalues, cmd = etcmd, clustermask=clustermask, pmap=pmap)
+	out = list(pvalues=pvalues, clustermask=clustermask, pmap=pmap, cmd=etcmd)
 }
 
 regionmean = function(input=NULL, label=NULL){
