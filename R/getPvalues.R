@@ -41,19 +41,21 @@ getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 1
 	if(is.character(betamap))
 		betamap = readNifti(betamap)
 
-	# get betamap components
-	betacomp = mmand::components(sig, mmand::shapeKernel(3, 3, type=kernel))
-	clustsize = sort(table(c(betacomp)))
-
-	# renumber components smallest to largest
-	for(i in 1:length(clustsize)){
-		betacomp[ which(betacomp==as.numeric(names(clustsize))[i]) ] = i + length(clustsize)
-	}
-	names(clustsize) = 1:length(clustsize)
-	betacomp = betacomp - length(clustsize)
-
+	# get pmap components
 	comps = mmand::components(pmap, mmand::shapeKernel(3, 3, type=kernel))
-	if(!is.null(betacomp)){
+
+	if(!is.null(betamap)){
+		# get betamap components
+		betacomp = mmand::components(betamap, mmand::shapeKernel(3, 3, type=kernel))
+		clustsize = sort(table(c(betacomp)))
+
+		# renumber components smallest to largest
+		for(i in 1:length(clustsize)){
+			betacomp[ which(betacomp==as.numeric(names(clustsize))[i]) ] = i + length(clustsize)
+		}
+		names(clustsize) = 1:length(clustsize)
+		betacomp = betacomp - length(clustsize)
+
 		allaltinds = list()
 		altp = list()
 		# compute p-values for each real cluster defined by betacomp
@@ -63,10 +65,10 @@ getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 1
 			allaltinds[[clind]] = altinds
 		}
 	} else {
-		clustsize <- altp <- allaltind <- NULL
+		clustsize <- altp <- allaltinds <- NULL
 	}
 	nullinds = na.omit(unique(c(comps)))
 	nullinds = nullinds[ !nullinds %in% unlist(allaltinds) ]
 	nullp = if(length(nullinds)==0) 1 else sort(pfunc(sapply(nullinds, function(x) pmap[ which(comps==x)[1] ] )) )
-	list(altp = altp, nullp = nullp, clustsize = clustsize,  altinds = allaltinds, nullinds=nullinds, componentmap=updateNifti(comps, pmap))
+	list(altp = altp, clustsize = clustsize,  altinds = allaltinds, nullp = nullp, nullinds=nullinds, componentmap=updateNifti(comps, pmap))
 }

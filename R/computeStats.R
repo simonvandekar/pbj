@@ -54,13 +54,12 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     cat('Weights are voxel-wise.\n')
     voxwts = TRUE
     W = do.call(abind, list(RNifti::readNifti(W), along=4))
-    W = apply(W, 4, function(x) x[mask==1])
+    W = t(apply(W, 4, function(x) x[mask==1]))
     W = sqrt(W)
   } else {
     voxwts=FALSE
     # compute W half
     W = c(sqrt(W))
-    X = X
   }
   X1 = X[,peind]
   # this is a pointwise matrix multiplication if W was passed as images
@@ -117,7 +116,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     }
 
     if(robust){
-      res = lm(res ~ -1 + (X * W), model=FALSE)
+      res = lm(res ~ -1 + I(X * W), model=FALSE)
 
       # get parameter estimates
       stat=coefficients(res)[peind,]
