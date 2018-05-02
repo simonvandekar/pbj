@@ -8,7 +8,7 @@ addSignal(files = NULL, betaimg = NULL, X = NULL, Xred = NULL,
   outfiles = NULL)
 }
 \arguments{
-\item{files}{a vector of images.}
+\item{files}{a vector of .nii or .nii.gz images.}
 
 \item{betaimg}{a parameter image that describes the association between X
 and the images in filelist. The units of this are standardized so that it

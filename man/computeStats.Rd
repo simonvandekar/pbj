@@ -30,12 +30,17 @@ Uses HC3 SE estimates from REF.}
 
 \item{statfile}{nii or nii.gz file to save out 3d statistical image.}
 
-\item{resfile}{nii or nii.gz file to save residuals.}
+\item{resfile}{nii or nii.gz file to save out 4d covariance image.}
 
 \item{mc.cores}{Argument passed to mclapply for parallel things.}
 }
+\value{
+Returns a list with the following values:
+\item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a $\chi^2$-statistic map.}
+\item{res}{The 4d covariance object. This is a $V \times n$ matrix $R$, such that $R R^T = \Sigma$.}
+}
 \description{
-This function computes a statistical map and covariance matrix which are the
+This function computes a statistical map and residuals which are the
  objects necessary to perform the parametric bootstrap joint (PBJ) inference
  procedure.
 }

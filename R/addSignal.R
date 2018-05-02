@@ -5,7 +5,7 @@
 #'  The output images are equal the images specified by filelist plus betaimg
 #'  times the column of X that is not in Xred. This column is first
 #'  residualized to Xred.
-#' @param files a vector of images.
+#' @param files a vector of .nii or .nii.gz images.
 #' @param betaimg a parameter image that describes the association between X
 #'  and the images in filelist. The units of this are standardized so that it
 #'  is like effect size.
@@ -14,9 +14,10 @@
 #' @param Xred the design matrix for all covariates except the column that is
 #'  being multiplied by betaimg. Xred must have only one less column than X.
 #' @param outfiles a vector of images to save the output.
+#' @return Returns a 4d array of imaging data with synthetic signal added. The first three dimensions are equal to dim(betaimg) and the 4th dimension indexes subject.
 #' @keywords power simulation
-#' @export
-#' @examples
+# @export
+# @examples
 addSignal = function(files=NULL, betaimg=NULL, X=NULL, Xred=NULL, outfiles=NULL){
   if(any(sapply(list(files, betaimg, X, Xred), is.null)))
     stop('One or more required arguments are unspecified')

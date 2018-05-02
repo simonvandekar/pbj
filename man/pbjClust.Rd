@@ -2,14 +2,14 @@
 % Please edit documentation in R/pbjClust.R
 \name{pbjClust}
 \alias{pbjClust}
-\title{Performs (semi)Parametric Bootstrap Joint Inference ((s)PBJ)}
+\title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Cluster Extent Inference}
 \usage{
 pbjClust(stat = NULL, res = NULL, mask = NULL, statoutfiles = NULL,
   df = 0, rdf = NULL, cfts = c(0.01, 0.005), nboot = 5000,
   kernel = "box")
 }
 \arguments{
-\item{stat}{staterved statistical map e.g. as obtained from computeStats.}
+\item{stat}{observed statistical map e.g. as obtained from computeStats.}
 
 \item{res}{Character of 4d residuals in nii or nii.gz format, or residual
 matrix as obtained from computeStats.}
@@ -35,8 +35,14 @@ Z-statistics probabilities.}
 \item{nboot}{Number of bootstraps to perform.}
 
 \item{kernel}{Kernel to use for computing connected components. Box is
-default, but Diamond may also be reasonable.}
+default (26 neighbors), but Diamond may also be reasonable.}
+}
+\value{
+Returns a list with the following values:
+\item{pvalues}{A list of length length(cfts) where each element is a vector of p-values corresponding to the cluster labels in clustermaps.}
+\item{clustermaps}{A list of length length(cfts) where each element is a nifti object with the cluster labels.}
+\item{pmaps}{A list of length length(cfts) where each element is a nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
 }
 \description{
-Performs (semi)Parametric Bootstrap Joint Inference ((s)PBJ)
+Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Cluster Extent Inference
 }

@@ -13,26 +13,25 @@
 #'  values as -log10(p).
 #'
 #' @return Returns a list with the following values:
-#' @param altp If betamap is non-NULL then this returns a list the length of
+#' \item{altp}{If betamap is non-NULL then this returns a list the length of
 #'  the number of connected components in betamap. Each list element gives
 #'  the ordered p-values of clusters in pmap that have nonempty overlap with
 #'  that cluster in betamap. The output is ordered by increasing size of
-#'  connected components in betamap. NULL if betamap is NULL.
-#' @param nullp If betamap is non-NULL then these are the p-values for clusters
+#'  connected components in betamap. NULL if betamap is NULL.}
+#' \item{nullp}{If betamap is non-NULL then these are the p-values for clusters
 #'  in pmap that have empty intersection with betamap. Otherwise, this is a
-#'  vector of p-values for all clusters in pmap.
-#' @param clustsize If betmap us non-NULL then this is the sizes of clusters in
-#'  betamap in increasing order. NULL otherwise.
-#' @param altinds If betamap is non-NULL then this returns a list the length of
+#'  vector of p-values for all clusters in pmap.}
+#' \item{clustsize}{If betamap us non-NULL then this is the sizes of clusters in betamap in increasing order. NULL otherwise.}
+#' \item{altinds}{If betamap is non-NULL then this returns a list the length of
 #'  the number of connected components in betamap. Each list element gives the
 #'  indices of clusters indices in componentmap that overlap with the
-#'  corresponding cluster in betamap. NULL otherwise.
-#' @param nullinds Vector of indices of components in component map that do not
-#'  overlap with betamap.
-#' @param componentmap Nifti object giving connected components of pmap.
-#' @export
-#'
-#' @examples
+#'  corresponding cluster in betamap. NULL otherwise.}
+#' \item{nullinds}{Vector of indices of components in component map that do not
+#'  overlap with betamap.}
+#' \item{componentmap}{Nifti object giving connected components of pmap.}
+# @export
+#
+# @examples
 getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 10^(-x) ){
 	if(is.null(pmap))
 		stop("pmap is required.")

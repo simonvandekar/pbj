@@ -1,6 +1,6 @@
 #' Computes Statistical Map for Neuroimaging Data
 #'
-#' This function computes a statistical map and covariance matrix which are the
+#' This function computes a statistical map and residuals which are the
 #'  objects necessary to perform the parametric bootstrap joint (PBJ) inference
 #'  procedure.
 #' @param files Character vector of subject images to be modeled as an outcome
@@ -16,11 +16,14 @@
 #' @param robust Compute robust standard error estimates? Defaults to TRUE.
 #'   Uses HC3 SE estimates from REF.
 #' @param statfile nii or nii.gz file to save out 3d statistical image.
-#' @param resfile nii or nii.gz file to save residuals.
+#' @param resfile nii or nii.gz file to save out 4d covariance image.
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
-#' @export
-#' @examples
+#' @return Returns a list with the following values:
+#' \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
+#' \item{res}{The 4d covariance object. This is a V by n matrix R, such that R %*% t(R) = Sigma.}
+# @export
+# @examples
 computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W=rep(1, nrow(X)), robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
@@ -72,29 +75,33 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
 
     if(!robust){
       if(df==1){
-        qrs = mclapply(1:ncol(res), function(ind) qr(X * W[,ind]), mc.cores=mc.cores)
-        seX1 = sqrt(do.call(c, mclapply(1:ncol(res), function(ind) chol2inv(qr.R(qrs[[ind]]))[peind,peind], mc.cores=mc.cores)))
-        num = do.call(c, mclapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind], mc.cores=mc.cores) )
-        res = do.call(rbind, mclapply(1:ncol(res), function(ind) qr.resid(qrs[[ind]], res[,ind]), mc.cores=mc.cores))
+        # cannot be parallelized due to memory use
+        qrs = apply(W, function(Wcol) qr(X * Wcol))
+        # This should work in parallel
+        seX1 = sqrt(do.call(c, mclapply(qrs, function(qrval) chol2inv(qr.R(qrval))[peind,peind], mc.cores=mc.cores)))
+        # cannot be parallelized due to memory use
+        num = do.call(c, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind]) )
+        # cannot be parallelized due to memory use
+        res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qrs[[ind]], res[,ind])) )
         rm(qrs)
       } else {
-        num = do.call(c, mclapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2), mc.cores=mc.cores) )
-        res = do.call(rbind, mclapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind]), mc.cores=mc.cores))
+        num = do.call(c, lapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2)) )
+        res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind])) )
       }
     }
 
     if(robust){
-      res = mclapply(1:ncol(res), function(ind) lm(res[,ind] ~ -1 + I(X * W[,ind]), model=FALSE), mc.cores=mc.cores)
+      res = lapply(1:ncol(res), function(ind) lm(res[,ind] ~ -1 + I(X * W[,ind]), model=FALSE) )
 
       # get parameter estimates
-      stat = do.call(rbind, mclapply(res, coefficients, mc.cores=mc.cores ))[,peind]
+      stat = do.call(c, mclapply(res, coefficients, mc.cores=mc.cores ))[peind]
 
       cat('Getting voxel-wise hat values.\n')
       h = do.call(rbind, mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
 
       cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
       res = do.call(rbind, mclapply(res, residuals, mc.cores=mc.cores))
-      X1res = do.call(rbind, mclapply(1:ncol(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind]), mc.cores=mc.cores ))
+      X1res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
       res = t(res * X1res /(1-h))
       A = rowSums(X1res^2)
       rm(h, X1res)
@@ -166,7 +173,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
   }
 
   if(!is.null(resfile)){
-    # need to reform residuals into an array first
+    # need to re-form residuals into an array first
     writeNifti(res, resfile)
   }
 

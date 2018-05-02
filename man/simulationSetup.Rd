@@ -5,7 +5,7 @@
 \title{Prepares Simulation Data for Bootstrapping}
 \usage{
 simulationSetup(files = NULL, form = NULL, dat = NULL, mask = NULL,
-  smoutfiles = NULL, outfiles = NULL, sm = 0,
+  outfiles = NULL, smoutfiles = NULL, sm = 0,
   mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{

@@ -1,6 +1,6 @@
-#' Performs (semi)Parametric Bootstrap Joint Inference ((s)PBJ)
+#' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Cluster Extent Inference
 #'
-#' @param stat staterved statistical map e.g. as obtained from computeStats.
+#' @param stat observed statistical map e.g. as obtained from computeStats.
 #' @param res Character of 4d residuals in nii or nii.gz format, or residual
 #'  matrix as obtained from computeStats.
 #' @param mask Character mask file location.
@@ -18,12 +18,14 @@
 #'  Z-statistics probabilities.
 #' @param nboot Number of bootstraps to perform.
 #' @param kernel Kernel to use for computing connected components. Box is
-#'  default, but Diamond may also be reasonable.
+#'  default (26 neighbors), but Diamond may also be reasonable.
 #'
-#' @return
-#' @export
-#'
-#' @examples
+#' @return Returns a list with the following values:
+#' \item{pvalues}{A list of length length(cfts) where each element is a vector of p-values corresponding to the cluster labels in clustermaps.}
+#' \item{clustermaps}{A list of length length(cfts) where each element is a nifti object with the cluster labels.}
+#' \item{pmaps}{A list of length length(cfts) where each element is a nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
+# @export
+# @examples
 pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 
   if(is.null(mask))
@@ -114,5 +116,5 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
     }
   }
 
-  list(pvalues=pvals, clustmaps=clustmaps, pmaps=pmaps)
+  list(pvalues=pvals, clustermaps=clustmaps, pmaps=pmaps)
 }
