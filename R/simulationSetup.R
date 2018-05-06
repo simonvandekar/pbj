@@ -16,11 +16,11 @@
 #' @param outfiles Character vector of images to save the residual output images.
 #' @param sm Numeric giving the smoothing amount in mm FWHM to perform before creating residuals. Smoothing is performed using fsl's susan.
 #' @param mc.cores Argument passed to mclapply for parallel things.
-#' @return No return argument. This functions saves out nifti images files after residualizing to the model specified by form and dat. The residuals of files are saved as the corresponding element in outfiles.
+#' @return No returned value. This functions saves out nifti images files after residualizing to the model specified by form and dat. The residuals of files are saved as the corresponding element in outfiles.
 #' @keywords power simulation, parametric bootstrap, type 1 error simulations, null simulations
 # @export
 # @examples
-simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, outfiles=NULL, smoutfiles=NULL, sm=0, mc.cores = getOption("mc.cores", 2L)){
+simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, outfiles=NULL, smoutfiles=NULL, sm=0){
   if(any( is.null(list(files, form, dat, mask, outfiles ) )))
     stop('One or more required arguments unspecified.')
 
@@ -56,8 +56,8 @@ simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, outfiles=
 
   # save out images
   temp = mask
-  trash = parallel::mclapply(1:nrow(y), function(ind){ temp[ temp==1] = y[ind,]
+  trash = lapply(1:nrow(y), function(ind){ temp[ temp==1] = y[ind,]
                         RNifti::writeNifti(temp, outfiles[ind])
-                        }, mc.cores=mc.cores)
+                        })
   return(NULL)
 }
