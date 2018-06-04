@@ -54,7 +54,7 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
   tmp = mask
   tmp = lapply(ts, function(th){ tmp[ mask==1] = (stat[mask==1]>th); tmp})
   k = mmand::shapeKernel(3, 3, type=kernel)
-  clustmaps = lapply(tmp, function(tm) {out = mmand::components(tm, k); out[is.na(out)] = 0; out})
+  clustmaps = lapply(tmp, function(tm) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)})
   stat = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
   if(is.character(res)){
@@ -112,7 +112,7 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
 
   if(!is.null(statoutfiles)){
     for(cft in cfts){
-      RNifti::writeNifti(pmaps[[ paste('cft', cft, sep='') ]], file=paste(statoutfiles, '_cft', cft, '.nii.gz', sep='') )
+      RNifti::writeNifti(pmaps[[ paste('cft', cft, sep='') ]], file=paste(gsub('.nii.gz', '', statoutfiles), '_cft', cft, '.nii.gz', sep='') )
     }
   }
 

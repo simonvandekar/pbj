@@ -44,7 +44,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     mask = RNifti::readNifti(mask)
 
   # load images
-  res = do.call(abind, list(RNifti::readNifti(files), along=4))
+  res = do.call(abind::abind, list(RNifti::readNifti(files), along=4))
   res = t(apply(res, 4, function(x) x[mask==1]))
 
   peind = which(!colnames(X) %in% colnames(Xred))
@@ -56,7 +56,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
   if(is.character(W)){
     cat('Weights are voxel-wise.\n')
     voxwts = TRUE
-    W = do.call(abind, list(RNifti::readNifti(W), along=4))
+    W = do.call(abind::abind, list(RNifti::readNifti(W), along=4))
     W = t(apply(W, 4, function(x) x[mask==1]))
     W = sqrt(W)
   } else {
@@ -76,14 +76,14 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     if(!robust){
       if(df==1){
         # cannot be parallelized due to memory use
-        qrs = apply(W, function(Wcol) qr(X * Wcol))
+        qrs = apply(W, 2, function(Wcol) qr(X * Wcol))
         # This should work in parallel
-        seX1 = sqrt(do.call(c, mclapply(qrs, function(qrval) chol2inv(qr.R(qrval))[peind,peind], mc.cores=mc.cores)))
+        seX1 = sqrt(do.call(c, parallel::mclapply(qrs, function(qrval) chol2inv(qr.R(qrval))[peind,peind], mc.cores=mc.cores)))
         # cannot be parallelized due to memory use
         num = do.call(c, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind]) )
         # cannot be parallelized due to memory use
         res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qrs[[ind]], res[,ind])) )
-        rm(qrs)
+        rm(qrs, W)
       } else {
         num = do.call(c, lapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2)) )
         res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind])) )
@@ -94,15 +94,16 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
       res = lapply(1:ncol(res), function(ind) lm(res[,ind] ~ -1 + I(X * W[,ind]), model=FALSE) )
 
       # get parameter estimates
-      stat = do.call(c, mclapply(res, coefficients, mc.cores=mc.cores ))[peind]
+      stat = do.call(rbind, parallel::mclapply(res, coefficients, mc.cores=mc.cores ))[,peind]
 
       cat('Getting voxel-wise hat values.\n')
-      h = do.call(rbind, mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
+      h = do.call(rbind, parallel::mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
 
       cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
-      res = do.call(rbind, mclapply(res, residuals, mc.cores=mc.cores))
-      X1res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
-      res = t(res * X1res /(1-h))
+
+      res = do.call(rbind, parallel::mclapply(res, residuals, mc.cores=mc.cores))
+      X1res = do.call(rbind, lapply(1:nrow(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
+      res = res * X1res /(1-h)
       A = rowSums(X1res^2)
       rm(h, X1res)
     }
@@ -168,8 +169,6 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     stattemp = stat*A/sqrt(rowSums(res^2))
     stat = mask
     stat[ stat==1] = stattemp
-  } else {
-    # compute non-robust statistical image
   }
 
   if(!is.null(resfile)){
