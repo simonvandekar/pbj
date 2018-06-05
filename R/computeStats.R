@@ -34,6 +34,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     n=length(files)
     if(nrow(X)!=n)
       stop('length(files) and nrow(X) must be the same.')
+    res = do.call(abind::abind, list(RNifti::readNifti(files), along=4))
     } else {
       res = files
       rm(files)
@@ -44,7 +45,6 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     mask = RNifti::readNifti(mask)
 
   # load images
-  res = do.call(abind::abind, list(RNifti::readNifti(files), along=4))
   res = t(apply(res, 4, function(x) x[mask==1]))
 
   peind = which(!colnames(X) %in% colnames(Xred))
