@@ -36,6 +36,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
       stop('length(files) and nrow(X) must be the same.')
     res = do.call(abind::abind, list(RNifti::readNifti(files), along=4))
     } else {
+      n = nrow(X)
       res = files
       rm(files)
     }
