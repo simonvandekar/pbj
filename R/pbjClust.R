@@ -90,7 +90,7 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
   close(pb)
   # add the stat max
   stat = lapply(stat, function(x) if(length(x)==0) 0 else x)
-  Fs = rbind(Fs, sapply(stat, max))
+  Fs = rbind(Fs, sapply(stat, max)+0.01) # + 0.01 to make it larger than observed data
   # compute empirical CDFs
   Fs = apply(Fs, 2, ecdf)
   pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](stat[[ind]]) )
