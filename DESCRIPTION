@@ -2,7 +2,7 @@ Package: pbj
 Type: Package
 Title: Parametric Bootstrap Joint Testing Procedures for Neuroimaging
 Version: 0.1.0
-Author@R: person("Simon", "Vandekar", email="simonv@pennmedicine.upenn.edu", role=c('aut', 'cre'))
+Author@R: person("Simon", "Vandekar", email="simonv@pennmedicine.upenn.edu", role=c('aut', 'cre')) person("Jiajing", "Niu", email="simonv@pennmedicine.upenn.edu", role=c('aut', 'cre')) 
 Maintainer@R: person("Simon", "Vandekar", email="simonv@pennmedicine.upenn.edu")
 Description: The pbj package includes a set of parametric bootstrap joint (PBJ)
     testing procedures designed for neuroimaging data. The statistical tools
