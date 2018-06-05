@@ -24,7 +24,7 @@
 #' \item{pvalues}{A list of length length(cfts) where each element is a vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermaps}{A list of length length(cfts) where each element is a nifti object with the cluster labels.}
 #' \item{pmaps}{A list of length length(cfts) where each element is a nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
-# @export
+#' @export
 # @examples
 pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 

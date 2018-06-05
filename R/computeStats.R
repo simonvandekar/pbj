@@ -22,8 +22,8 @@
 #' @return Returns a list with the following values:
 #' \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
 #' \item{res}{The 4d covariance object. This is a V by n matrix R, such that R %*% t(R) = Sigma.}
-# @export
-# @examples
+#' @export
+#' @examples
 computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W=rep(1, nrow(X)), robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001

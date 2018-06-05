@@ -16,7 +16,7 @@
 #' @param outfiles a vector of images to save the output.
 #' @return Returns a 4d array of imaging data with synthetic signal added. The first three dimensions are equal to dim(betaimg) and the 4th dimension indexes subject.
 #' @keywords power simulation
-# @export
+#' @export
 # @examples
 addSignal = function(files=NULL, betaimg=NULL, X=NULL, Xred=NULL, outfiles=NULL){
   if(any(sapply(list(files, betaimg, X, Xred), is.null)))

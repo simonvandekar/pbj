@@ -29,7 +29,7 @@
 #' \item{nullinds}{Vector of indices of components in component map that do not
 #'  overlap with betamap.}
 #' \item{componentmap}{Nifti object giving connected components of pmap.}
-# @export
+#' @export
 #
 # @examples
 getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 10^(-x) ){
