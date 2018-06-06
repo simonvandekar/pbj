@@ -24,7 +24,7 @@
 #' \item{pvalues}{A list of length length(cfts) where each element is a vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermaps}{A list of length length(cfts) where each element is a nifti object with the cluster labels.}
 #' \item{pmaps}{A list of length length(cfts) where each element is a nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
-# @export
+#' @export
 # @examples
 pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 
@@ -90,7 +90,7 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
   close(pb)
   # add the stat max
   stat = lapply(stat, function(x) if(length(x)==0) 0 else x)
-  Fs = rbind(Fs, sapply(stat, max))
+  Fs = rbind(Fs, sapply(stat, max)+0.01) # + 0.01 to make it larger than observed data
   # compute empirical CDFs
   Fs = apply(Fs, 2, ecdf)
   pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](stat[[ind]]) )

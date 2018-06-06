@@ -12,6 +12,9 @@ formula without the outcome variable.}
 
 \item{data}{A data frame containing the variables specified in eq.}
 }
+\value{
+Returns a design matrix constructed from eq and data.
+}
 \description{
 This function gets a design matrix for a generalized additive model (GAM)
  from the mgcv package or a linear model.

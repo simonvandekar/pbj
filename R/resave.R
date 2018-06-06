@@ -6,6 +6,7 @@
 #' @param file An (potentially already existing) rdata file to save objects
 #'  specified by ellipsis into.
 #' @keywords save, resave, rdata
+#' @export
 resave <- function(..., list = character(), file) {
   list <- union(list, as.character(substitute((...)))[-1L])
   # loads saved objects into new environment

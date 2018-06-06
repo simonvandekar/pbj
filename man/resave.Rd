@@ -16,4 +16,6 @@ specified by ellipsis into.}
 \description{
 Updates an .Rdata file by adding the variables specified in ellipsis to the rdata file.
 }
-\keyword{save}
+\keyword{rdata}
+\keyword{resave,}
+\keyword{save,}

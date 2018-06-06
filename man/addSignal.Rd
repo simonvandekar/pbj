@@ -22,6 +22,9 @@ being multiplied by betaimg. Xred must have only one less column than X.}
 
 \item{outfiles}{a vector of images to save the output.}
 }
+\value{
+Returns a 4d array of imaging data with synthetic signal added. The first three dimensions are equal to dim(betaimg) and the 4th dimension indexes subject.
+}
 \description{
 This function loads images specified in filelist and adds signal to the
  images. The amount and structure of signal is determined by betaimg and X.

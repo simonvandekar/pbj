@@ -7,6 +7,7 @@
 #' @param data A data frame containing the variables specified in eq.
 #' @keywords design matrix
 #' @return Returns a design matrix constructed from eq and data.
+#' @export
 getDesign = function(eq=NULL, data=NULL){
   # if it looks like a gam formula
   if(any(grepl("s\\(", eq))){

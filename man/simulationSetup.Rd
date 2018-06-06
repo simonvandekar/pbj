@@ -5,8 +5,7 @@
 \title{Prepares Simulation Data for Bootstrapping}
 \usage{
 simulationSetup(files = NULL, form = NULL, dat = NULL, mask = NULL,
-  outfiles = NULL, smoutfiles = NULL, sm = 0,
-  mc.cores = getOption("mc.cores", 2L))
+  outfiles = NULL, smoutfiles = NULL, sm = 0)
 }
 \arguments{
 \item{files}{Character vector of subject images to be modeled as an outcome
@@ -23,6 +22,9 @@ variable.}
 \item{sm}{Numeric giving the smoothing amount in mm FWHM to perform before creating residuals. Smoothing is performed using fsl's susan.}
 
 \item{mc.cores}{Argument passed to mclapply for parallel things.}
+}
+\value{
+No returned value. This functions saves out nifti images files after residualizing to the model specified by form and dat. The residuals of files are saved as the corresponding element in outfiles.
 }
 \description{
 Residualizes the images in files to the model form and writes the output to
