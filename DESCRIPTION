@@ -21,5 +21,6 @@ Imports:
   mmand,
   parallel,
   progress,
+  pblapply,
   RNifti
 RoxygenNote: 6.0.1.9000
