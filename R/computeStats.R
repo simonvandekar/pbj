@@ -13,6 +13,8 @@
 #' @param mask File name for a binary mask file.
 #' @param W Weights for regression model. Can be used to deweight noisy
 #'  observations. Same as what should be passed to lm.
+#' @param Winv Inverse weights for regression model. Inverse of W. Required when
+#' passing variance images as the inverse weights.
 #' @param robust Compute robust standard error estimates? Defaults to TRUE.
 #'   Uses HC3 SE estimates from REF.
 #' @param statfile nii or nii.gz file to save out 3d statistical image.
@@ -24,11 +26,19 @@
 #' \item{res}{The 4d covariance object. This is a V by n matrix R, such that R %*% t(R) = Sigma.}
 # @export
 # @examples
-computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W=rep(1, nrow(X)), robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W=rep(1, nrow(X)), Winv=NULL, robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
   if(any( is.null(list(files, X, Xred, mask ) )))
     stop('One or more required arguments unspecified.')
+
+  # check if inverse weights are given
+  if(!is.null(Winv)){
+    W = Winv
+    Winv = TRUE
+  } else {
+    Winv = FALSE
+  }
 
   if(is.character(files)){
     n=length(files)
@@ -64,6 +74,8 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     # compute W half
     W = c(sqrt(W))
   }
+  # inverse weights were passed
+  if(Winv) W = 1/W
   X1 = X[,peind]
   # this is a pointwise matrix multiplication if W was passed as images
   res = res * W
