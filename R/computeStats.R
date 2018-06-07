@@ -76,7 +76,7 @@ computeStats = function(files=NULL, X=NULL, Xred=NULL, Xfiles=NULL, mask=NULL, W
     W = c(sqrt(W))
   }
   # inverse weights were passed
-  if(Winv) W[W!=0] = 1/W[!=0]
+  if(Winv) W[W!=0] = 1/W[W!=0]
   X1 = X[,peind]
   # this is a pointwise matrix multiplication if W was passed as images
   res = res * W
