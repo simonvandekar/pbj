@@ -47,8 +47,10 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
     ts = qchisq(cfts, 1, lower.tail=FALSE)
     sgnstat = sign(stat)
     stat = stat^2
+    df=1; zerodf=TRUE
   } else {
     ts = qchisq(cfts, df, lower.tail=FALSE)
+    zerodf=FALSE
   }
 
   tmp = mask
@@ -95,7 +97,7 @@ pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf
   Fs = apply(Fs, 2, ecdf)
   pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](stat[[ind]]) )
   names(pvals) = paste('cft', ts, sep='')
-  if(df>0){
+  if(!zerodf){
     pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
       clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2])
     }
