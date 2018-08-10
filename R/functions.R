@@ -1,4 +1,6 @@
 ### RANDOMISE WRAPPER ###
+#' @importFrom stats qt qf
+#' @importFrom utils write.table
 randomise = function(filelist=NULL, dat=NULL, maskfile=NULL, X=NULL, Xred=NULL, outdir=NULL, groupvar=NULL, nperm=500, thresh=0.01, run=TRUE){
 	outdirdir = dirname(outdir)
 	mergednifti=file.path(outdirdir, 'merged.nii.gz')
@@ -78,6 +80,7 @@ mergeimages = function(filelist=NULL, mergednifti=NULL){
 
 
 # specify outroot to keep output
+#' @importFrom utils read.table
 easythresh = function(pstat=NULL, mask=NULL, cthresh=0.01, pthresh=0.15, bgimg=mask, run=TRUE, outroot=NULL){
 	if(any(is.null(c(pstat, mask)))){
 		stop('Must specify pstat and mask')

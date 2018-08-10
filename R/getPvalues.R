@@ -30,8 +30,7 @@
 #'  overlap with betamap.}
 #' \item{componentmap}{Nifti object giving connected components of pmap.}
 #' @export
-#
-# @examples
+#' @importFrom stats na.omit
 getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 10^(-x) ){
 	if(is.null(pmap))
 		stop("pmap is required.")

@@ -8,6 +8,7 @@
 #' @keywords design matrix
 #' @return Returns a design matrix constructed from eq and data.
 #' @importFrom mgcv gam
+#' @importFrom stats as.formula model.matrix update.formula
 #' @export
 getDesign = function(eq, data){
   # if it looks like a gam formula

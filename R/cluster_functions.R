@@ -5,7 +5,8 @@
 # thr is a vector of cluster forming thresholds as a p-value
 # kernel is for connected components definition. "box" or "diamond" are both reasonable
 
-
+#' @importFrom stats quantile rnorm
+#' @importFrom utils setTxtProgressBar txtProgressBar
 pbjES = function(obs, residuals=NULL, mask, df=1, rdf, alpha=0.05, thr=df*rdf/(rdf-2), nsim=5000){
 
 	if(is.null(thr))	     stop('Must specify cluster forming threshold.')

@@ -21,11 +21,13 @@
 #' @param resfile nii or nii.gz file to save out 4d covariance image.
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
+#' @importFrom abind abind
 #' @return Returns a list with the following values:
 #' \describe{
 #'   \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
 #'   \item{res}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
 #' }
+#' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
 #' @export
 computeStats = function(files, X, Xred, Xfiles=NULL, mask, W=rep(1, nrow(X)), Winv=NULL, robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values

@@ -32,5 +32,6 @@ Imports:
   parallel,
   progress,
   pbapply,
-  RNifti
+  RNifti,
+  mgcv
 RoxygenNote: 6.0.1
