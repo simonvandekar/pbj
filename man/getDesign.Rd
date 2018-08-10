@@ -4,7 +4,7 @@
 \alias{getDesign}
 \title{Gets a Design Matrix for a GAM or Linear Model}
 \usage{
-getDesign(eq = NULL, data = NULL)
+getDesign(eq, data)
 }
 \arguments{
 \item{eq}{A formula or string beginning with ~ that can be interpreted as an mgcv or lm

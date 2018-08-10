@@ -4,8 +4,7 @@
 \alias{addSignal}
 \title{Loads NIfTI Images and Adds Synthetic Signal}
 \usage{
-addSignal(files = NULL, betaimg = NULL, X = NULL, Xred = NULL,
-  outfiles = NULL)
+addSignal(files, betaimg, X, Xred, outfiles = NULL)
 }
 \arguments{
 \item{files}{a vector of .nii or .nii.gz images.}

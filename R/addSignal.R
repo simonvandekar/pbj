@@ -18,9 +18,8 @@
 #' @keywords power simulation
 #' @export
 # @examples
-addSignal = function(files=NULL, betaimg=NULL, X=NULL, Xred=NULL, outfiles=NULL){
-  if(any(sapply(list(files, betaimg, X, Xred), is.null)))
-    stop('One or more required arguments are unspecified')
+addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
+
   # get column of interest
   nullinds = which(!colnames(X) %in% colnames(Xred))
   # X residualized to covariates

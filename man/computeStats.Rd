@@ -4,9 +4,9 @@
 \alias{computeStats}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-computeStats(files = NULL, X = NULL, Xred = NULL, Xfiles = NULL,
-  mask = NULL, W = rep(1, nrow(X)), robust = TRUE, statfile = NULL,
-  resfile = NULL, mc.cores = getOption("mc.cores", 2L))
+computeStats(files, X, Xred, Xfiles = NULL, mask, W = rep(1, nrow(X)),
+  Winv = NULL, robust = TRUE, statfile = NULL, resfile = NULL,
+  mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
 \item{files}{Character vector of subject images to be modeled as an outcome
@@ -25,6 +25,9 @@ each column corresponds to an imaging covariate. Currently, not available.}
 \item{W}{Weights for regression model. Can be used to deweight noisy
 observations. Same as what should be passed to lm.}
 
+\item{Winv}{Inverse weights for regression model. Inverse of W. Required when
+passing variance images as the inverse weights.}
+
 \item{robust}{Compute robust standard error estimates? Defaults to TRUE.
 Uses HC3 SE estimates from REF.}
 
@@ -33,6 +36,13 @@ Uses HC3 SE estimates from REF.}
 \item{resfile}{nii or nii.gz file to save out 4d covariance image.}
 
 \item{mc.cores}{Argument passed to mclapply for parallel things.}
+}
+\value{
+Returns a list with the following values:
+\describe{
+  \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
+  \item{res}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
+}
 }
 \description{
 This function computes a statistical map and residuals which are the

@@ -1,35 +1,17 @@
-# libraries
-# nifti IO
-require(RNifti)
-# connected components
-require(mmand)
-# progress bar
-require(progress)
 
 # cluster correction
 # c.values is a vector of cluster extents
 # residuals are nXV matrix where V is number of voxels in the image
 # thr is a vector of cluster forming thresholds as a p-value
 # kernel is for connected components definition. "box" or "diamond" are both reasonable
-pbjES = function(obs=NULL, residuals=NULL, mask=NULL, df=1, rdf=NULL, alpha=0.05, thr=df*rdf/(rdf-2), nsim=5000){
-	if(is.null(rdf)){
-		stop('Must specify "rdf" residual degrees of freedom.')
-	}
-	if(is.null(mask)){
-		stop('Must specify mask.')
-	}
-	if(is.null(thr)){
-		stop('Must specify cluster forming threshold.')
-	}
-	if(is.null(obs)){
-		stop('Must pass observed map.')
-	}
-	if(is.character(mask)){
-		mask=readNifti(mask)
-	}
-	if(is.character(obs)){
-		obs = readNifti(obs)
-	}
+
+
+pbjES = function(obs, residuals=NULL, mask, df=1, rdf, alpha=0.05, thr=df*rdf/(rdf-2), nsim=5000){
+
+	if(is.null(thr))	     stop('Must specify cluster forming threshold.')
+	if(is.character(mask)) mask = readNifti(mask)
+	if(is.character(obs))  obs  = readNifti(obs)
+
 	k = shapeKernel(3, 3, type='diamond')
 	thrmask = mask
 	thrmask = ( obs > thr)
