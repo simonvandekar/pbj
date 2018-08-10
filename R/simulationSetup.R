@@ -19,6 +19,7 @@
 #' @return No returned value. This functions saves out nifti images files after residualizing to the model specified by form and dat. The residuals of files are saved as the corresponding element in outfiles.
 #' @keywords power simulation, parametric bootstrap, type 1 error simulations, null simulations
 #' @importFrom abind abind
+#' @importFrom RNifti writeNifti
 #' @export
 # @examples
 simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, outfiles=NULL, smoutfiles=NULL, sm=0){

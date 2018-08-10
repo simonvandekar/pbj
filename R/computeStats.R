@@ -28,6 +28,7 @@
 #'   \item{res}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
 #' }
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
+#' @importFrom RNifti writeNifti readNifti
 #' @export
 computeStats = function(files, X, Xred, Xfiles=NULL, mask, W=rep(1, nrow(X)), Winv=NULL, robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values

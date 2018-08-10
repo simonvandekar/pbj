@@ -18,6 +18,7 @@
 #' @keywords power simulation
 #' @importFrom abind abind
 #' @importFrom stats sd
+#' @importFrom RNifti writeNifti
 #' @export
 # @examples
 addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
