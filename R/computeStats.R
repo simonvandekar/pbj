@@ -29,6 +29,7 @@
 #' }
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
 #' @importFrom RNifti writeNifti readNifti
+#' @importFrom parallel mclapply
 #' @export
 computeStats = function(files, X, Xred, Xfiles=NULL, mask, W=rep(1, nrow(X)), Winv=NULL, robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values

@@ -31,7 +31,7 @@
 #' \item{componentmap}{Nifti object giving connected components of pmap.}
 #' @export
 #' @importFrom stats na.omit
-#' @importFrom RNifti readNifti
+#' @importFrom RNifti readNifti updateNifti
 #' @importFrom mmand shapeKernel
 getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 10^(-x) ){
 	if(is.null(pmap))

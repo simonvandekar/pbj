@@ -20,6 +20,7 @@
 #' @keywords power simulation, parametric bootstrap, type 1 error simulations, null simulations
 #' @importFrom abind abind
 #' @importFrom RNifti writeNifti
+#' @importFrom parallel mclapply
 #' @export
 # @examples
 simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, outfiles=NULL, smoutfiles=NULL, sm=0){

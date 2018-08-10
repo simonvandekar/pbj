@@ -27,7 +27,7 @@
 #' @export
 #' @importFrom stats ecdf qchisq rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
-#' @importFrom RNifti writeNifti
+#' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
 pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 
