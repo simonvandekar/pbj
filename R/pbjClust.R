@@ -29,16 +29,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjClust = function(stat=NULL, res=NULL, mask=NULL, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
-
-  if(is.null(mask))
-    stop('Must specify mask.')
-
-  if(is.null(stat))
-    stop('Must pass stat map.')
-
-  if(is.null(res))
-    stop('Must specify res matrix or images.')
+pbjClust = function(stat, res, mask, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 
   if(is.character(mask))
     mask=readNifti(mask)

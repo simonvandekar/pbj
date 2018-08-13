@@ -23,9 +23,7 @@
 #' @importFrom parallel mclapply
 #' @export
 # @examples
-simulationSetup = function(files=NULL, form=NULL, dat=NULL, mask=NULL, outfiles=NULL, smoutfiles=NULL, sm=0){
-  if(any( is.null(list(files, form, dat, mask, outfiles ) )))
-    stop('One or more required arguments unspecified.')
+simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0){
 
   # smooth using susan
   if(sm>0){

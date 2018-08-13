@@ -33,9 +33,7 @@
 #' @importFrom stats na.omit
 #' @importFrom RNifti readNifti updateNifti
 #' @importFrom mmand shapeKernel
-getPvalues = function(pmap=NULL, betamap=NULL, kernel='box', pfunc=function(x) 10^(-x) ){
-	if(is.null(pmap))
-		stop("pmap is required.")
+getPvalues = function(pmap, betamap=NULL, kernel='box', pfunc=function(x) 10^(-x) ){
 	if(is.character(pmap))
 		pmap = readNifti(pmap)
 	if(is.character(betamap))
