@@ -4,9 +4,8 @@
 \alias{pbjClust}
 \title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Cluster Extent Inference}
 \usage{
-pbjClust(stat = NULL, res = NULL, mask = NULL, statoutfiles = NULL,
-  df = 0, rdf = NULL, cfts = c(0.01, 0.005), nboot = 5000,
-  kernel = "box")
+pbjClust(stat, res, mask, statoutfiles = NULL, df = 0, rdf = NULL,
+  cfts = c(0.01, 0.005), nboot = 5000, kernel = "box")
 }
 \arguments{
 \item{stat}{observed statistical map e.g. as obtained from computeStats.}

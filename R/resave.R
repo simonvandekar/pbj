@@ -1,12 +1,13 @@
 #' Updates a .Rdata file
 #'
 #' Updates an .Rdata file by adding the variables specified in ellipsis to the rdata file.
+#' No longer exported.
 #' @param ... Objects in work space.  Will overwrite objects that already exist
 #'  in file with the same name.
+#' @param list Option to pass objects in work space as a character vector.
 #' @param file An (potentially already existing) rdata file to save objects
 #'  specified by ellipsis into.
 #' @keywords save, resave, rdata
-#' @export
 resave <- function(..., list = character(), file) {
   list <- union(list, as.character(substitute((...)))[-1L])
   # loads saved objects into new environment

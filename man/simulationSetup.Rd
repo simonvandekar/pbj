@@ -4,8 +4,8 @@
 \alias{simulationSetup}
 \title{Prepares Simulation Data for Bootstrapping}
 \usage{
-simulationSetup(files = NULL, form = NULL, dat = NULL, mask = NULL,
-  outfiles = NULL, smoutfiles = NULL, sm = 0)
+simulationSetup(files, form, dat, mask, outfiles, smoutfiles = NULL,
+  sm = 0, mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
 \item{files}{Character vector of subject images to be modeled as an outcome
@@ -17,7 +17,9 @@ variable.}
 
 \item{mask}{Character giving location of mask image.}
 
-\item{outfiles}{Character vector of images to save the residual output images.}
+\item{outfiles}{Character vector of residual output images to smooth.}
+
+\item{smoutfiles}{Character vector of smoothed output images.}
 
 \item{sm}{Numeric giving the smoothing amount in mm FWHM to perform before creating residuals. Smoothing is performed using fsl's susan.}
 

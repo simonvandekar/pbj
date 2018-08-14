@@ -13,7 +13,8 @@
 #' @param form mgcv or lm style formula.
 #' @param dat Data frame containing covariates used by form.
 #' @param mask Character giving location of mask image.
-#' @param outfiles Character vector of images to save the residual output images.
+#' @param outfiles Character vector of residual output images to smooth.
+#' @param smoutfiles Character vector of smoothed output images.
 #' @param sm Numeric giving the smoothing amount in mm FWHM to perform before creating residuals. Smoothing is performed using fsl's susan.
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @return No returned value. This functions saves out nifti images files after residualizing to the model specified by form and dat. The residuals of files are saved as the corresponding element in outfiles.
@@ -23,7 +24,7 @@
 #' @importFrom parallel mclapply
 #' @export
 # @examples
-simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0){
+simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0, mc.cores=getOption("mc.cores", 2L)){
 
   # smooth using susan
   if(sm>0){
@@ -32,10 +33,10 @@ simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm
     # writes output if outfiles given
     if(is.character(smoutfiles[1])){
       dir.create(dirname(smoutfiles[1]), showWarnings=FALSE)
-      y = mclapply(1:length(files), function(ind) fslr::susan(files[ind], smoutfiles[ind], retimg=TRUE, sigma=smsigma) )
+      y = mclapply(1:length(files), function(ind) fslr::susan(files[ind], smoutfiles[ind], retimg=TRUE, sigma=smsigma), mc.cores=mc.cores )
       # else returns 4d array
     } else {
-      y = mclapply(1:length(files), function(ind) fslr::susan(files[ind], retimg=TRUE, sigma=smsigma) )
+      y = mclapply(1:length(files), function(ind) fslr::susan(files[ind], retimg=TRUE, sigma=smsigma), mc.cores=mc.cores )
       y = do.call(abind::abind, list(y, along=4))
     }
   } else {

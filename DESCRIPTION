@@ -2,8 +2,9 @@ Package: pbj
 Type: Package
 Title: Parametric Bootstrap Joint Testing Procedures for Neuroimaging
 Version: 0.1.0
-Authors@R: c(person("Simon",   "Vandekar", email="simonv@pennmedicine.upenn.edu", role=c('aut', 'cre')),
-             person("Jiajing", "Niu",      email="simonv@pennmedicine.upenn.edu", role=c('aut'))) 
+Authors@R: c(person("Simon", "Vandekar", email="simon.vandekar@vanderbilt.edu", role=c('aut', 'cre')),
+             person("Shawn", "Garbett", email= "shawn.garbett@vumc.org", role=c('aut')),
+             person("Jiajing", "Niu", email="", role=c('aut'))) 
 Description: The pbj package includes a set of parametric bootstrap joint (PBJ)
     testing procedures designed for neuroimaging data. The statistical tools
     are more generally applicable, but this package is designed to allow input
@@ -23,7 +24,6 @@ Collate:
   'getDesign.R'
   'getPvalues.R'
   'pbjClust.R'
-  'resave.R'
   'simulationSetup.R'
 Imports:
   abind,
@@ -34,4 +34,4 @@ Imports:
   pbapply,
   RNifti,
   mgcv
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0.9000
