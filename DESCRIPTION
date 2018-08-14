@@ -16,7 +16,7 @@ Encoding: UTF-8
 License: GPL-3
 LazyData: true
 Depends: R (>= 3.4)
-Collate: 
+Collate:
   'addSignal.R'
   'cluster_functions.R'
   'computeStats.R'
@@ -36,3 +36,6 @@ Imports:
   RNifti,
   mgcv
 RoxygenNote: 6.1.0.9000
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

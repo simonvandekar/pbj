@@ -3,22 +3,26 @@
 #' This function computes a statistical map and residuals which are the
 #'  objects necessary to perform the parametric bootstrap joint (PBJ) inference
 #'  procedure.
-#' @param files Character vector of subject images to be modeled as an outcome
+#' @param images Character vector of subject images to be modeled as an outcome
 #'  variable OR 4d array of imaging data OR 4d nifti object.
-#' @param X Design matrix for full model.
-#' @param Xred Design matrix for reduced model. If robust=TRUE then this must
-#'  have one less column than X.
-#' @param Xfiles n X p matrix of images where n is the number of subjects and
-#'  each column corresponds to an imaging covariate. Currently, not available.
-#' @param mask File name for a binary mask file.
+#' @param form formula or character that can be coerced to a formula or a design
+#' matrix for the full model.
+#' @param formred formula or character that can be coerced to a formula or a
+#' design matrix for reduced model. If robust=TRUE then this must have one less
+#' column than X.
+#' @param mask File name for a binary mask file or niftiImage object.
+#' @param data R data frame containing variabes in form. If form and formred
+#' are matrices then this can be NULL.
 #' @param W Weights for regression model. Can be used to deweight noisy
 #'  observations. Same as what should be passed to lm.
 #' @param Winv Inverse weights for regression model. Inverse of W. Required when
 #' passing variance images as the inverse weights.
+#' @param formImages n X p matrix of images where n is the number of subjects and
+#'  each column corresponds to an imaging covariate. Currently, not supported.
 #' @param robust Compute robust standard error estimates? Defaults to TRUE.
 #'   Uses HC3 SE estimates from REF.
 #' @param statfile nii or nii.gz file to save out 3d statistical image.
-#' @param resfile nii or nii.gz file to save out 4d covariance image.
+#' @param resfile nii or nii.gz file to save out 4d covariance image. Currently, not supported.
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
 #' @importFrom abind abind
@@ -31,7 +35,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(files, X, Xred, Xfiles=NULL, mask, W=rep(1, nrow(X)), Winv=NULL, robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)), Winv=NULL, formImages=NULL, robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -43,15 +47,24 @@ computeStats = function(files, X, Xred, Xfiles=NULL, mask, W=rep(1, nrow(X)), Wi
     Winv = FALSE
   }
 
-  if(is.character(files)){
-    n=length(files)
+  if(!is.matrix(form) & !is.matrix(formred)){
+    X = getDesign(form, data)
+    Xred = getDesign(formred, data)
+  } else {
+    X = form
+    Xred = formred
+    rm(form, formred)
+  }
+
+  if(is.character(images)){
+    n=length(images)
     if(nrow(X)!=n)
-      stop('length(files) and nrow(X) must be the same.')
-    res = do.call(abind::abind, list(RNifti::readNifti(files), along=4))
+      stop('length(images) and nrow(X) must be the same.')
+    res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
     } else {
       n = nrow(X)
-      res = files
-      rm(files)
+      res = images
+      rm(images)
     }
 
   # load mask
