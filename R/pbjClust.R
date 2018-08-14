@@ -1,12 +1,6 @@
-#' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Cluster Extent Inference
+#' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
 #'
-#' @param stat observed statistical map e.g. as obtained from computeStats.
-#' @param res Character of 4d residuals in nii or nii.gz format, or residual
-#'  matrix as obtained from computeStats.
-#' @param mask Character mask file location.
-#' @param statoutfiles Character basename for nii.gz files to write out
-#'  -log10(p) maps. These are thresholded maps, where the value in each cluster
-#'  is the cluster adjusted p-value.
+#' @param statMap statMap object as obtained from computeStats.
 #' @param df Degrees of freedom of test statistics. This is the numerator
 #'  degrees of freedom of the F-statistic. If you are passing a Z-statistic
 #'  image set df=0.
@@ -20,22 +14,22 @@
 #' @param kernel Kernel to use for computing connected components. Box is
 #'  default (26 neighbors), but Diamond may also be reasonable.
 #'
-#' @return Returns a list with the following values:
-#' \item{pvalues}{A list of length length(cfts) where each element is a vector of p-values corresponding to the cluster labels in clustermaps.}
-#' \item{clustermaps}{A list of length length(cfts) where each element is a nifti object with the cluster labels.}
-#' \item{pmaps}{A list of length length(cfts) where each element is a nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
+#' @return Returns a list of length length(cfts)+1. The first element contains
+#' statMap$stat. The remaining elements are lists containing the following:
+#' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
+#' \item{clustermap}{A niftiImage object with the cluster labels.}
+#' \item{pmap}{A nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
+#' \item{CDF}{A bootstrap CDF.}
 #' @export
 #' @importFrom stats ecdf qchisq rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjClust = function(stat, res, mask, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
+pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, kernel='box'){
 
-  if(is.character(mask))
-    mask=readNifti(mask)
+  mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
 
-  if(is.character(stat))
-    stat = readNifti(stat)
+  stat = if(is.character(statMap$stat)) readNifti(statMap$stat) else statMap$stat
 
   if(df==0){
     ts = qchisq(cfts, 1, lower.tail=FALSE)
@@ -53,24 +47,27 @@ pbjClust = function(stat, res, mask, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0
   clustmaps = lapply(tmp, function(tm) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)})
   stat = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
-  if(is.character(res)){
-    res = readNifti(res)
-    res = apply(res, 4, function(x) x[mask==1])
+  if(is.character(statMap$sqrtSigma)){
+    sqrtSigma = readNifti(statMap$sqrtSigma)
+    sqrtSigma = apply(sqrtSigma, 4, function(x) x[mask==1])
+  } else {
+    sqrtSigma = statMap$sqrtSigma
+    rm(statMap)
   }
-  n = ncol(res)
+  n = ncol(sqrtSigma)
   if(is.null(rdf)) rdf=n
 
-  ssqs = sqrt(rowSums(res^2))
+  ssqs = sqrt(rowSums(sqrtSigma^2))
   if( any(ssqs != 1) ){
-    res = sweep(res, 1, ssqs, '/')
+    sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
   }
-  p=nrow(res)
+  p=nrow(sqrtSigma)
   # This SVD is not strictly necessary
   # If rdf<<n than n and there is a large number of simulations it might save time
   r = min(rdf, p)
   if(rdf != n){
-    res = svd(res, nu=r, nv=0)
-    res = sweep(res$u, 2, res$d[1:r], "*")
+    sqrtSigma = svd(sqrtSigma, nu=r, nv=0)
+    sqrtSigma = sweep(sqrtSigma$u, 2, sqrtSigma$d[1:r], "*")
   }
 
   Fs = matrix(NA, nboot, length(cfts))
@@ -78,7 +75,7 @@ pbjClust = function(stat, res, mask, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0
   for(i in 1:nboot){
     tmp = mask
     S = matrix(rnorm(r*df), r, df)
-    statimg = rowSums((res %*% S)^2)
+    statimg = rowSums((sqrtSigma %*% S)^2)
     tmp = lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
     Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
     setTxtProgressBar(pb, round(i/nboot,2))
@@ -112,5 +109,10 @@ pbjClust = function(stat, res, mask, statoutfiles=NULL, df=0, rdf=NULL, cfts=c(0
     }
   }
 
-  list(pvalues=pvals, clustermaps=clustmaps, pmaps=pmaps)
+  out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
+  # changes indexing order of out
+  out = apply(do.call(rbind, out), 2, as.list)
+  out = c(stat=stat, out)
+  class(out) = c('pbj', 'list')
+  return(out)
 }

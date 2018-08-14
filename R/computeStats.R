@@ -21,6 +21,9 @@
 #'  each column corresponds to an imaging covariate. Currently, not supported.
 #' @param robust Compute robust standard error estimates? Defaults to TRUE.
 #'   Uses HC3 SE estimates from REF.
+#' @param outdir If specified, output is saved as NIfTIs and statMap object is
+#' saved as strings. This approach conserves memory, but has longer IO time.
+#' Currently, not supported.
 #' @param statfile nii or nii.gz file to save out 3d statistical image.
 #' @param resfile nii or nii.gz file to save out 4d covariance image. Currently, not supported.
 #' @param mc.cores Argument passed to mclapply for parallel things.
@@ -35,7 +38,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)), Winv=NULL, formImages=NULL, robust=TRUE, statfile=NULL, resfile=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)), Winv=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -53,7 +56,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
   } else {
     X = form
     Xred = formred
-    rm(form, formred)
+    form <- formred <- NULL
   }
 
   if(is.character(images)){
@@ -200,14 +203,8 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     stat[ stat==1] = stattemp
   }
 
-  if(!is.null(resfile)){
-    # need to re-form residuals into an array first
-    writeNifti(res, resfile)
-  }
-
-  if(!is.null(statfile))
-    writeNifti(stat, statfile)
-
   # returns if requested
-  out = list(stat=stat, res=res)
+  out = list(stat=stat, sqrtSigma=res, mask=mask, formulas=list(form, formred))
+  class(out) = c('statMap', 'list')
+  return(out)
 }
