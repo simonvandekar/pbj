@@ -25,6 +25,7 @@ Collate:
   'getPvalues.R'
   'pbjClust.R'
   'simulationSetup.R'
+  'resave.R'
 Imports:
   abind,
   fslr,
