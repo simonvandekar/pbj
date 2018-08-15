@@ -14,8 +14,8 @@
 #' @param kernel Kernel to use for computing connected components. Box is
 #'  default (26 neighbors), but Diamond may also be reasonable.
 #'
-#' @return Returns a list of length length(cfts)+1. The first element contains
-#' statMap$stat. The remaining elements are lists containing the following:
+#' @return Returns a list of length length(cfts)+2. The first two elements contain
+#' statMap$stat and statMap$template. The remaining elements are lists containing the following:
 #' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
@@ -26,10 +26,12 @@
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
 pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, kernel='box'){
+  if(class(statMap) != 'statMap')
+    warning('Class of first argument is not \'statMap\'.')
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
-
   stat = if(is.character(statMap$stat)) readNifti(statMap$stat) else statMap$stat
+  template = statMap$template
 
   if(df==0){
     ts = qchisq(cfts, 1, lower.tail=FALSE)
@@ -112,7 +114,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, ke
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
-  out = c(stat=stat, out)
+  out = c(stat=stat, template=template, out)
   class(out) = c('pbj', 'list')
   return(out)
 }

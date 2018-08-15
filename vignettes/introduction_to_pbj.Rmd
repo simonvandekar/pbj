@@ -18,8 +18,8 @@ knitr::opts_chunk$set(
 ```
 
 ## The PBJ hypothesis testing procedures
-Spatial extent hypothesis testing (SEHT) is a widely used tool in neuroimaging to perform group level analysis where neuroimaging data are modeled as a function of subject level covariates such as age, sex, diagnosis, and/or other phenotypes.
-The parametric bootstrap joint (PBJ) testing procedure and the semi-PBJ (sPBJ) procedure are recently proposed methods to perform SEHT that relax the assumptions of gaussian random field (GRF) and permutation based methods.
+Spatial extent inference (SEI) is a widely used tool in neuroimaging to perform group level analysis where neuroimaging data are modeled as a function of subject level covariates such as age, sex, diagnosis, and/or other phenotypes.
+The parametric bootstrap joint (PBJ) testing procedure and the semi-PBJ (sPBJ) procedure are recently proposed methods to perform SEI that relax the assumptions of gaussian random field (GRF) and permutation based methods.
 For a detailed overview of these procedures please see XX REF.
 
 The PBJ and sPBJ procedures conceptualize a group level analysis as the second level in a multilevel model; both allow the user to specify subject specific weights that can be defined as images (e.g. varcopes from fsl) or as a scalar value for each subject.
@@ -28,7 +28,7 @@ The PBJ procedure assumes that the weights the user passes are exactly equal to 
 However, most of the time, $\sigma^{-2}_i(v)$ is unknown.
 As a solution, the sPBJ procedure uses a robust "sandwich" covariance estimator that provides consistent estimates of the standard errors, even if the estimates of $\sigma^{-2}_i(v)$ are misspecified.
 
-The sPBJ SEHT procedure is appropriate for any type of group level analysis and has been demonstrated to be robust at cluster forming thresholds (CFTs) where GRF-based methods fail.
+The sPBJ SEI procedure is appropriate for any type of group level analysis and has been demonstrated to be robust at cluster forming thresholds (CFTs) where GRF-based methods fail.
 
 ## Overview of this vignette
 To demonstrate how to use the pbj package we utilize data from Maumet et al. (2016) to perform a meta-analysis of statistical maps from 21 pain studies [@maumet_sharing_2016; @gorgolewski_neurovault.org:_2015].
@@ -43,7 +43,7 @@ This tutorial assumes you have fully processed subject (or study) level imaging 
 ## Computing statMaps
 
 
-## Performing SEHT on the statMaps
+## Performing SEI on the statMaps
 
 ## Visualizing and saving pbj objects
 
@@ -54,7 +54,7 @@ This tutorial assumes you have fully processed subject (or study) level imaging 
 * CFT - cluster forming threshold. The threshold chosen to binarize the statistical map for spatial extent hypothesis testing.
 * PBJ - parametric bootstrap joint (testing procedure).
 * sPBJ - semiparametric bootstrap joint (testing procedure). Robust to variance misspecification.
-* SEHT - spatial extent hypothesis testing. Using threshold contiguous cluster extents to performing inference on a statistical map.
+* SEI - spatial extent hypothesis testing. Using threshold contiguous cluster extents to performing inference on a statistical map.
 
 ## Styles
 
