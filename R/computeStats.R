@@ -53,7 +53,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
 
   if(!is.matrix(form) & !is.matrix(formred)){
     X = getDesign(form, data)
-    Xred = getDesign(formred, data)
+    Xred = if(!is.null(formred)) getDesign(formred, data) else NULL
   } else {
     X = form
     Xred = formred
@@ -137,7 +137,12 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
       cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
 
       res = do.call(rbind, parallel::mclapply(res, residuals, mc.cores=mc.cores))
-      X1res = do.call(rbind, lapply(1:nrow(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
+      if(!is.null(Xred)){
+        X1res = do.call(rbind, lapply(1:nrow(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
+      } else {
+        # X1 is the intercept, Xred doesn't exist
+        X1res = W * X1
+      }
       res = res * X1res /(1-h)
       A = rowSums(X1res^2)
       rm(h, X1res)
@@ -172,7 +177,8 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
       res = residuals(res)
 
       # residualize variable of interest to covariates
-      X1res = qr.resid(qr(Xred * W), X1 * W) # Formula XX in the paper
+      # null statement is for if X is the intercept (Xred is null)
+      X1res = if(!is.null(Xred)) qr.resid(qr(Xred * W), X1 * W) else X1 # Formula XX in the paper
       A = sum(X1res^2)
       # compute half of covariance of parameter of interest
       # divides by 1-h to use the HC3 version discussed by Long and Ervin
