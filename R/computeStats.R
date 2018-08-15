@@ -141,7 +141,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
         X1res = do.call(rbind, lapply(1:nrow(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
       } else {
         # X1 is the intercept, Xred doesn't exist
-        X1res = W * X1
+        X1res = t(W) * X1
       }
       res = res * X1res /(1-h)
       A = rowSums(X1res^2)
