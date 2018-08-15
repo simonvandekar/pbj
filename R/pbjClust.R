@@ -26,7 +26,7 @@
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
 pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, kernel='box'){
-  if(class(statMap) != 'statMap')
+  if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
@@ -46,8 +46,8 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, ke
   tmp = mask
   tmp = lapply(ts, function(th){ tmp[ mask==1] = (stat[mask==1]>th); tmp})
   k = mmand::shapeKernel(3, 3, type=kernel)
-  clustmaps = lapply(tmp, function(tm) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)})
-  stat = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
+  clustmaps = lapply(tmp, function(tm, mask) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)}, mask=mask)
+  ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
   if(is.character(statMap$sqrtSigma)){
     sqrtSigma = readNifti(statMap$sqrtSigma)
@@ -84,11 +84,11 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, ke
   }
   close(pb)
   # add the stat max
-  stat = lapply(stat, function(x) if(length(x)==0) 0 else x)
-  Fs = rbind(Fs, sapply(stat, max)+0.01) # + 0.01 to make it larger than observed data
+  ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
+  Fs = rbind(Fs, sapply(ccomps, max)+0.01) # + 0.01 to make it larger than observed data
   # compute empirical CDFs
   Fs = apply(Fs, 2, ecdf)
-  pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](stat[[ind]]) )
+  pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](ccomps[[ind]]) )
   names(pvals) = paste('cft', ts, sep='')
   if(!zerodf){
     pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
