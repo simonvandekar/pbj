@@ -228,7 +228,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     # overwriting res
     res = lapply(1:ncol(res), function(ind){ mask[ mask==1] = res[,ind]; mask} )
     # combine into 4d array
-    res = do.call(abind, c(temp, along=4))
+    res = do.call(abind, c(res, along=4))
     writeNifti(updateNifti(res, mask), resimg)
     res = resimg
 
