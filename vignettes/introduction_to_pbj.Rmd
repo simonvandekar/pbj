@@ -1,0 +1,90 @@
+---
+title: "Introduction to Robust Spatial Extent Inference using the pbj Package"
+author: "Simon N. Vandekar"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+bibliography: bib.bib
+vignette: >
+  %\VignetteIndexEntry{Introduction to Robust Spatial Extent Inference using the pbj Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## The PBJ hypothesis testing procedures
+Spatial extent hypothesis testing (SEHT) is a widely used tool in neuroimaging to perform group level analysis where neuroimaging data are modeled as a function of subject level covariates such as age, sex, diagnosis, and/or other phenotypes.
+The parametric bootstrap joint (PBJ) testing procedure and the semi-PBJ (sPBJ) procedure are recently proposed methods to perform SEHT that relax the assumptions of gaussian random field (GRF) and permutation based methods.
+For a detailed overview of these procedures please see XX REF.
+
+The PBJ and sPBJ procedures conceptualize a group level analysis as the second level in a multilevel model; both allow the user to specify subject specific weights that can be defined as images (e.g. varcopes from fsl) or as a scalar value for each subject.
+An optimal decision for the weight for subject $i$ at voxel $v$ is the inverse of subject $i$'s variance at location $v$, call it $\sigma^{-2}_i(v)$.
+The PBJ procedure assumes that the weights the user passes are exactly equal to $\sigma^{-2}_i(v)$.
+However, most of the time, $\sigma^{-2}_i(v)$ is unknown.
+As a solution, the sPBJ procedure uses a robust "sandwich" covariance estimator that provides consistent estimates of the standard errors, even if the estimates of $\sigma^{-2}_i(v)$ are misspecified.
+
+The sPBJ SEHT procedure is appropriate for any type of group level analysis and has been demonstrated to be robust at cluster forming thresholds (CFTs) where GRF-based methods fail.
+
+## Overview of this vignette
+To demonstrate how to use the pbj package we utilize data from Maumet et al. (2016) to perform a meta-analysis of statistical maps from 21 pain studies [@maumet_sharing_2016; @gorgolewski_neurovault.org:_2015].
+This vignette will take you through the process of computing a robust statistical meta-analytic map from the results of the 21 pain studies, performing inference on the maps using the PBJ and sPBJ procedures, and saving and visualizing the results.
+This tutorial assumes you have fully processed subject (or study) level imaging data.
+
+### Functions and objects overview
+
+
+![Schematic of pbj analysis functions.](../images/pbj_schematic.png)
+
+## Computing statMaps
+
+
+## Performing SEHT on the statMaps
+
+## Visualizing and saving pbj objects
+
+## Simulation tools
+
+## Glossary of acronyms
+
+* CFT - cluster forming threshold. The threshold chosen to binarize the statistical map for spatial extent hypothesis testing.
+* PBJ - parametric bootstrap joint (testing procedure).
+* sPBJ - semiparametric bootstrap joint (testing procedure). Robust to variance misspecification.
+* SEHT - spatial extent hypothesis testing. Using threshold contiguous cluster extents to performing inference on a statistical map.
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
