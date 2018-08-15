@@ -11,12 +11,13 @@
 #' design matrix for reduced model. If robust=TRUE then this must have one less
 #' column than X.
 #' @param mask File name for a binary mask file or niftiImage object.
-#' @param data R data frame containing variabes in form. If form and formred
+#' @param data R data frame containing variables in form. If form and formred
 #' are matrices then this can be NULL.
 #' @param W Weights for regression model. Can be used to deweight noisy
 #'  observations. Same as what should be passed to lm.
 #' @param Winv Inverse weights for regression model. Inverse of W. Required when
 #' passing variance images as the inverse weights.
+#' @param template Template image used for visualization.
 #' @param formImages n X p matrix of images where n is the number of subjects and
 #'  each column corresponds to an imaging covariate. Currently, not supported.
 #' @param robust Compute robust standard error estimates? Defaults to TRUE.
@@ -38,7 +39,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)), Winv=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)), Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -71,8 +72,10 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     }
 
   # load mask
-  if(is.character(mask))
+  if(is.character(mask)){
+    maskimg=mask
     mask = RNifti::readNifti(mask)
+  }
 
   # load images
   res = t(apply(res, 4, function(x) x[mask==1]))
@@ -199,12 +202,37 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
 
   if(robust){
     stattemp = stat*A/sqrt(rowSums(res^2))
+    # get niftiImage from mask
     stat = mask
     stat[ stat==1] = stattemp
   }
 
+  # if outdir is specified the stat and sqrtSigma images are saved in outdir
+  # and mask tries to get saved as a character.
+  if(!is.null(outdir)){
+    dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
+    statimg = file.path(outdir, 'stat.nii.gz')
+    writeNifti(stat, statimg)
+    stat = statimg
+
+
+    resimg = file.path(outdir, 'sqrtSigma.nii.gz')
+    # reshape res matrix into 4d image
+    # memory intensive
+    # overwriting res
+    res = lapply(1:ncol(res), function(ind){ mask[ mask==1] = res[,ind]; mask} )
+    # combine into 4d array
+    res = do.call(abind, c(temp, along=4))
+    writeNifti(updateNifti(res, mask), resimg)
+    res = resimg
+
+    # if mask was a string then pass that forward instead if the niftiImage
+    if(exists(maskimg))
+      mask = maskimg
+  }
+
   # returns if requested
-  out = list(stat=stat, sqrtSigma=res, mask=mask, formulas=list(form, formred))
+  out = list(stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred))
   class(out) = c('statMap', 'list')
   return(out)
 }
