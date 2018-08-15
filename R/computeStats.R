@@ -164,16 +164,19 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     }
 
     if(robust){
+      cat('Performing voxel regression.\n')
       res = lm(res ~ -1 + I(X * W), model=FALSE)
 
       # get parameter estimates
       stat=coefficients(res)[peind,]
 
       # compute hat values
+      cat('Computing hat values.\n')
       h = rowSums(qr.Q(res$qr)^2)
       h = ifelse(h>=1, 1-eps, h)
 
       # get residuals
+      cat('Getting residuals\n')
       res = residuals(res)
 
       # residualize variable of interest to covariates
@@ -189,6 +192,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
 
   # compute statistical image
   if(!robust){
+    cat('Computing stat image.\n')
     stattemp = rowSums(res^2)
     # assume t-statistics if df==1
     if(df==1){
@@ -207,6 +211,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
   }
 
   if(robust){
+    cat('Computing robust stat image.\n')
     stattemp = stat*A/sqrt(rowSums(res^2))
     # get niftiImage from mask
     stat = mask
@@ -216,12 +221,13 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
   # if outdir is specified the stat and sqrtSigma images are saved in outdir
   # and mask tries to get saved as a character.
   if(!is.null(outdir)){
+    cat('Writing output images.\n')
     dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
     statimg = file.path(outdir, 'stat.nii.gz')
     writeNifti(stat, statimg)
     stat = statimg
 
-
+    cat('Writing sqrtSigma 4d image.\n')
     resimg = file.path(outdir, 'sqrtSigma.nii.gz')
     # reshape res matrix into 4d image
     # memory intensive
@@ -232,13 +238,13 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     writeNifti(updateNifti(res, mask), resimg)
     res = resimg
 
-    # if mask was a string then pass that forward instead if the niftiImage
-    if(exists(maskimg))
+    # if mask was a character then pass that forward instead if the niftiImage
+    if(exists('maskimg'))
       mask = maskimg
   }
 
   # returns if requested
-  out = list(stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred))
+  out = list(stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust)
   class(out) = c('statMap', 'list')
   return(out)
 }
