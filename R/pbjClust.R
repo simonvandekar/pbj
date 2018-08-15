@@ -105,12 +105,6 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, ke
   }
   names(pvals) <- names(pmaps) <- names(clustmaps) <- paste('cft', cfts, sep='')
 
-  if(!is.null(statoutfiles)){
-    for(cft in cfts){
-      RNifti::writeNifti(pmaps[[ paste('cft', cft, sep='') ]], file=paste(gsub('.nii.gz', '', statoutfiles), '_cft', cft, '.nii.gz', sep='') )
-    }
-  }
-
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
