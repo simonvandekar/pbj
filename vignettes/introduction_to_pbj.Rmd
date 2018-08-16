@@ -72,7 +72,7 @@ basename(pain$template)
 ```
 
 ### Computing the statistical map using voxel-wise weights
-With these data we are now ready to pass our arguments to the `computeStats` function.
+With these data, we are now ready to pass our arguments to the `computeStats` function.
 Since this is a meta analysis we are performing a one sample t-test, so the full model includes only the intercept and the reduced model is `NULL`.
 There are many options with how we pass arguments and analyze the data.
 As a first pass, let's do the best thing and use variance images inverse weights in the regression.
@@ -102,7 +102,7 @@ Of course, the best study level weight is one that is a good estimate of the var
 
 
 Let's run this analysis again, instead on scaled versions of the statistical maps, but using weights are that proportional to the sample size for each study.
-Because we need to pass statistical maps, we will compute these maps in `R` and pass `niftiImage` objects as arguments to `computeStats`.
+Because we are now going to pass statistical maps to `computeStats`, we will compute these maps in `R` and pass `niftiImage` objects as arguments to `computeStats`, instead of character vectors.
 Note that we are passing the weights using the `W=` argument this time and including the `template` argument for downstream aesthetics.
 
 ```{r, cache=TRUE}
