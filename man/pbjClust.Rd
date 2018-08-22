@@ -2,22 +2,17 @@
 % Please edit documentation in R/pbjClust.R
 \name{pbjClust}
 \alias{pbjClust}
-\title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Cluster Extent Inference}
+\title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference}
 \usage{
-pbjClust(stat, res, mask, statoutfiles = NULL, df = 0, rdf = NULL,
-  cfts = c(0.01, 0.005), nboot = 5000, kernel = "box")
+pbjClust(statMap, cfts = c(0.01, 0.005), df = 0, rdf = NULL,
+  nboot = 5000, kernel = "box")
 }
 \arguments{
-\item{stat}{observed statistical map e.g. as obtained from computeStats.}
+\item{statMap}{statMap object as obtained from computeStats.}
 
-\item{res}{Character of 4d residuals in nii or nii.gz format, or residual
-matrix as obtained from computeStats.}
-
-\item{mask}{Character mask file location.}
-
-\item{statoutfiles}{Character basename for nii.gz files to write out
--log10(p) maps. These are thresholded maps, where the value in each cluster
-is the cluster adjusted p-value.}
+\item{cfts}{Numeric vector of cluster forming thresholds to use. These are
+single-tailed for chi-squared (or F) statistics or two tailed for
+Z-statistics probabilities.}
 
 \item{df}{Degrees of freedom of test statistics. This is the numerator
 degrees of freedom of the F-statistic. If you are passing a Z-statistic
@@ -27,21 +22,19 @@ image set df=0.}
 freedom of the F-statistic. This is an optional parameter. If rdf<<n then
 this might save time, otherwise, it is ok to leave NULL.}
 
-\item{cfts}{Numeric vector of cluster forming thresholds to use. These are
-single-tailed for chi-squared (or F) statistics or two tailed for
-Z-statistics probabilities.}
-
 \item{nboot}{Number of bootstraps to perform.}
 
 \item{kernel}{Kernel to use for computing connected components. Box is
 default (26 neighbors), but Diamond may also be reasonable.}
 }
 \value{
-Returns a list with the following values:
-\item{pvalues}{A list of length length(cfts) where each element is a vector of p-values corresponding to the cluster labels in clustermaps.}
-\item{clustermaps}{A list of length length(cfts) where each element is a nifti object with the cluster labels.}
-\item{pmaps}{A list of length length(cfts) where each element is a nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
+Returns a list of length length(cfts)+2. The first two elements contain
+statMap$stat and statMap$template. The remaining elements are lists containing the following:
+\item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
+\item{clustermap}{A niftiImage object with the cluster labels.}
+\item{pmap}{A nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
+\item{CDF}{A bootstrap CDF.}
 }
 \description{
-Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Cluster Extent Inference
+Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
 }

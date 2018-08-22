@@ -37,5 +37,6 @@ Imports:
   mgcv
 RoxygenNote: 6.1.0.9000
 Suggests: knitr,
-    rmarkdown
+    rmarkdown,
+    pain21
 VignetteBuilder: knitr

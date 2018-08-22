@@ -4,16 +4,16 @@
 \alias{getDesign}
 \title{Gets a Design Matrix for a GAM or Linear Model}
 \usage{
-getDesign(eq, data)
+getDesign(form, data)
 }
 \arguments{
-\item{eq}{A formula or string beginning with ~ that can be interpreted as an mgcv or lm
+\item{form}{A formula or string beginning with ~ that can be interpreted as an mgcv or lm
 formula without the outcome variable.}
 
-\item{data}{A data frame containing the variables specified in eq.}
+\item{data}{A data frame containing the variables specified in form.}
 }
 \value{
-Returns a design matrix constructed from eq and data.
+Returns a design matrix constructed from form and data.
 }
 \description{
 This function gets a design matrix for a generalized additive model (GAM)

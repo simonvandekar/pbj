@@ -4,23 +4,25 @@
 \alias{computeStats}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-computeStats(files, X, Xred, Xfiles = NULL, mask, W = rep(1, nrow(X)),
-  Winv = NULL, robust = TRUE, statfile = NULL, resfile = NULL,
-  mc.cores = getOption("mc.cores", 2L))
+computeStats(images, form, formred, mask, data = NULL, W = rep(1,
+  nrow(X)), Winv = NULL, template = NULL, formImages = NULL,
+  robust = TRUE, outdir = NULL, mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
-\item{files}{Character vector of subject images to be modeled as an outcome
+\item{images}{Character vector of subject images to be modeled as an outcome
 variable OR 4d array of imaging data OR 4d nifti object.}
 
-\item{X}{Design matrix for full model.}
+\item{form}{formula or character that can be coerced to a formula or a design
+matrix for the full model.}
 
-\item{Xred}{Design matrix for reduced model. If robust=TRUE then this must
-have one less column than X.}
+\item{formred}{formula or character that can be coerced to a formula or a
+design matrix for reduced model. If robust=TRUE then this must have one less
+column than X.}
 
-\item{Xfiles}{n X p matrix of images where n is the number of subjects and
-each column corresponds to an imaging covariate. Currently, not available.}
+\item{mask}{File name for a binary mask file or niftiImage object.}
 
-\item{mask}{File name for a binary mask file.}
+\item{data}{R data frame containing variables in form. If form and formred
+are matrices then this can be NULL.}
 
 \item{W}{Weights for regression model. Can be used to deweight noisy
 observations. Same as what should be passed to lm.}
@@ -28,14 +30,23 @@ observations. Same as what should be passed to lm.}
 \item{Winv}{Inverse weights for regression model. Inverse of W. Required when
 passing variance images as the inverse weights.}
 
+\item{template}{Template image used for visualization.}
+
+\item{formImages}{n X p matrix of images where n is the number of subjects and
+each column corresponds to an imaging covariate. Currently, not supported.}
+
 \item{robust}{Compute robust standard error estimates? Defaults to TRUE.
 Uses HC3 SE estimates from REF.}
 
-\item{statfile}{nii or nii.gz file to save out 3d statistical image.}
-
-\item{resfile}{nii or nii.gz file to save out 4d covariance image.}
+\item{outdir}{If specified, output is saved as NIfTIs and statMap object is
+saved as strings. This approach conserves memory, but has longer IO time.
+Currently, not supported.}
 
 \item{mc.cores}{Argument passed to mclapply for parallel things.}
+
+\item{statfile}{nii or nii.gz file to save out 3d statistical image.}
+
+\item{resfile}{nii or nii.gz file to save out 4d covariance image. Currently, not supported.}
 }
 \value{
 Returns a list with the following values:
