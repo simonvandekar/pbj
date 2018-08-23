@@ -51,3 +51,8 @@ print.statMap <- function(x, ...)
 {
   cat(summary(x, ...))
 }
+
+plot.statMap <- function(x, slice=1, ...)
+{
+  stop("FILL IN PLOTTING FUNCTION HERE. SLICE IS an example of an additional parameter")
+}
