@@ -97,7 +97,7 @@ outdir = '~/pain_temp'
 comptime = system.time(statmap <- computeStats(pain$data$images, form, formred, pain$mask,
                                                data = pain$data, Winv = pain$data$varimages, outdir=outdir))
 
-str(statmap)
+statmap
 ```
 
 ### <a id="technical_details_return"></a>Computing the statistical map with study-wise (subject-wise) weights
@@ -141,7 +141,7 @@ images = updateNifti(do.call(abind, c(images, along=4)), readNifti(pain$template
 comptimen = system.time(statmapn <- computeStats(images, form, formred, pain$mask,
                                                  template=pain$template, data = pain$data, W = pain$data$n))
 
-str(statmapn)
+statmapn
 ```
 
 The statistical map with study level weights has a much faster compute time than the voxel-wise weights.
