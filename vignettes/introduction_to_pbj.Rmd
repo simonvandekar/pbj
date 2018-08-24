@@ -6,7 +6,10 @@ output: rmarkdown::html_vignette
 bibliography: bib.bib
 vignette: >
   %\VignetteIndexEntry{Introduction to Robust Spatial Extent Inference using the pbj Package}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{R.rsp::asis}
+  %\VignetteKeyword{HTML}
+  %\VignetteKeyword{vignette}
+  %\VignetteKeyword{package}
   %\VignetteEncoding{UTF-8}
 ---
 

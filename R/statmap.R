@@ -42,7 +42,7 @@ summary.statMap <- function(object, ...)
     statInner("  Sqrt Sigma: '", object$sqrtSigma),
     statInner("  Mask:       '", object$mask),
     statInner("  Template:   '", object$template),
-    "  Robust:     ", object$robust
+    "  Robust:     ", object$robust, "\n"
   )
 }
 

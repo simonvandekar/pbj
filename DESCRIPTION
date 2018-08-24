@@ -39,5 +39,6 @@ Imports:
 RoxygenNote: 6.1.0.9000
 Suggests: knitr,
     rmarkdown,
-    pain21
+    pain21,
+    R.rsp
 VignetteBuilder: knitr
