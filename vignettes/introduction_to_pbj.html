@@ -12,7 +12,7 @@
 
 <meta name="author" content="Simon N. Vandekar" />
 
-<meta name="date" content="2018-08-15" />
+<meta name="date" content="2018-08-24" />
 
 <title>Introduction to Robust Spatial Extent Inference using the pbj Package</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Introduction to Robust Spatial Extent Inference using the pbj Package</h1>
 <h4 class="author"><em>Simon N. Vandekar</em></h4>
-<h4 class="date"><em>2018-08-15</em></h4>
+<h4 class="date"><em>2018-08-24</em></h4>
 
 
 
@@ -96,9 +96,15 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="loading-in-the-data" class="section level3">
 <h3>loading in the data</h3>
 <p>The first step is to gather the files we need to perform the analysis. This is the hardest part; passing the necessary files to the <code>computeStats</code> function produces a <code>statMap</code> object which retains all of the objects we need to perform SEI and visualization. First, we install the packages we need. The pain21 package includes cleaned data from the “21 Pain Studies” <a href="https://neurovault.org/collections/1425/">Neurovault repository</a> <span class="citation">(Maumet et al. 2016)</span>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># install latest version of packages</span>
-devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">'simonvandekar/pain21'</span>)
-devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">'simonvandekar/pbj'</span>)</code></pre></div>
+</div>
+</div>
+<div id="installation" class="section level2">
+<h2>INSTALLATION</h2>
+<p>Use these commands:</p>
+<ul>
+<li><code>devtools::install_github('simonvandekar/pain21')</code></li>
+<li><code>devtools::install_github('simonvandekar/pbj')</code></li>
+</ul>
 <p>The <code>pain21</code> function from the <code>pain21</code> package creates a data frame with file paths for the imaging data that we need to perform the analysis. The following images are required to perform the analysis:</p>
 <ul>
 <li>The <code>mask</code> image is a binary image indicating which voxels should be included in the analysis.</li>
@@ -109,9 +115,9 @@ devtools<span class="op">::</span><span class="kw">install_github</span>(<span c
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(pain21)
 pain =<span class="st"> </span><span class="kw">pain21</span>()
 pain<span class="op">$</span>mask
-<span class="co">#&gt; [1] &quot;/Library/Frameworks/R.framework/Versions/3.5/Resources/library/pain21/pain21/mask.nii.gz&quot;</span>
+<span class="co">#&gt; [1] &quot;/home/garbetsp/R/x86_64-pc-linux-gnu-library/3.5/pain21/pain21/mask.nii.gz&quot;</span>
 <span class="kw">dirname</span>(pain<span class="op">$</span>data<span class="op">$</span>images[<span class="dv">1</span>])
-<span class="co">#&gt; [1] &quot;/Library/Frameworks/R.framework/Versions/3.5/Resources/library/pain21/pain21&quot;</span>
+<span class="co">#&gt; [1] &quot;/home/garbetsp/R/x86_64-pc-linux-gnu-library/3.5/pain21/pain21&quot;</span>
 <span class="kw">head</span>(<span class="kw">basename</span>(pain<span class="op">$</span>data<span class="op">$</span>images))
 <span class="co">#&gt; [1] &quot;contrast_pain_01.nii.gz&quot; &quot;contrast_pain_02.nii.gz&quot;</span>
 <span class="co">#&gt; [3] &quot;contrast_pain_03.nii.gz&quot; &quot;contrast_pain_04.nii.gz&quot;</span>
@@ -121,7 +127,6 @@ pain<span class="op">$</span>mask
 <span class="co">#&gt; [4] &quot;var_pain_04.nii.gz&quot; &quot;var_pain_05.nii.gz&quot; &quot;var_pain_06.nii.gz&quot;</span>
 <span class="kw">basename</span>(pain<span class="op">$</span>template)
 <span class="co">#&gt; [1] &quot;MNI152_T1_2mm_brain.nii.gz&quot;</span></code></pre></div>
-</div>
 <div id="computing-the-statistical-map-using-voxel-wise-weights" class="section level3">
 <h3>Computing the statistical map using voxel-wise weights</h3>
 <p>These data can be passed as arguments to the <code>computeStats</code> function. Since this is a meta-analysis we are performing a one sample t-test, so the full model includes only the intercept and the reduced model is <code>NULL</code>. There are many options with how we pass arguments and analyze the data. As a first pass, let’s do the best thing and use the inverse of the variance images as weights in the regression. Here, we will specify the outdir argument, which will save the output as nifti images so that the large objects stored in the statMap object are not retained in memory. Using voxel level weights can take a little while because the computation must be performed separately at each voxel. <code>computeStats</code> defaults to using robust variance estimates (utilized by the sPBJ procedure); this can be changed by setting <code>robust=FALSE</code>. Because we specified the output directory, nifti images of the results are stored in <code>outdir</code> and <code>statmap</code> includes only character vectors and formulas that point to the files in <code>outdir</code>. The output directory and all parent directories are created automatically by <code>computeStats</code>.</p>
@@ -141,18 +146,15 @@ comptime =<span class="st"> </span><span class="kw">system.time</span>(statmap &
 <span class="co">#&gt; Writing output images.</span>
 <span class="co">#&gt; Writing sqrtSigma 4d image.</span>
 
-<span class="kw">str</span>(statmap)
-<span class="co">#&gt; List of 6</span>
-<span class="co">#&gt;  $ stat     : chr &quot;~/pain_temp/stat.nii.gz&quot;</span>
-<span class="co">#&gt;  $ sqrtSigma: chr &quot;~/pain_temp/sqrtSigma.nii.gz&quot;</span>
-<span class="co">#&gt;  $ mask     : chr &quot;/Library/Frameworks/R.framework/Versions/3.5/Resources/library/pain21/pain21/mask.nii.gz&quot;</span>
-<span class="co">#&gt;  $ template : NULL</span>
-<span class="co">#&gt;  $ formulas :List of 2</span>
-<span class="co">#&gt;   ..$ :Class 'formula'  language ~1</span>
-<span class="co">#&gt;   .. .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; </span>
-<span class="co">#&gt;   ..$ : NULL</span>
-<span class="co">#&gt;  $ robust   : logi TRUE</span>
-<span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr [1:2] &quot;statMap&quot; &quot;list&quot;</span></code></pre></div>
+statmap
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Formula: ~1</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Contents:</span>
+<span class="co">#&gt;   Stat:       '~/pain_temp/stat.nii.gz' 1.9M</span>
+<span class="co">#&gt;   Sqrt Sigma: '~/pain_temp/sqrtSigma.nii.gz' 38.2M</span>
+<span class="co">#&gt;   Mask:       '/home/garbetsp/R/x86_64-pc-linux-gnu-library/3.5/pain21/pain21/mask.nii.gz' 0M</span>
+<span class="co">#&gt;   Robust:     TRUE</span></code></pre></div>
 </div>
 <div id="computing-the-statistical-map-with-study-wise-subject-wise-weights" class="section level3">
 <h3><a id="technical_details_return"></a>Computing the statistical map with study-wise (subject-wise) weights</h3>
@@ -191,30 +193,20 @@ comptimen =<span class="st"> </span><span class="kw">system.time</span>(statmapn
 <span class="co">#&gt; Getting residuals</span>
 <span class="co">#&gt; Computing robust stat image.</span>
 
-<span class="kw">str</span>(statmapn)
-<span class="co">#&gt; List of 6</span>
-<span class="co">#&gt;  $ stat     : 'niftiImage' num [1:91, 1:109, 1:91] 0 0 0 0 0 0 0 0 0 0 ...</span>
-<span class="co">#&gt;   ..- attr(*, &quot;pixdim&quot;)= num [1:3] 2 2 2</span>
-<span class="co">#&gt;   ..- attr(*, &quot;pixunits&quot;)= chr [1:2] &quot;mm&quot; &quot;s&quot;</span>
-<span class="co">#&gt;   ..- attr(*, &quot;.nifti_image_ptr&quot;)=&lt;externalptr&gt; </span>
-<span class="co">#&gt;  $ sqrtSigma: num [1:259353, 1:21] -1.092 -0.78 -0.532 -1.27 -1.785 ...</span>
-<span class="co">#&gt;   ..- attr(*, &quot;dimnames&quot;)=List of 2</span>
-<span class="co">#&gt;   .. ..$ : NULL</span>
-<span class="co">#&gt;   .. ..$ : chr [1:21] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;4&quot; ...</span>
-<span class="co">#&gt;  $ mask     : 'niftiImage' num [1:91, 1:109, 1:91] 0 0 0 0 0 0 0 0 0 0 ...</span>
-<span class="co">#&gt;   ..- attr(*, &quot;pixdim&quot;)= num [1:3] 2 2 2</span>
-<span class="co">#&gt;   ..- attr(*, &quot;pixunits&quot;)= chr [1:2] &quot;mm&quot; &quot;s&quot;</span>
-<span class="co">#&gt;   ..- attr(*, &quot;.nifti_image_ptr&quot;)=&lt;externalptr&gt; </span>
-<span class="co">#&gt;  $ template : chr &quot;/Library/Frameworks/R.framework/Versions/3.5/Resources/library/pain21/pain21/MNI152_T1_2mm_brain.nii.gz&quot;</span>
-<span class="co">#&gt;  $ formulas :List of 2</span>
-<span class="co">#&gt;   ..$ : chr &quot;~ 1&quot;</span>
-<span class="co">#&gt;   ..$ : NULL</span>
-<span class="co">#&gt;  $ robust   : logi TRUE</span>
-<span class="co">#&gt;  - attr(*, &quot;class&quot;)= chr [1:2] &quot;statMap&quot; &quot;list&quot;</span></code></pre></div>
+statmapn
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Formula: ~ 1</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Contents:</span>
+<span class="co">#&gt;   Stat:       'nifti[91 x 109 x 91] Pixel dimensions: 2mm x 2mm x 2s</span>
+<span class="co">#&gt;   Sqrt Sigma: 'matrix[259353 x 21]</span>
+<span class="co">#&gt;   Mask:       'nifti[91 x 109 x 91] Pixel dimensions: 2mm x 2mm x 2s</span>
+<span class="co">#&gt;   Template:   '/home/garbetsp/R/x86_64-pc-linux-gnu-library/3.5/pain21/pain21/MNI152_T1_2mm_brain.nii.gz' 0.4M</span>
+<span class="co">#&gt;   Robust:     TRUE</span></code></pre></div>
 <p>The statistical map with study level weights has a much faster compute time than the voxel-wise weights. In our paper, for group level analyses of subject level data, motion was a very effective estimate of subject level variance XX REF.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">c</span>(<span class="st">'voxel weights'</span>=comptime[<span class="dv">3</span>], <span class="st">'study weights'</span>=comptimen[<span class="dv">3</span>]))
 <span class="co">#&gt; voxel weights.elapsed study weights.elapsed </span>
-<span class="co">#&gt;               226.500                 1.184</span></code></pre></div>
+<span class="co">#&gt;               174.959                 0.648</span></code></pre></div>
 </div>
 <div id="visualizing-statmap-objects" class="section level3">
 <h3>Visualizing <code>statMap</code> objects</h3>
@@ -226,12 +218,12 @@ comptimen =<span class="st"> </span><span class="kw">system.time</span>(statmapn
 <div id="performing-sei-using-pbjclust" class="section level3">
 <h3>Performing SEI using <code>pbjClust</code></h3>
 <p>The <code>statMap</code> object includes the statistical map and an esimate of the covariance of the statistical map (<code>statmapn$sqrtSigma</code>), which can be use to estimate the distribution of the largest cluster size under the null. This distribution can be used to compute p-values for each cluster. This step is easy; the <code>statMap</code> object contains all of the objects necessary to perform SEI on the statistical map. The only thing we need to do is specify the CTFs. The default is <code>cfts=c(0.01, 0.005)</code>, which will run the sPBJ procedure at both thresholds. Because it is a bootstrap procedure the <code>nboot</code> argument can be used to control the number of bootstrap samples used. For this example we use 200 samples, but for a publication a few thousand is more appropriate. <code>pbjClust</code> keeps track of progress while it’s running (not shown here).</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pbjcomptime =<span class="st"> </span><span class="kw">system.time</span>(sPBJ &lt;-<span class="st"> </span><span class="kw">pbjClust</span>(statmap, <span class="dt">nboot=</span><span class="dv">200</span>))
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pbjcomptime  =<span class="st"> </span><span class="kw">system.time</span>(sPBJ &lt;-<span class="st"> </span><span class="kw">pbjClust</span>(statmap, <span class="dt">nboot=</span><span class="dv">200</span>))
 pbjcomptimen =<span class="st"> </span><span class="kw">system.time</span>(sPBJn &lt;-<span class="st"> </span><span class="kw">pbjClust</span>(statmapn, <span class="dt">nboot=</span><span class="dv">200</span>))</code></pre></div>
 <p>The bootstrap time doesn’t differ between voxel-wise or study/subject level weights.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">c</span>(<span class="st">'voxel weights'</span>=pbjcomptime[<span class="dv">3</span>], <span class="st">'study weights'</span>=pbjcomptimen[<span class="dv">3</span>]))
 <span class="co">#&gt; voxel weights.elapsed study weights.elapsed </span>
-<span class="co">#&gt;                50.421                44.459</span></code></pre></div>
+<span class="co">#&gt;                 25.19                 23.75</span></code></pre></div>
 </div>
 <div id="visualizing-and-saving-pbj-objects" class="section level3">
 <h3>Visualizing and saving pbj objects</h3>

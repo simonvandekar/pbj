@@ -37,7 +37,7 @@ summary.statMap <- function(object, ...)
 {
   paste0(
     "\nFormula: ", paste0(as.character(object$formulas[[2]]), collapse=''), paste0(as.character(object$formulas[[1]]), collapse=''), "\n",
-    "\nFiles:\n",
+    "\nContents:\n",
     statInner("  Stat:       '", object$stat),
     statInner("  Sqrt Sigma: '", object$sqrtSigma),
     statInner("  Mask:       '", object$mask),
