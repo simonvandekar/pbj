@@ -80,13 +80,15 @@ image.statMap = function (statmap, index = NULL, col = gray(0:64/64), plane = c(
     # permuted image dimensions
 
     # crop image and get image dimensions
-    xinds = apply(mask, 1, any)
-    yinds = apply(mask, 2, any)
-    zinds = apply(mask, 3, any)
+    xinds = apply(mask==1, 1, any)
+    yinds = apply(mask==1, 2, any)
+    zinds = apply(mask==1, 3, any)
     x = x[xinds,,]
     x = x[,yinds,]
     x = x[,,zinds]
     imgdim = dim(x)
+    zlim = range(x, na.rm=TRUE)
+    breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
     if(is.null(index)) index = 1:imgdim[3] 
     oldpar <- par(no.readonly = TRUE)
     par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
