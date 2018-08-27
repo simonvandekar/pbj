@@ -17,6 +17,7 @@ License: GPL-3
 LazyData: true
 Depends: R (>= 3.4)
 Collate:
+  'statmap.R'
   'addSignal.R'
   'cluster_functions.R'
   'computeStats.R'
@@ -38,5 +39,6 @@ Imports:
 RoxygenNote: 6.1.0.9000
 Suggests: knitr,
     rmarkdown,
-    pain21
+    pain21,
+    R.rsp
 VignetteBuilder: knitr

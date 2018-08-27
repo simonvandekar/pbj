@@ -6,7 +6,10 @@ output: rmarkdown::html_vignette
 bibliography: bib.bib
 vignette: >
   %\VignetteIndexEntry{Introduction to Robust Spatial Extent Inference using the pbj Package}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{R.rsp::asis}
+  %\VignetteKeyword{HTML}
+  %\VignetteKeyword{vignette}
+  %\VignetteKeyword{package}
   %\VignetteEncoding{UTF-8}
 ---
 
@@ -50,11 +53,13 @@ The first step is to gather the files we need to perform the analysis.
 This is the hardest part; passing the necessary files to the `computeStats` function produces a `statMap` object which retains all of the objects we need to perform SEI and visualization.
 First, we install the packages we need.
 The pain21 package includes cleaned data from the "21 Pain Studies" [Neurovault repository](https://neurovault.org/collections/1425/) [@maumet_sharing_2016].
-```{r, results='hide', message=FALSE, cache=FALSE}
-# install latest version of packages
-devtools::install_github('simonvandekar/pain21')
-devtools::install_github('simonvandekar/pbj')
-```
+
+## INSTALLATION
+
+Use these commands:
+
+* `devtools::install_github('simonvandekar/pain21')`
+* `devtools::install_github('simonvandekar/pbj')`
 
 The `pain21` function from the `pain21` package creates a data frame with file paths for the imaging data that we need to perform the analysis.
 The following images are required to perform the analysis:
@@ -97,7 +102,7 @@ outdir = '~/pain_temp'
 comptime = system.time(statmap <- computeStats(pain$data$images, form, formred, pain$mask,
                                                data = pain$data, Winv = pain$data$varimages, outdir=outdir))
 
-str(statmap)
+statmap
 ```
 
 ### <a id="technical_details_return"></a>Computing the statistical map with study-wise (subject-wise) weights
@@ -141,7 +146,7 @@ images = updateNifti(do.call(abind, c(images, along=4)), readNifti(pain$template
 comptimen = system.time(statmapn <- computeStats(images, form, formred, pain$mask,
                                                  template=pain$template, data = pain$data, W = pain$data$n))
 
-str(statmapn)
+statmapn
 ```
 
 The statistical map with study level weights has a much faster compute time than the voxel-wise weights.
@@ -167,7 +172,7 @@ For this example we use 200 samples, but for a publication a few thousand is mor
 `pbjClust` keeps track of progress while it's running (not shown here).
 
 ```{r, results=FALSE}
-pbjcomptime = system.time(sPBJ <- pbjClust(statmap, nboot=200))
+pbjcomptime  = system.time(sPBJ <- pbjClust(statmap, nboot=200))
 pbjcomptimen = system.time(sPBJn <- pbjClust(statmapn, nboot=200))
 ```
 
