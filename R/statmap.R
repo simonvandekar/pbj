@@ -57,24 +57,29 @@ plot.statMap <- function(x, slice=1, ...)
   stop("FILL IN PLOTTING FUNCTION HERE. SLICE IS an example of an additional parameter")
 }
 
+redyellow = colorRampPalette(c('red', 'yellow'))
+blueteal = colorRampPalette(c('blue', 'teal'))
+
 # modified from oro.nifti:::image.nifti
-image.statMap = function (statmap, index = NULL, col = gray(0:64/64), plane = c("axial", 
-    "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 
-        4), mar = rep(0, 4), bg = "black", ...) 
+image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(0:64/64), colneg=blueteal(0:64/64),
+     plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
 {
     x = if(is.character(statmap$template)) readNifti(statmap$template) else statmap$template
     pixdim = RNifti::pixdim(x)
     mask = if(is.character(statmap$mask)) readNifti(statmap$mask) else statmap$mask
+    stat = if(is.character(statmap$stat)) readNifti(statmap$stat) else statmap$stat
 
     switch(plane[1], axial = {
         aspect <- pixdim[3]/pixdim[2]
     }, coronal = {
             x <- aperm(x, c(1, 3, 2))
             mask <- aperm(mask, c(1, 3, 2))
+            stat <- aperm(stat, c(1, 3, 2))
         aspect <- pixdim[4]/pixdim[2]
     }, sagittal = {
             x <- aperm(x, c(2, 3, 1))
             mask <- aperm(mask, c(2, 3, 1))
+            stat <- aperm(stat, c(2, 3, 1))
         aspect <- pixdim[4]/pixdim[3]
     }, stop(paste("Orthogonal plane", plane[1], "is not valid.")))
     # permuted image dimensions
@@ -86,6 +91,13 @@ image.statMap = function (statmap, index = NULL, col = gray(0:64/64), plane = c(
     x = x[xinds,,]
     x = x[,yinds,]
     x = x[,,zinds]
+    stat = stat[xinds,,]
+    stat = stat[,yinds,]
+    stat = stat[,,zinds]
+    statneg = stat
+    statneg[ statneg>= -thresh] = 0
+    statneg = abs(statneg)
+    stat[ stat<=thresh ] = 0 
     imgdim = dim(x)
     zlim = range(x, na.rm=TRUE)
     breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
@@ -93,9 +105,18 @@ image.statMap = function (statmap, index = NULL, col = gray(0:64/64), plane = c(
     oldpar <- par(no.readonly = TRUE)
     par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
     for (z in index) {
-        graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col, 
-          breaks = breaks, asp = aspect, axes = axes, 
-          xlab = xlab, ylab = ylab, ...)
+      # background image
+      graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col, 
+        breaks = breaks, asp = aspect, axes = axes, 
+        xlab = xlab, ylab = ylab, ...)
+      # overlay positive
+      graphics::image(1:imgdim[1], 1:imgdim[2], stat[, , z], col = colpos, 
+        breaks = breakspos, asp = aspect, axes = axes, add=TRUE,
+        xlab = xlab, ylab = ylab, ...)
+      # overlay negative
+      graphics::image(1:imgdim[1], 1:imgdim[2], statneg[, , z], col = colneg, 
+        breaks = breaksneg, asp = aspect, axes = axes, add=TRUE,
+        xlab = xlab, ylab = ylab, ...)
     }
     par(oldpar)
     invisible()
