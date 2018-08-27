@@ -58,7 +58,7 @@ plot.statMap <- function(x, slice=1, ...)
 }
 
 # modified from oro.nifti:::image.nifti
-image.statMap = function (statmap, col = gray(0:64/64), plane = c("axial", 
+image.statMap = function (statmap, index = NULL, col = gray(0:64/64), plane = c("axial", 
     "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 
         4), mar = rep(0, 4), bg = "black", ...) 
 {
@@ -87,10 +87,9 @@ image.statMap = function (statmap, col = gray(0:64/64), plane = c("axial",
     x = x[,yinds,]
     x = x[,,zinds]
     imgdim = dim(x)
-    index = 
-    lz <- length(index)
+    if(is.null(index)) index = 1:imgdim[3] 
     oldpar <- par(no.readonly = TRUE)
-    par(mfrow = ceiling(rep(sqrt(lz), 2)), oma = oma, mar = mar, bg = bg)
+    par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
     for (z in index) {
         graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col, 
           breaks = breaks, asp = aspect, axes = axes, 
