@@ -58,10 +58,10 @@ plot.statMap <- function(x, slice=1, ...)
 }
 
 redyellow = colorRampPalette(c('red', 'yellow'))
-blueteal = colorRampPalette(c('blue', 'teal'))
+bluecyan = colorRampPalette(c('blue', 'cyan'))
 
 # modified from oro.nifti:::image.nifti
-image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(0:64/64), colneg=blueteal(0:64/64),
+image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(0:64/64), colneg=bluecyan(0:64/64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
 {
     x = if(is.character(statmap$template)) readNifti(statmap$template) else statmap$template
