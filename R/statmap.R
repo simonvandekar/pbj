@@ -57,8 +57,8 @@ plot.statMap <- function(x, slice=1, ...)
   stop("FILL IN PLOTTING FUNCTION HERE. SLICE IS an example of an additional parameter")
 }
 
-redyellow = colorRampPalette(c('red', 'yellow'))
-bluecyan = colorRampPalette(c('blue', 'cyan'))
+redyellow = colorRampPalette(c('red', 'yellow'), space='Lab')
+bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 
 # modified from oro.nifti:::image.nifti
 image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
@@ -95,16 +95,16 @@ image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64
     stat = stat[,yinds,]
     stat = stat[,,zinds]
     statneg = stat
-    statneg[ statneg>= -thresh] = 0
+    statneg[ statneg> -thresh] = 0
     statneg = abs(statneg)
-    stat[ stat<=thresh ] = 0 
+    stat[ stat<thresh ] = 0 
     imgdim = dim(x)
     zlim = range(x, na.rm=TRUE)
     maxstat = max(c(stat[ stat>0], thresh), na.rm=TRUE)
     maxstatneg = max(c(statneg[ statneg>0], thresh), na.rm=TRUE)
     breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
-    breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos)))
-    breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)))
+    breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos)-1), maxstat)
+    breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
     if(is.null(index)) index = 1:imgdim[3] 
     oldpar <- par(no.readonly = TRUE)
     par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
