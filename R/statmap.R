@@ -64,6 +64,7 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
 {
+    if(is.null(statmap$template)) statmap$template=statmap$mask
     x = if(is.character(statmap$template)) readNifti(statmap$template) else statmap$template
     pixdim = RNifti::pixdim(x)
     mask = if(is.character(statmap$mask)) readNifti(statmap$mask) else statmap$mask
