@@ -103,8 +103,8 @@ image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64
     maxstat = quantile(c(stat[ stat>0], thresh), 0.85, na.rm=TRUE)
     maxstatneg = quantile(c(statneg[ statneg>0], thresh), 0.85, na.rm=TRUE)
     breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
-    breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos) - 1))
-    breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg) - 1))
+    breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos)))
+    breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)))
     if(is.null(index)) index = 1:imgdim[3] 
     oldpar <- par(no.readonly = TRUE)
     par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
