@@ -61,7 +61,7 @@ redyellow = colorRampPalette(c('red', 'yellow'))
 bluecyan = colorRampPalette(c('blue', 'cyan'))
 
 # modified from oro.nifti:::image.nifti
-image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(0:64/64), colneg=bluecyan(0:64/64),
+image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
 {
     x = if(is.character(statmap$template)) readNifti(statmap$template) else statmap$template
@@ -103,8 +103,8 @@ image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64
     maxstat = max(stat, na.rm=TRUE)
     maxstatneg = max(statneg, na.rm=TRUE)
     breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
-    breakspos <- c(thresh, seq(thresh, maxstat, length = length(col) - 1), maxstat)
-    breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(col) - 1), maxstatneg)
+    breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos) - 1), maxstat)
+    breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg) - 1), maxstatneg)
     if(is.null(index)) index = 1:imgdim[3] 
     oldpar <- par(no.readonly = TRUE)
     par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
