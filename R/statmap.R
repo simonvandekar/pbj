@@ -35,7 +35,7 @@ statInner <- function(label, obj)
 #' @export
 summary.statMap <- function(object, ...)
 {
-  cat(paste0(
+  paste0(
     "\nFormula: ", paste0(as.character(object$formulas[[2]]), collapse=''), paste0(as.character(object$formulas[[1]]), collapse=''), "\n",
     "\nContents:\n",
     statInner("  Stat:       '", object$stat),
@@ -43,7 +43,7 @@ summary.statMap <- function(object, ...)
     statInner("  Mask:       '", object$mask),
     statInner("  Template:   '", object$template),
     "  Robust:     ", object$robust, "\n"
-  ))
+  )
 }
 
 #' @export
@@ -52,23 +52,27 @@ print.statMap <- function(x, ...)
   cat(summary(x, ...))
 }
 
-plot.statMap <- function(x, slice=1, ...)
+plot.statMap <- function(object, ...)
 {
-  stop("FILL IN PLOTTING FUNCTION HERE. SLICE IS an example of an additional parameter")
+  pbj:::image.statMap(object)
+  
+  # added variable plot in average effect in significant voxels
 }
 
 redyellow = colorRampPalette(c('red', 'yellow'), space='Lab')
 bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 
+
+
 # modified from oro.nifti:::image.nifti
-image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
+image.statMap = function (object, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
 {
-    if(is.null(statmap$template)) statmap$template=statmap$mask
-    x = if(is.character(statmap$template)) readNifti(statmap$template) else statmap$template
+    if(is.null(object$template)) object$template=object$mask
+    x = if(is.character(object$template)) readNifti(object$template) else object$template
     pixdim = RNifti::pixdim(x)
-    mask = if(is.character(statmap$mask)) readNifti(statmap$mask) else statmap$mask
-    stat = if(is.character(statmap$stat)) readNifti(statmap$stat) else statmap$stat
+    mask = if(is.character(object$mask)) readNifti(object$mask) else object$mask
+    stat = if(is.character(object$stat)) readNifti(object$stat) else object$stat
 
     switch(plane[1], axial = {
         aspect <- pixdim[3]/pixdim[2]
