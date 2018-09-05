@@ -112,3 +112,21 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, ke
   class(out) = c('pbj', 'list')
   return(out)
 }
+
+#' @export
+summary.pbj <- function(object, ...)
+{
+  stop("TBD")
+}
+
+#'@export
+image.pbj <- function(x, ...)
+{
+  stop("TBD")
+}
+
+#'@export
+write.pbj <- function(x, ...)
+{
+  stop("TBD")
+}

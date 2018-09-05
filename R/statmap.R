@@ -52,19 +52,12 @@ print.statMap <- function(x, ...)
   cat(summary(x, ...))
 }
 
-plot.statMap <- function(object, ...)
-{
-  pbj:::image.statMap(object)
-  
-  # added variable plot in average effect in significant voxels
-}
-
 redyellow = colorRampPalette(c('red', 'yellow'), space='Lab')
 bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 
 
-
 # modified from oro.nifti:::image.nifti
+#' @export
 image.statMap = function (object, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
 {
@@ -130,3 +123,10 @@ image.statMap = function (object, thresh=2.32, index = NULL, col = gray(0:64/64)
     par(oldpar)
     invisible()
 }
+
+#'@export
+write.statMap <- function(x, ...)
+{
+  stop("TBD")
+}
+

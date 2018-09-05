@@ -158,6 +158,9 @@ print(c('voxel weights'=comptime[3], 'study weights'=comptimen[3]))
 ### Visualizing `statMap` objects
 
 At this point we may want to view the statistical images to see what the results look like at a few different CFTs.
+```{r}
+image(statmapn)
+```
 
 ## Performing SEI on the `statMap` objects
 
