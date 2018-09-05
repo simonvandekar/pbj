@@ -52,15 +52,11 @@ print.statMap <- function(x, ...)
   cat(summary(x, ...))
 }
 
-plot.statMap <- function(x, slice=1, ...)
-{
-  stop("FILL IN PLOTTING FUNCTION HERE. SLICE IS an example of an additional parameter")
-}
-
 redyellow = colorRampPalette(c('red', 'yellow'), space='Lab')
 bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 
 # modified from oro.nifti:::image.nifti
+#' @export
 image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
 {
@@ -126,3 +122,10 @@ image.statMap = function (statmap, thresh=2.32, index = NULL, col = gray(0:64/64
     par(oldpar)
     invisible()
 }
+
+#'@export
+write.statMap <- function(x, ...)
+{
+  stop("TBD")
+}
+
