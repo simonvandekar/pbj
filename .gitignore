@@ -3,3 +3,5 @@
 .Rhistory
 .RData
 .Ruserdata
+vignettes/introduction_to_pbj_cache
+vignettes/introduction_to_pbj_files
