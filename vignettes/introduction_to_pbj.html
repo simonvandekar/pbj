@@ -101,10 +101,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <div id="installation" class="section level2">
 <h2>INSTALLATION</h2>
 <p>Use these commands:</p>
-<ul>
-<li><code>devtools::install_github('simonvandekar/pain21')</code></li>
-<li><code>devtools::install_github('simonvandekar/pbj')</code></li>
-</ul>
+<p><code>install.packages('devtools')</code> <code>devtools::install_github('simonvandekar/pain21')</code> <code>devtools::install_github('simonvandekar/pbj')</code></p>
 <p>The <code>pain21</code> function from the <code>pain21</code> package creates a data frame with file paths for the imaging data that we need to perform the analysis. The following images are required to perform the analysis:</p>
 <ul>
 <li>The <code>mask</code> image is a binary image indicating which voxels should be included in the analysis.</li>
@@ -213,7 +210,7 @@ statmapn
 <p>The statistical map with study level weights has a much faster compute time than the voxel-wise weights. In our paper, for group level analyses of subject level data, motion was a very effective estimate of subject level variance <span class="citation">(Vandekar et al. 2018)</span>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">c</span>(<span class="st">'voxel weights'</span>=comptime[<span class="dv">3</span>], <span class="st">'study weights'</span>=comptimen[<span class="dv">3</span>]))
 <span class="co">#&gt; voxel weights.elapsed study weights.elapsed </span>
-<span class="co">#&gt;               247.070                 1.105</span></code></pre></div>
+<span class="co">#&gt;               232.415                 1.123</span></code></pre></div>
 </div>
 <div id="visualizing-statmap-objects" class="section level3">
 <h3>Visualizing <code>statMap</code> objects</h3>
@@ -234,7 +231,7 @@ pbjcomptimen =<span class="st"> </span><span class="kw">system.time</span>(sPBJn
 <p>The bootstrap time doesn’t differ between voxel-wise or study/subject level weights.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">c</span>(<span class="st">'voxel weights'</span>=pbjcomptime[<span class="dv">3</span>], <span class="st">'study weights'</span>=pbjcomptimen[<span class="dv">3</span>]))
 <span class="co">#&gt; voxel weights.elapsed study weights.elapsed </span>
-<span class="co">#&gt;                50.421                44.459</span></code></pre></div>
+<span class="co">#&gt;                49.097                43.467</span></code></pre></div>
 </div>
 <div id="visualizing-and-saving-pbj-objects" class="section level3">
 <h3>Visualizing and saving pbj objects</h3>
