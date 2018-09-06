@@ -42,6 +42,7 @@ write.pbj <- function(x, outdir, ...)
     } else {
       writeNifti(x$stat, statimg)
     }
+  }
   # for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
   # pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz')))
   # clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz')))
