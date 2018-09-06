@@ -24,6 +24,7 @@ Collate:
   'functions.R'
   'getDesign.R'
   'getPvalues.R'
+  'pbj.R'
   'pbjClust.R'
   'simulationSetup.R'
   'resave.R'
