@@ -108,7 +108,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, ke
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
-  out = list(stat=list(stat), template=list(template), out)
+  out = c(stat=list(stat), template=list(template), out)
   class(out) = c('pbj', 'list')
   return(out)
 }
