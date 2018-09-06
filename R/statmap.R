@@ -125,8 +125,30 @@ image.statMap = function (object, thresh=2.32, index = NULL, col = gray(0:64/64)
 }
 
 #'@export
-write.statMap <- function(x, ...)
+write.statMap <- function(x,outdir, ...)
 {
-  stop("TBD")
+  statimg = file.path(outdir, 'stat.nii.gz')
+  resimg = file.path(outdir, 'sqrtSigma.nii.gz')
+  summaryf = file.path(outdir, 'summary.txt')
+  if(is.character(x$stat)){
+    file.copy(x$stat, statimg)
+    file.copy(x$sqrtSigma, resimg)
+  } else {  
+    cat('Writing output images.\n')
+    dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
+    writeNifti(x$stat, statimg)
+
+    cat('Writing sqrtSigma 4d image.\n')
+    # reshape res matrix into 4d image
+    # memory intensive
+    # overwriting res
+    x$sqrtSigma = lapply(1:ncol(x$sqrtSigma), function(ind){ x$mask[ x$mask==1] = x$sqrtSigma[,ind]; x$mask} )
+    # combine into 4d array
+    x$sqrtSigma = do.call(abind::abind, c(x$sqrtSigma, along=4))
+    writeNifti(updateNifti(x$sqrtSigma, x$mask), resimg)
+    res = resimg
+  }
+  cat(summary(x), file=summaryf)
+  return(list(stat=statimg, sqrtSigma=resimg, summary=summaryf))
 }
 

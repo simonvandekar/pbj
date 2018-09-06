@@ -18,7 +18,7 @@
 #' statMap$stat and statMap$template. The remaining elements are lists containing the following:
 #' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
-#' \item{pmap}{A nifti object with each cluster assigned its cluster extent FWE adjusted p-value.}
+#' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
 #' \item{CDF}{A bootstrap CDF.}
 #' @export
 #' @importFrom stats ecdf qchisq rnorm
@@ -111,22 +111,4 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, ke
   out = list(stat=stat, template=template, out)
   class(out) = c('pbj', 'list')
   return(out)
-}
-
-#' @export
-summary.pbj <- function(object, ...)
-{
-  stop("TBD")
-}
-
-#'@export
-image.pbj <- function(x, ...)
-{
-  stop("TBD")
-}
-
-#'@export
-write.pbj <- function(x, ...)
-{
-  stop("TBD")
 }

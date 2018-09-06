@@ -218,33 +218,21 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     stat[ stat==1] = stattemp
   }
 
-  # if outdir is specified the stat and sqrtSigma images are saved in outdir
-  # and mask tries to get saved as a character.
-  if(!is.null(outdir)){
-    cat('Writing output images.\n')
-    dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
-    statimg = file.path(outdir, 'stat.nii.gz')
-    writeNifti(stat, statimg)
-    stat = statimg
-
-    cat('Writing sqrtSigma 4d image.\n')
-    resimg = file.path(outdir, 'sqrtSigma.nii.gz')
-    # reshape res matrix into 4d image
-    # memory intensive
-    # overwriting res
-    res = lapply(1:ncol(res), function(ind){ mask[ mask==1] = res[,ind]; mask} )
-    # combine into 4d array
-    res = do.call(abind, c(res, along=4))
-    writeNifti(updateNifti(res, mask), resimg)
-    res = resimg
-
-    # if mask was a character then pass that forward instead if the niftiImage
-    if(exists('maskimg'))
-      mask = maskimg
-  }
 
   # returns if requested
   out = list(stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust)
   class(out) = c('statMap', 'list')
+
+  # if outdir is specified the stat and sqrtSigma images are saved in outdir
+  # and mask tries to get saved as a character.
+  if(!is.null(outdir)){
+    files = write.statMap(out, outdir)
+    out$stat = files$stat
+    out$sqrtSigma = files$sqrtSigma
+    # if mask was a character then pass that forward instead if the niftiImage
+    if(exists('maskimg'))
+      out$mask = maskimg
+
+  }
   return(out)
 }
