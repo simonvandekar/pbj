@@ -270,7 +270,7 @@ This object is a list containing the following things:
 * CFT - cluster forming threshold. The threshold chosen to binarize the statistical map for spatial extent hypothesis testing.
 * PBJ - parametric bootstrap joint (testing procedure).
 * sPBJ - semiparametric bootstrap joint (testing procedure). Robust to variance misspecification.
-* SEI - spatial extent inference. Using threshold contiguous cluster extents to performing inference on a statistical map.
+* SEI - spatial extent inference. Using thresholded contiguous cluster extents to perform inference on a statistical map.
 
 ### <a id="technical_details"></a>Technical details for study level weights
 
