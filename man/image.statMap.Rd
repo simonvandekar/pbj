@@ -10,6 +10,35 @@
   axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black",
   ...)
 }
+\arguments{
+\item{x}{the statMap object to display images of}
+
+\item{thresh}{A threshold to apply to the image, defaults to 2.32}
+
+\item{index}{Any selected image indexes to use for the z. defaults to NULL}
+
+\item{col}{a vector of colors to use for scaled intensities defaults to a grey scale.}
+
+\item{colpos}{a vector of colors to use for positive values.}
+
+\item{colneg}{a vector of colors to use for negative values.}
+
+\item{plane}{the plane to display, can be axial, coronal or sagittal.}
+
+\item{xlab}{a title for the x axis.}
+
+\item{ylab}{a title for the u axis.}
+
+\item{axes}{display axes, defaults to false}
+
+\item{oma}{A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.}
+
+\item{mar}{A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.}
+
+\item{bg}{background color, defaults to black.}
+
+\item{...}{additional arguments passed to par}
+}
 \description{
 modified from oro.nifti:::image.nifti
 }

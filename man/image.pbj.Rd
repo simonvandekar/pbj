@@ -7,6 +7,10 @@
 \method{image}{pbj}(x, alpha = 0.05, ...)
 }
 \arguments{
+\item{x}{pbj object to create images for}
+
+\item{alpha}{numeric; threshold to apply for threshold mask of significant voxels}
+
 \item{...}{Arguments passed to image.statMap}
 }
 \description{

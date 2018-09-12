@@ -43,10 +43,6 @@ saved as strings. This approach conserves memory, but has longer IO time.
 Currently, not supported.}
 
 \item{mc.cores}{Argument passed to mclapply for parallel things.}
-
-\item{statfile}{nii or nii.gz file to save out 3d statistical image.}
-
-\item{resfile}{nii or nii.gz file to save out 4d covariance image. Currently, not supported.}
 }
 \value{
 Returns a list with the following values:

@@ -18,6 +18,8 @@ summary.pbj <- function(object, ...)
 #' See image.statMap for additional arguments
 #' 
 #' @export
+#' @param x pbj object to create images for
+#' @param alpha numeric; threshold to apply for threshold mask of significant voxels
 #' @param ... Arguments passed to image.statMap
 #' @importFrom graphics image
 #' @importFrom graphics par
@@ -36,6 +38,13 @@ image.pbj <- function(x, alpha=0.05, ...)
   }
 }
 
+#' Write a pbj object to disk
+#' 
+#' Write a pbj object to disk in parts
+#' 
+#' @param x pbj object to write
+#' @param outdir output directory to write pbj pieces
+#' @param ... additional arguments; unused.
 #' @export
 write.pbj <- function(x, outdir, ...)
 {

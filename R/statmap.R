@@ -61,6 +61,20 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' modified from oro.nifti:::image.nifti
 #'
 #' @export
+#' @param x the statMap object to display images of
+#' @param thresh A threshold to apply to the image, defaults to 2.32
+#' @param index Any selected image indexes to use for the z. defaults to NULL
+#' @param col a vector of colors to use for scaled intensities defaults to a grey scale.
+#' @param colpos a vector of colors to use for positive values.
+#' @param colneg a vector of colors to use for negative values.
+#' @param plane the plane to display, can be axial, coronal or sagittal.
+#' @param xlab a title for the x axis.
+#' @param ylab a title for the u axis.
+#' @param axes display axes, defaults to false
+#' @param oma A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.
+#' @param mar A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.
+#' @param bg background color, defaults to black.
+#' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
 #' @importFrom graphics par
 image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
@@ -112,7 +126,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
     if(is.null(index)) index = 1:imgdim[3] 
     oldpar <- par(no.readonly = TRUE)
-    par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
+    par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg, ...)
     for (z in index) {
       # background image
       graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col, 
@@ -131,7 +145,14 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     invisible()
 }
 
-#'@export
+#' Write the statMap objects out
+#' 
+#' Given a statMap object and a directory write the objects as stat.nii.gz, sqrtSigma.nii.gz and summary.txt
+#' @param x the statMap object to write out
+#' @param outdir the directory to write into
+#' @param ... additional arugment, unused
+#' @return a list of what was written
+#' @export
 write.statMap <- function(x,outdir, ...)
 {
   statimg = file.path(outdir, 'stat.nii.gz')

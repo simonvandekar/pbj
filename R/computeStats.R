@@ -25,8 +25,6 @@
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
 #' saved as strings. This approach conserves memory, but has longer IO time.
 #' Currently, not supported.
-#' @param statfile nii or nii.gz file to save out 3d statistical image.
-#' @param resfile nii or nii.gz file to save out 4d covariance image. Currently, not supported.
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
 #' @importFrom abind abind
