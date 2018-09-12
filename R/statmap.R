@@ -56,18 +56,23 @@ redyellow = colorRampPalette(c('red', 'yellow'), space='Lab')
 bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 
 
-# modified from oro.nifti:::image.nifti
+#' Create images of a statMap
+#'
+#' modified from oro.nifti:::image.nifti
+#'
 #' @export
-image.statMap = function (object, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
+#' @importFrom grDevices gray
+#' @importFrom graphics par
+image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
   {
-    # mask can't be empty in typical statMap object unless it's manually constructed
-    if(is.null(object$mask)) object$mask=object$template
-    if(is.null(object$template)) object$template=object$mask
-    x = if(is.character(object$template)) readNifti(object$template) else object$template
+    # mask can't be empty in typical statMap x unless it's manually constructed
+    if(is.null(x$mask)) x$mask=x$template
+    if(is.null(x$template)) x$template=x$mask
+    x = if(is.character(x$template)) readNifti(x$template) else x$template
     pixdim = RNifti::pixdim(x)
-    mask = if(is.character(object$mask)) readNifti(object$mask) else object$mask
-    stat = if(is.character(object$stat)) readNifti(object$stat) else object$stat
+    mask = if(is.character(x$mask)) readNifti(x$mask) else x$mask
+    stat = if(is.character(x$stat)) readNifti(x$stat) else x$stat
 
     switch(plane[1], axial = {
         aspect <- pixdim[3]/pixdim[2]

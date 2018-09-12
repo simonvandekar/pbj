@@ -48,7 +48,7 @@ Preprocessing can be done using other tools in `R` [@muschelli_neuroconductor:_2
 ### Functions and objects overview
 
 
-![Schematic of pbj analysis functions.](../images/pbj_schematic.jpg)
+![Schematic of pbj analysis functions.](../inst/images/pbj_schematic.jpg)
 
 ## Computing statMaps
 

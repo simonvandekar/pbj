@@ -13,8 +13,14 @@ summary.pbj <- function(object, ...)
   # }
 }
 
+#' image a pbj object
+#' 
+#' See image.statMap for additional arguments
+#' 
 #' @export
 #' @param ... Arguments passed to image.statMap
+#' @importFrom graphics image
+#' @importFrom graphics par
 image.pbj <- function(x, alpha=0.05, ...)
 {
   for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
