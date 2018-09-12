@@ -48,7 +48,7 @@ Preprocessing can be done using other tools in `R` [@muschelli_neuroconductor:_2
 ### Functions and objects overview
 
 
-![Schematic of pbj analysis functions.](../images/pbj_schematic.png)
+![Schematic of pbj analysis functions.](../images/pbj_schematic.jpg)
 
 ## Computing statMaps
 
@@ -262,7 +262,7 @@ This object is a list containing the following things:
 
 `pbj` objects can be visualized in the same way as the `statMap` object. The image function takes a desired rejection threshold `alpha` and only plots clusters with cluster-wise p-values below that threshold.
 
-If multiple CFTs were used it writes the images for each of those thresholds.
+If multiple CFTs were used it produces the images for each of those thresholds.
 
 ```{r}
 image(sPBJn)

@@ -21,7 +21,7 @@ image.pbj <- function(x, alpha=0.05, ...)
     stat = x$stat
     x[[cft]]
     # mask stat image with significant voxels
-    stat[ abs(x[[cft]]$pmap)>alpha ] = 0
+    stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
     # create a barebones statmap object
     statmap = list(stat=stat, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
     class(statmap) = "statMap"
