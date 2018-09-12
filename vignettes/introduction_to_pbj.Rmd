@@ -36,7 +36,7 @@ The PBJ procedure assumes that the weights the user passes are exactly equal to 
 However, most of the time, $\sigma^{-2}_i(v)$ is unknown.
 As a solution, the sPBJ procedure uses a robust "sandwich" covariance estimator that provides consistent estimates of the standard errors, even if the estimates of $\sigma^{-2}_i(v)$ are misspecified.
 
-The sPBJ SEI procedure is appropriate for any type of group level analysis and we demonstrated that it is robust at cluster forming thresholds (CFTs) where GRF-based methods fail.
+The sPBJ SEI procedure is appropriate for any type of group level analysis and we demonstrated that it is robust at cluster forming thresholds (CFTs) where GRF-based methods fail to control the FWER.
 
 ## Overview of this vignette
 To demonstrate how to use the pbj package, we utilize data from Maumet et al. (2016) to perform a meta-analysis of statistical maps from 21 pain studies [@maumet_sharing_2016; @gorgolewski_neurovault.org:_2015].
@@ -175,7 +175,7 @@ We will see here that our (somewhat arbitrary) sample size approximation leads t
 print(c('voxel weights'=comptime[3], 'study weights'=comptimen[3]))
 ```
 
-### Visualizing `statMap` objects
+### Visualizing and saving `statMap` objects
 
 At this point we may want to view the statistical images to see what the results look like at a few different CFTs.
 We can do this using `statMap` method for the `image` function.
@@ -207,6 +207,11 @@ image(statmapn, plane='sagittal')
 
 the function `write.statMap` can be used to write the output to a directory for later use (e.g. separate visualization or to upload to a public access database).
 
+```{r}
+write.statMap(statmapn, outdir='~/pain_results')
+```
+
+
 ## Performing SEI on the `statMap` objects
 
 The next step is to perform spatial extent inference to see how likely our results are to have occurred under the global null hypothesis that the image is not associated with the covariate.
@@ -223,18 +228,13 @@ We have the voxel level map, which we might choose to use a more stringent thres
 For the study level map we've lost some power with our approximation, so we get anatomically distinct clusters at a lower threshold, so we might lean towards a CFT of 0.01.
 The default is to use multiple CFTs, `cfts=c(0.01, 0.005)`, which will run the sPBJ procedure at both thresholds.
 
-### Brief aside
-As an aside, it's worth noting that Gaussian random field (GRF) methods have pretty consistently been shown to fail to control the family-wise error rate at these thresholds.
-This is because GRF methods assume the data are only spatially correlated, which is wholly inaccurate, due in part to interhemispheric correlation and network connectivity.
-Because of this unrealistic assumption, GRF-based tools are unlikely to control the FWER across a range of CFTs and smoothing parameters.
-You don't have to use sPBJ, just don't use GRF methods (Use permutation e.g. FSL's `randomise`).
+
 
 Because the PBJ and sPBJ procedures use a bootstrap, the `nboot` argument can be used to control the number of bootstrap samples used.
 For this example we use 200 samples, but for a publication a few thousand is more appropriate to reduce the error in the computational approximation.
 `pbjClust` keeps track of progress while it's running (not shown here).
 We again use `system.time` here to track computing times.
 
-### End brief aside
 
 ```{r, results=FALSE}
 pbjcomptime  = system.time(sPBJ <- pbjClust(statmap, nboot=200))
@@ -260,8 +260,24 @@ This object is a list containing the following things:
 
 ### Visualizing and saving pbj objects
 
+`pbj` objects can be visualized in the same way as the `statMap` object. The image function takes a desired rejection threshold `alpha` and only plots clusters with cluster-wise p-values below that threshold.
+
+If multiple CFTs were used it writes the images for each of those thresholds.
+
+```{r}
+image(sPBJn)
+```
+
+The `write.pbj` function can be used to export the the images contained in the `pbj` object.
+The cluster and p-value maps are written for every CFT in a standardized format `pbj_sei_log10p_cft*.nii.gz` and `pbj_sei_log10p_cft*.nii.gz`, respectively.
+
+```{r}
+write.pbj(sPBJn, '~/pain_results')
+```
+
 ## Simulation tools
 
+Tools to run simulations as in [@vandekar_robust_2018] are in progress.
 
 ## Appendix 
 

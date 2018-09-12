@@ -17,25 +17,23 @@ summary.pbj <- function(object, ...)
 #' @param ... Arguments passed to image.statMap
 image.pbj <- function(x, alpha=0.05, ...)
 {
-  stop("TBD")
-  # for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
-  #   stat = x$stat
-  #   x[[cft]]
-  #   # mask stat image with significant voxels
-  #   stat[ abs(x[[cft]]$pmap)>alpha ] = 0
-  #   # create a barebones statmap object
-  #   statmap = list(stat=stat, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
-  #   class(statmap) = "statMap"
-  #   # call image.statMap
-  #   image(statmap, thresh=qnorm(1-gsub("[^0-9\\.]", "", cft)) ) 
-  # }
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
+    stat = x$stat
+    x[[cft]]
+    # mask stat image with significant voxels
+    stat[ abs(x[[cft]]$pmap)>alpha ] = 0
+    # create a barebones statmap object
+    statmap = list(stat=stat, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
+    class(statmap) = "statMap"
+    # call image.statMap
+    image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft)) )  )
+  }
 }
 
 #' @export
 write.pbj <- function(x, outdir, ...)
 {
-  stop("TBD")
-  statimg = paste(outdir, 'stat.nii.gz')
+  statimg = file.path(outdir, 'stat.nii.gz')
   if(!file.exists(statimg)){ 
     if(is.character(x$stat)){
       file.copy(x$stat, statimg)
@@ -43,10 +41,10 @@ write.pbj <- function(x, outdir, ...)
       writeNifti(x$stat, statimg)
     }
   }
-  # for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
-  # pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz')))
-  # clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz')))
-  # writeNifti(x[[cft]]$pmap, pmapimg)
-  # writeNifti(x[[cft]]$clustmap, clustmapimg)
-  # }
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
+    pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz'))
+    clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz'))
+    writeNifti(x[[cft]]$pmap, pmapimg)
+    writeNifti(x[[cft]]$clustermap, clustmapimg)
+  }
 }

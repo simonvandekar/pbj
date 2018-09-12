@@ -60,7 +60,9 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' @export
 image.statMap = function (object, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
-{
+  {
+    # mask can't be empty in typical statMap object unless it's manually constructed
+    if(is.null(object$mask)) object$mask=object$template
     if(is.null(object$template)) object$template=object$mask
     x = if(is.character(object$template)) readNifti(object$template) else object$template
     pixdim = RNifti::pixdim(x)
@@ -83,9 +85,9 @@ image.statMap = function (object, thresh=2.32, index = NULL, col = gray(0:64/64)
     # permuted image dimensions
 
     # crop image and get image dimensions
-    xinds = apply(mask==1, 1, any)
-    yinds = apply(mask==1, 2, any)
-    zinds = apply(mask==1, 3, any)
+    xinds = apply(mask!=0, 1, any)
+    yinds = apply(mask!=0, 2, any)
+    zinds = apply(mask!=0, 3, any)
     x = x[xinds,,]
     x = x[,yinds,]
     x = x[,,zinds]
