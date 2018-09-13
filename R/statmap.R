@@ -77,16 +77,19 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
 #' @importFrom graphics par
+# modified from oro.nifti:::image.nifti
+#' @export
 image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
      plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
   {
-    # mask can't be empty in typical statMap x unless it's manually constructed
-    if(is.null(x$mask)) x$mask=x$template
-    if(is.null(x$template)) x$template=x$mask
-    x = if(is.character(x$template)) readNifti(x$template) else x$template
+    object <- x
+    # mask can't be empty in typical statMap object unless it's manually constructed
+    if(is.null(object$mask)) object$mask=object$template
+    if(is.null(object$template)) object$template=object$mask
+    x = if(is.character(object$template)) readNifti(object$template) else object$template
     pixdim = RNifti::pixdim(x)
-    mask = if(is.character(x$mask)) readNifti(x$mask) else x$mask
-    stat = if(is.character(x$stat)) readNifti(x$stat) else x$stat
+    mask = if(is.character(object$mask)) readNifti(object$mask) else object$mask
+    stat = if(is.character(object$stat)) readNifti(object$stat) else object$stat
 
     switch(plane[1], axial = {
         aspect <- pixdim[3]/pixdim[2]
@@ -126,7 +129,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
     if(is.null(index)) index = 1:imgdim[3] 
     oldpar <- par(no.readonly = TRUE)
-    par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg, ...)
+    par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
     for (z in index) {
       # background image
       graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col, 
@@ -155,8 +158,8 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
 #' @export
 write.statMap <- function(x,outdir, ...)
 {
-  statimg = file.path(outdir, 'stat.nii.gz')
-  resimg = file.path(outdir, 'sqrtSigma.nii.gz')
+  statimg  = file.path(outdir, 'stat.nii.gz')
+  resimg   = file.path(outdir, 'sqrtSigma.nii.gz')
   summaryf = file.path(outdir, 'summary.txt')
   if(is.character(x$stat)){
     file.copy(x$stat, statimg)
