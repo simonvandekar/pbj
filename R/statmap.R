@@ -1,6 +1,6 @@
 
 sizing <- function(fn) paste0(round(file.info(fn)$size/1024^2, 2), "M")
-statFile  <- function(label, fn) paste0(label, fn, "' ", sizing(fn), "\n")
+statFile  <- function(label, fn) paste0(label, "'", fn, "' ", sizing(fn), "\n")
 statNifti <- function(label, im)
 {
   paste0(
@@ -35,21 +35,21 @@ statInner <- function(label, obj)
 #' @export
 summary.statMap <- function(object, ...)
 {
-  paste0(
+  cat(paste0(
     "\nFormula: ", paste0(as.character(object$formulas[[2]]), collapse=''), paste0(as.character(object$formulas[[1]]), collapse=''), "\n",
     "\nContents:\n",
-    statInner("  Stat:       '", object$stat),
-    statInner("  Sqrt Sigma: '", object$sqrtSigma),
-    statInner("  Mask:       '", object$mask),
-    statInner("  Template:   '", object$template),
+    statInner("  Stat:       ", object$stat),
+    statInner("  Sqrt Sigma: ", object$sqrtSigma),
+    statInner("  Mask:       ", object$mask),
+    statInner("  Template:   ", object$template),
     "  Robust:     ", object$robust, "\n"
-  )
+  ))
 }
 
 #' @export
 print.statMap <- function(x, ...)
 {
-  cat(summary(x, ...))
+  summary(x, ...)
 }
 
 redyellow = colorRampPalette(c('red', 'yellow'), space='Lab')

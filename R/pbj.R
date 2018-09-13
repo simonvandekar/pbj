@@ -1,16 +1,34 @@
 # functions for pbj objects
 
 #' @export
+print.pbj <- function(x, ...)
+{
+  summary(x, ...)
+}
+
+cat0 <- function(...) cat(..., sep='')
+
+#' @export
+#' @include statmap.R
+#' @importFrom stats quantile
 summary.pbj <- function(object, ...)
 {
-  stop("TBD")
-  # display "Contents" for stat and template as in summary.statmap
-  # for(cft in names(object)[ ! names(object) %in% c('stat', 'template') ]){
-  # Display contents of each cft
-    # pvals is a vector of p-values. The length and min and max are interesting
-    # pmap is a nifti object. A summary like for "stat" and "mask" in statMap are interesting enough
-    # clustmap is a nifti object. A summary like for stat and mask are interesting 
-  # }
+  cat0(
+    "\nContents:\n",
+    statInner("  Stat:       ", object$stat),
+    statInner("  Template:   ", object$template)
+  )
+  
+  for(cft in names(object)[ ! names(object) %in% c('stat', 'template') ]){
+    cat0('\n', cft, ':\n')
+    
+    cat0("  P-Values:\n")
+    print(quantile(object[[cft]]$pvalues))
+    
+    cat0(statInner("  Cluster Map: ", object[[cft]]$clustermap),
+         statInner("  P Map:       ", object[[cft]]$pmap)
+    )
+  }
 }
 
 #' image a pbj object

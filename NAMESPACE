@@ -2,6 +2,7 @@
 
 S3method(image,pbj)
 S3method(image,statMap)
+S3method(print,pbj)
 S3method(print,statMap)
 S3method(summary,pbj)
 S3method(summary,statMap)
