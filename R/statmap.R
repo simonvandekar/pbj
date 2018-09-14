@@ -29,7 +29,7 @@ statInner <- function(label, obj)
   if(class(obj)[1] == "niftiImage") return(statNifti(label, obj))
   if(class(obj)[1] == "matrix")     return(statMatrix(label, obj))
   
-  paste0(label, "Unhandled Class(",class(obj)[1],")")
+  paste0(label, "Unhandled Class(",class(obj)[1],")\n")
 }
 
 #' @export
