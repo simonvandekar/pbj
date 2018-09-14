@@ -179,7 +179,6 @@ write.statMap <- function(x,outdir, ...)
     writeNifti(updateNifti(x$sqrtSigma, x$mask), resimg)
     res = resimg
   }
-  cat(summary(x), file=summaryf)
   return(list(stat=statimg, sqrtSigma=resimg, summary=summaryf))
 }
 
