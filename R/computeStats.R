@@ -111,8 +111,12 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
         # cannot be parallelized due to memory use
         qrs = apply(W, 2, function(Wcol) qr(X * Wcol))
         # This should work in parallel
-        seX1 = sqrt(do.call(c, parallel::mclapply(qrs, function(qrval) chol2inv(qr.R(qrval))[peind,peind], mc.cores=mc.cores)))
-        # cannot be parallelized due to memory use
+        if(.Platform$OS.type!='windows'){
+          seX1 = sqrt(do.call(c, parallel::mclapply(qrs, function(qrval) chol2inv(qr.R(qrval))[peind,peind], mc.cores=mc.cores)))
+        } else {
+          seX1 = sqrt(do.call(c, lapply(qrs, function(qrval) chol2inv(qr.R(qrval))[peind,peind])))
+        }
+        # cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
         num = do.call(c, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind]) )
         # cannot be parallelized due to memory use
         res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qrs[[ind]], res[,ind])) )
@@ -127,14 +131,20 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
       res = lapply(1:ncol(res), function(ind) lm(res[,ind] ~ -1 + I(X * W[,ind]), model=FALSE) )
 
       # get parameter estimates
-      stat = do.call(rbind, parallel::mclapply(res, coefficients, mc.cores=mc.cores ))[,peind]
+      if(.Platform$OS.type!='windows'){
+        stat = do.call(rbind, parallel::mclapply(res, coefficients, mc.cores=mc.cores ))[,peind]
+        cat('Getting voxel-wise hat values.\n')
+        h = do.call(rbind, parallel::mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
+        cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
+        res = do.call(rbind, parallel::mclapply(res, residuals, mc.cores=mc.cores))
+      } else {
+        stat = do.call(rbind, lapply(res, coefficients ))[,peind]
+        cat('Getting voxel-wise hat values.\n')
+        h = do.call(rbind, lapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}))
+        cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
+        res = do.call(rbind, lapply(res, residuals))
+      }
 
-      cat('Getting voxel-wise hat values.\n')
-      h = do.call(rbind, parallel::mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
-
-      cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
-
-      res = do.call(rbind, parallel::mclapply(res, residuals, mc.cores=mc.cores))
       if(!is.null(Xred)){
         X1res = do.call(rbind, lapply(1:nrow(res), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
       } else {
