@@ -31,8 +31,15 @@
 #' @return Returns a list with the following values:
 #' \describe{
 #'   \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
-#'   \item{res}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
+#'   \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
+#'   \item{mask}{The input mask.}
+#'   \item{template}{The background template used for visualization.}
+#'   \item{formulas}{A list containing the full and reduced models.}
+#'   \item{robust}{A logical indicating the input setting.}
+#'   \item{df}{The numerator degrees of freedom of the test.}
+#'   \item{rdf}{The numerator degrees of freedom of the test.}
 #' }
+#' stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
@@ -226,9 +233,10 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     stat[ stat==1] = stattemp
   }
 
-
-  # returns if requested
-  out = list(stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust)
+  # used later to indicated t-statistic
+  if(df==1)
+    df=0
+  out = list(stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf)
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir

@@ -9,7 +9,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @importFrom mmand shapeKernel dilate
-pbjES = function(obs, residuals=NULL, mask, df=1, rdf, alpha=0.05, thr=df*rdf/(rdf-2), nsim=5000){
+pbjESR = function(obs, residuals=NULL, mask, df=1, rdf, alpha=0.05, thr=df*rdf/(rdf-2), nsim=5000){
 
 	if(is.null(thr))	     stop('Must specify cluster forming threshold.')
 	if(is.character(mask)) mask = readNifti(mask)

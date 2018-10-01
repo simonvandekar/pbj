@@ -1,12 +1,6 @@
 #' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
 #'
 #' @param statMap statMap object as obtained from computeStats.
-#' @param df Degrees of freedom of test statistics. This is the numerator
-#'  degrees of freedom of the F-statistic. If you are passing a Z-statistic
-#'  image set df=0.
-#' @param rdf Residual degrees of freedom. This is the denominator degrees of
-#'  freedom of the F-statistic. This is an optional parameter. If rdf<<n then
-#'  this might save time, otherwise, it is ok to leave NULL.
 #' @param cfts Numeric vector of cluster forming thresholds to use. These are
 #'  single-tailed for chi-squared (or F) statistics or two tailed for
 #'  Z-statistics probabilities.
@@ -25,13 +19,15 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjClust = function(statMap, cfts=c(0.01, 0.005), df=0, rdf=NULL, nboot=5000, kernel='box'){
+pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   stat = if(is.character(statMap$stat)) readNifti(statMap$stat) else statMap$stat
   template = statMap$template
+  df = statMap$df
+  rdf = statMap$rdf
 
   if(df==0){
     ts = qchisq(cfts, 1, lower.tail=FALSE)

@@ -31,7 +31,7 @@ summary.pbj <- function(object, ...)
   }
 }
 
-#' image a pbj object
+#' Image a pbj object
 #' 
 #' See image.statMap for additional arguments
 #' 
@@ -81,3 +81,37 @@ write.pbj <- function(x, outdir, ...)
     writeNifti(x[[cft]]$clustermap, clustmapimg)
   }
 }
+
+#' Image a CoPE object
+#' 
+#' See image.statMap for additional arguments
+#' 
+#' @export
+#' @param x pbj object to create images for
+#' @param alpha Displays 1-alpha CoPE maps
+#' @param ... Arguments passed to image.statMap
+#' @importFrom graphics image
+#' @importFrom graphics par
+image.CoPE <- function(x, alpha=0.05, ...)
+{
+  for(rsq in names(x)[ ! names(x) %in% c('stat', 'template') ]){
+    statminus = statplus = x$stat
+    x[[rsq]]
+    # mask stat image with significant voxels
+    statminus[ x[[rsq]]$Aminus > 1-alpha ] = 0
+    # create a barebones statmap object
+    statmap = list(stat=statminus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
+    class(statmap) = "statMap"
+    # call image.statMap
+    image(statmap, thresh=0.01  )
+
+    # mask stat image with significant voxels
+    statplus[ x[[rsq]]$Aplus <= 1-alpha ] = 0
+    # create a barebones statmap object
+    statmap = list(stat=statplus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
+    class(statmap) = "statMap"
+    # call image.statMap
+    image(statmap, thresh=0.01  )
+  }
+}
+
