@@ -17,6 +17,7 @@ License: GPL-3
 LazyData: true
 Depends: R (>= 3.2)
 Collate:
+    'RcppExports.R'
     'addSignal.R'
     'cluster_functions.R'
     'computeStats.R'
@@ -26,6 +27,7 @@ Collate:
     'statmap.R'
     'pbj.R'
     'pbjClust.R'
+    'pbjExSet.R'
     'resave.R'
     'simulationSetup.R'
 Imports:
@@ -35,8 +37,12 @@ Imports:
   parallel,
   progress,
   pbapply,
+  Rcpp (>= 0.12.18),
+  RcppArmadillo,
   RNifti,
   mgcv
+LinkingTo: Rcpp,
+  RcppArmadillo
 RoxygenNote: 6.1.0.9000
 Suggests: knitr,
     rmarkdown,

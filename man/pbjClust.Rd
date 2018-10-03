@@ -4,8 +4,8 @@
 \alias{pbjClust}
 \title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference}
 \usage{
-pbjClust(statMap, cfts = c(0.01, 0.005), df = 0, rdf = NULL,
-  nboot = 5000, kernel = "box")
+pbjClust(statMap, cfts = c(0.01, 0.005), nboot = 5000,
+  kernel = "box")
 }
 \arguments{
 \item{statMap}{statMap object as obtained from computeStats.}
@@ -13,14 +13,6 @@ pbjClust(statMap, cfts = c(0.01, 0.005), df = 0, rdf = NULL,
 \item{cfts}{Numeric vector of cluster forming thresholds to use. These are
 single-tailed for chi-squared (or F) statistics or two tailed for
 Z-statistics probabilities.}
-
-\item{df}{Degrees of freedom of test statistics. This is the numerator
-degrees of freedom of the F-statistic. If you are passing a Z-statistic
-image set df=0.}
-
-\item{rdf}{Residual degrees of freedom. This is the denominator degrees of
-freedom of the F-statistic. This is an optional parameter. If rdf<<n then
-this might save time, otherwise, it is ok to leave NULL.}
 
 \item{nboot}{Number of bootstraps to perform.}
 

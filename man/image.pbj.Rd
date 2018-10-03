@@ -2,7 +2,7 @@
 % Please edit documentation in R/pbj.R
 \name{image.pbj}
 \alias{image.pbj}
-\title{image a pbj object}
+\title{Image a pbj object}
 \usage{
 \method{image}{pbj}(x, alpha = 0.05, ...)
 }
