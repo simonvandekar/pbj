@@ -76,7 +76,6 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if(.Platform$OS.type=='windows')
   {
     pb = txtProgressBar(style=3, title='Generating null distribution')
-    brower()
     for(i in 1:nboot)
     {
       tmp = mask
