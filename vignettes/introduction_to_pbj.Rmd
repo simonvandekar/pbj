@@ -236,7 +236,7 @@ We again use `system.time` here to track computing times.
 
 
 ```{r, results=FALSE}
-pbjcomptime  = system.time(sPBJ <- pbjClust(statmap, nboot=200))
+pbjcomptime  = system.time(sPBJ  <- pbjClust(statmap,  nboot=200))
 pbjcomptimen = system.time(sPBJn <- pbjClust(statmapn, nboot=200))
 ```
 

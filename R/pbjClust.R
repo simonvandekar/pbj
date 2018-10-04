@@ -19,6 +19,9 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
+#' @import bigmemory
+#' @importFrom parallel mcparallel mccollect
+#' @import bigalgebra
 pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
@@ -69,16 +72,42 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   }
 
   Fs = matrix(NA, nboot, length(cfts))
-  pb = txtProgressBar(style=3, title='Generating null distribution')
-  for(i in 1:nboot){
-    tmp = mask
-    S = matrix(rnorm(r*df), r, df)
-    statimg = rowSums((sqrtSigma %*% S)^2)
-    tmp = lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
-    Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
-    setTxtProgressBar(pb, round(i/nboot,2))
+
+  if(.Platform$OS.type=='windows')
+  {
+    pb = txtProgressBar(style=3, title='Generating null distribution')
+    brower()
+    for(i in 1:nboot)
+    {
+      tmp = mask
+      S = matrix(rnorm(r*df), r, df)
+      statimg = rowSums((sqrtSigma %*% S)^2)
+      tmp = lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
+      Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
+      setTxtProgressBar(pb, round(i/nboot,2))
+    }
+    close(pb)
+  } else { # Support for Shared memory
+    ss <- as.big.matrix(sqrtSigma)
+
+    cat('Generating null distribution in parallel.\n')
+
+    jobs <- lapply(1:nboot, function(i) {
+      mcparallel({
+        tmp     <- mask
+        S       <- matrix(rnorm(r*df), r, df)
+        statimg <- rowSums((ss %*% S)^2)
+        tmp     <- lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
+        sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
+      }, name=i)
+      
+    })
+    results <- mccollect(jobs) # Wait for all jobs to finish and get results
+    for(i in 1:nboot) Fs[i,] <- results[[i]] # Assignment of parallel result
+    cat('Completed generation of null distribution.\n')
   }
-  close(pb)
+  
+
   # add the stat max
   ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
   Fs = rbind(Fs, sapply(ccomps, max)+0.01) # + 0.01 to make it larger than observed data

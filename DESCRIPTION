@@ -35,6 +35,8 @@ Imports:
   fslr,
   mmand,
   parallel,
+  bigmemory,
+  bigalgebra,
   progress,
   pbapply,
   Rcpp (>= 0.12.18),
