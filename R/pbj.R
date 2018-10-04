@@ -1,5 +1,6 @@
 # functions for pbj objects
 
+#' @useDynLib pbj, .registration=TRUE
 #' @export
 print.pbj <- function(x, ...)
 {
