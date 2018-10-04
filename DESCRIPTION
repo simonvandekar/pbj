@@ -50,4 +50,4 @@ Suggests: knitr,
     rmarkdown,
     pain21,
     R.rsp
-VignetteBuilder: knitr
+VignetteBuilder: R.rsp
