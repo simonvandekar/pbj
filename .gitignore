@@ -1,6 +1,5 @@
 inst/doc
 test.pdf
-*.Rproj
 .Rproj.user
 .Rhistory
 .RData
