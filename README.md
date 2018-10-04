@@ -1,4 +1,9 @@
 
+[![AppVeyor build
+status](https://ci.appveyor.com/api/projects/status/github/muschellij2/pbj?branch=master&svg=true)](https://ci.appveyor.com/project/muschellij2/pbj)
+[![Travis build
+status](https://travis-ci.com/muschellij2/pbj.svg?branch=master)](https://travis-ci.com/muschellij2/pbj)
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # pbj
