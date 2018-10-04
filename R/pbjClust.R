@@ -48,20 +48,19 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   clustmaps = lapply(tmp, function(tm, mask) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)}, mask=mask)
   ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
-  if(is.character(statMap$sqrtSigma)){
-    sqrtSigma = readNifti(statMap$sqrtSigma)
-    sqrtSigma = apply(sqrtSigma, 4, function(x) x[mask==1])
+  sqrtSigma <- if(is.character(statMap$sqrtSigma)) {
+    apply(readNifti(statMap$sqrtSigma), 4, function(x) x[mask==1])
   } else {
-    sqrtSigma = statMap$sqrtSigma
-    rm(statMap)
+    statMap$sqrtSigma
   }
+  rm(statMap)
+  
   n = ncol(sqrtSigma)
   if(is.null(rdf)) rdf=n
 
   ssqs = sqrt(rowSums(sqrtSigma^2))
-  if( any(ssqs != 1) ){
-    sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
-  }
+  if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
+
   p=nrow(sqrtSigma)
   # This SVD is not strictly necessary
   # If rdf<<n than n and there is a large number of simulations it might save time
@@ -71,6 +70,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     sqrtSigma = sweep(sqrtSigma$u, 2, sqrtSigma$d[1:r], "*")
   }
 
+  sqrtSigma <- as.big.matrix(sqrtSigma)
   Fs = matrix(NA, nboot, length(cfts))
 
   if(.Platform$OS.type=='windows')
@@ -87,15 +87,14 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     }
     close(pb)
   } else { # Support for Shared memory
-    ss <- as.big.matrix(sqrtSigma)
-
+    
     cat('Generating null distribution in parallel.\n')
 
     jobs <- lapply(1:nboot, function(i) {
       mcparallel({
         tmp     <- mask
         S       <- matrix(rnorm(r*df), r, df)
-        statimg <- rowSums((ss %*% S)^2)
+        statimg <- rowSums((sqrtSigma %*% S)^2)
         tmp     <- lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
         sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
       }, name=i)
@@ -105,7 +104,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     for(i in 1:nboot) Fs[i,] <- results[[i]] # Assignment of parallel result
     cat('Completed generation of null distribution.\n')
   }
-  
+  rm(sqrtSigma) # Free large big memory matrix object
 
   # add the stat max
   ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
