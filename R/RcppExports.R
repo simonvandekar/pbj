@@ -2,10 +2,10 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 pbjES <- function(mu, M, chsq, df, nboot) {
-    .Call('_pbj_pbjES', PACKAGE = 'pbj', mu, M, chsq, df, nboot)
+    .Call(`_pbj_pbjES`, mu, M, chsq, df, nboot)
 }
 
 pbjESboundary <- function(M, nboot) {
-    .Call('_pbj_pbjESboundary', PACKAGE = 'pbj', M, nboot)
+    .Call(`_pbj_pbjESboundary`, M, nboot)
 }
 
