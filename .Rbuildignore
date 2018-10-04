@@ -1,2 +1,4 @@
-^.*\.Rproj$
+^test\.pdf$
+^pbj\.Rproj$
 ^\.Rproj\.user$
+^.*\.Rproj$

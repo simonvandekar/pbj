@@ -15,6 +15,9 @@ pbjExSet(statMap, rsq = 0.05, nboot = 5000, boundary = FALSE,
 \item{nboot}{Number of bootstraps to perform.}
 
 \item{boundary}{Sample from the boundary as in Sommerfeld et al. (2018).}
+
+\item{eps}{tolerance for the chi-square statistic.  Only used if
+\code{boundary} is \code{TRUE} and the degrees of freedom is 1.}
 }
 \value{
 Returns a list of length length(rsq)+2. The first two elements contain

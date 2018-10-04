@@ -24,11 +24,11 @@ statInner <- function(label, obj)
 {
   if(is.null(obj))    return("")
   if(all(is.na(obj))) return(paste0(label, "NA"))
-  
+
   if(class(obj)[1] == "character")  return(statFile(label, obj))
   if(class(obj)[1] == "niftiImage") return(statNifti(label, obj))
   if(class(obj)[1] == "matrix")     return(statMatrix(label, obj))
-  
+
   paste0(label, "Unhandled Class(",class(obj)[1],")\n")
 }
 
@@ -47,6 +47,7 @@ summary.statMap <- function(object, ...)
 }
 
 #' @export
+#' @method print statMap
 print.statMap <- function(x, ...)
 {
   summary(x, ...)
@@ -80,7 +81,7 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 # modified from oro.nifti:::image.nifti
 #' @export
 image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
-     plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...) 
+     plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...)
   {
     object <- x
     # mask can't be empty in typical statMap object unless it's manually constructed
@@ -119,7 +120,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     statneg = stat
     statneg[ statneg> -thresh] = 0
     statneg = abs(statneg)
-    stat[ stat<thresh ] = 0 
+    stat[ stat<thresh ] = 0
     imgdim = dim(x)
     zlim = range(x, na.rm=TRUE)
     maxstat = max(c(stat[ stat>0], thresh), na.rm=TRUE)
@@ -127,20 +128,20 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
     breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos)-1), maxstat)
     breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
-    if(is.null(index)) index = 1:imgdim[3] 
+    if(is.null(index)) index = 1:imgdim[3]
     oldpar <- par(no.readonly = TRUE)
     par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
     for (z in index) {
       # background image
-      graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col, 
-        breaks = breaks, asp = aspect, axes = axes, 
+      graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
+        breaks = breaks, asp = aspect, axes = axes,
         xlab = xlab, ylab = ylab, ...)
       # overlay positive
-      graphics::image(1:imgdim[1], 1:imgdim[2], stat[, , z], col = colpos, 
+      graphics::image(1:imgdim[1], 1:imgdim[2], stat[, , z], col = colpos,
         breaks = breakspos, asp = aspect, axes = axes, add=TRUE,
         xlab = xlab, ylab = ylab, ...)
       # overlay negative
-      graphics::image(1:imgdim[1], 1:imgdim[2], statneg[, , z], col = colneg, 
+      graphics::image(1:imgdim[1], 1:imgdim[2], statneg[, , z], col = colneg,
         breaks = breaksneg, asp = aspect, axes = axes, add=TRUE,
         xlab = xlab, ylab = ylab, ...)
     }
@@ -149,7 +150,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
 }
 
 #' Write the statMap objects out
-#' 
+#'
 #' Given a statMap object and a directory write the objects as stat.nii.gz, sqrtSigma.nii.gz and summary.txt
 #' @param x the statMap object to write out
 #' @param outdir the directory to write into
@@ -164,7 +165,7 @@ write.statMap <- function(x,outdir, ...)
   if(is.character(x$stat)){
     file.copy(x$stat, statimg)
     file.copy(x$sqrtSigma, resimg)
-  } else {  
+  } else {
     cat('Writing output images.\n')
     dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
     writeNifti(x$stat, statimg)

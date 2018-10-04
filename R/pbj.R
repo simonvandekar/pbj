@@ -2,6 +2,7 @@
 
 #' @useDynLib pbj, .registration=TRUE
 #' @export
+#' @method print pbj
 print.pbj <- function(x, ...)
 {
   summary(x, ...)
@@ -19,13 +20,13 @@ summary.pbj <- function(object, ...)
     statInner("  Stat:       ", object$stat),
     statInner("  Template:   ", object$template)
   )
-  
+
   for(cft in names(object)[ ! names(object) %in% c('stat', 'template') ]){
     cat0('\n', cft, ':\n')
-    
+
     cat0("  P-Values:\n")
     print(quantile(object[[cft]]$pvalues))
-    
+
     cat0(statInner("  Cluster Map: ", object[[cft]]$clustermap),
          statInner("  P Map:       ", object[[cft]]$pmap)
     )
@@ -33,9 +34,9 @@ summary.pbj <- function(object, ...)
 }
 
 #' Image a pbj object
-#' 
+#'
 #' See image.statMap for additional arguments
-#' 
+#'
 #' @export
 #' @param x pbj object to create images for
 #' @param alpha numeric; threshold to apply for threshold mask of significant voxels
@@ -50,7 +51,7 @@ image.pbj <- function(x, alpha=0.05, ...)
     # mask stat image with significant voxels
     stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
     # create a barebones statmap object
-    statmap = list(stat=stat, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
+    statmap = list(stat=stat, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL)
     class(statmap) = "statMap"
     # call image.statMap
     image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft)) )  )
@@ -58,9 +59,9 @@ image.pbj <- function(x, alpha=0.05, ...)
 }
 
 #' Write a pbj object to disk
-#' 
+#'
 #' Write a pbj object to disk in parts
-#' 
+#'
 #' @param x pbj object to write
 #' @param outdir output directory to write pbj pieces
 #' @param ... additional arguments; unused.
@@ -68,7 +69,7 @@ image.pbj <- function(x, alpha=0.05, ...)
 write.pbj <- function(x, outdir, ...)
 {
   statimg = file.path(outdir, 'stat.nii.gz')
-  if(!file.exists(statimg)){ 
+  if(!file.exists(statimg)){
     if(is.character(x$stat)){
       file.copy(x$stat, statimg)
     } else {
@@ -84,9 +85,9 @@ write.pbj <- function(x, outdir, ...)
 }
 
 #' Image a CoPE object
-#' 
+#'
 #' See image.statMap for additional arguments
-#' 
+#'
 #' @export
 #' @param x pbj object to create images for
 #' @param alpha Displays 1-alpha CoPE maps
@@ -101,7 +102,7 @@ image.CoPE <- function(x, alpha=0.05, ...)
     # mask stat image with significant voxels
     statminus[ x[[rsq]]$Aminus > 1-alpha ] = 0
     # create a barebones statmap object
-    statmap = list(stat=statminus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
+    statmap = list(stat=statminus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL)
     class(statmap) = "statMap"
     # call image.statMap
     image(statmap, thresh=0.01  )
@@ -109,7 +110,7 @@ image.CoPE <- function(x, alpha=0.05, ...)
     # mask stat image with significant voxels
     statplus[ x[[rsq]]$Aplus <= 1-alpha ] = 0
     # create a barebones statmap object
-    statmap = list(stat=statplus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL) 
+    statmap = list(stat=statplus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL)
     class(statmap) = "statMap"
     # call image.statMap
     image(statmap, thresh=0.01  )
