@@ -43,11 +43,11 @@ Imports:
   RcppArmadillo,
   RNifti,
   mgcv
+Remotes: simonvandekar/pain21
 LinkingTo: Rcpp,
   RcppArmadillo
 RoxygenNote: 6.1.0.9000
 Suggests: knitr,
     rmarkdown,
-    pain21,
-    R.rsp
+    pain21
 VignetteBuilder: knitr

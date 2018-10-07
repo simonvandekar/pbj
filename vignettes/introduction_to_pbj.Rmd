@@ -5,12 +5,12 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 bibliography: bib.bib
 vignette: >
-  %\VignetteIndexEntry{Introduction to Robust Spatial Extent Inference Using the pbj Package}
-  %\VignetteEngine{R.rsp::asis}
-  %\VignetteKeyword{HTML}
-  %\VignetteKeyword{vignette}
-  %\VignetteKeyword{package}
-  %\VignetteEncoding{UTF-8}
+    %\VignetteIndexEntry{Introduction to Robust Spatial Extent Inference Using the pbj Package}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteKeyword{HTML}
+    %\VignetteKeyword{vignette}
+    %\VignetteKeyword{package}
+    %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
@@ -104,10 +104,15 @@ library(pbj)
 # setup model equations
 form = ~ 1
 formred = NULL
-outdir = '~/pain_temp'
+outdir = tempfile()
+dir.create(outdir)
 
-comptime = system.time(statmap <- computeStats(pain$data$images, form, formred, pain$mask,
-                                               data = pain$data, Winv = pain$data$varimages, outdir=outdir))
+comptime = system.time(
+  statmap <- computeStats(pain$data$images, form = form, 
+                          formred, pain$mask,
+                          data = pain$data, 
+                          Winv = pain$data$varimages, outdir=outdir)
+  )
 
 statmap
 ```
@@ -207,7 +212,9 @@ image(statmapn, plane='sagittal')
 the function `write.statMap` can be used to write the output to a directory for later use (e.g. separate visualization or to upload to a public access database).
 
 ```{r}
-write.statMap(statmapn, outdir='~/pain_results')
+resdir = tempfile()
+dir.create(resdir)
+write.statMap(statmapn, outdir=resdir)
 ```
 
 
@@ -271,7 +278,7 @@ The `write.pbj` function can be used to export the the images contained in the `
 The cluster and p-value maps are written for every CFT in a standardized format `pbj_sei_log10p_cft*.nii.gz` and `pbj_sei_log10p_cft*.nii.gz`, respectively.
 
 ```{r}
-write.pbj(sPBJn, '~/pain_results')
+write.pbj(sPBJn, resdir)
 ```
 
 ## Simulation tools

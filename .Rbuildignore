@@ -1,2 +1,7 @@
-^.*\.Rproj$
+^appveyor\.yml$
+^\.travis\.yml$
+^README\.Rmd$
+^test\.pdf$
+^pbj\.Rproj$
 ^\.Rproj\.user$
+^.*\.Rproj$

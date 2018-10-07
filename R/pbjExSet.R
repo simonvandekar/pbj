@@ -4,6 +4,8 @@
 #' @param rsq minimum effect size of interest. Currently, only supported for length(rsq)=1.
 #' @param nboot Number of bootstraps to perform.
 #' @param boundary Sample from the boundary as in Sommerfeld et al. (2018).
+#' @param eps tolerance for the chi-square statistic.  Only used if
+#' \code{boundary} is \code{TRUE} and the degrees of freedom is 1.
 #'
 #' @return Returns a list of length length(rsq)+2. The first two elements contain
 #' statMap$stat and statMap$template. The remaining elements are lists containing the following:
@@ -18,14 +20,14 @@
 pbjExSet = function(statMap, rsq=0.05, nboot=5000, boundary=FALSE, eps=0.01){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
-  
+
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   stat = if(is.character(statMap$stat)) readNifti(statMap$stat) else statMap$stat
   template = statMap$template
   if(is.null(template)) template = mask
   df = statMap$df
   rdf = statMap$rdf
-  
+
   if(df==0){
     sgnstat = sign(stat)
     stat = stat^2
@@ -33,7 +35,7 @@ pbjExSet = function(statMap, rsq=0.05, nboot=5000, boundary=FALSE, eps=0.01){
   } else {
     zerodf=FALSE
   }
-  
+
   # load sqrtSigma if nifti image
   if(is.character(statMap$sqrtSigma)){
     sqrtSigma = readNifti(statMap$sqrtSigma)
@@ -42,7 +44,7 @@ pbjExSet = function(statMap, rsq=0.05, nboot=5000, boundary=FALSE, eps=0.01){
     sqrtSigma = statMap$sqrtSigma
     rm(statMap)
   }
-  
+
   # normalize sqrtSigma
   ssqs = sqrt(rowSums(sqrtSigma^2))
   if( any(ssqs != 1) ){
@@ -73,7 +75,7 @@ pbjExSet = function(statMap, rsq=0.05, nboot=5000, boundary=FALSE, eps=0.01){
       stat = sqrt(stat) * sgnstat
     }
   }
-  
+
   out = list(stat=stat, template=template, rsq=list(Aminus=Aminus, Aplus=Aplus, rsq=rsq, chsq=chsq, CDFs=Fs) )
   names(out)[3] =  paste0('rsq', rsq)
   class(out) = c('CoPE', 'list')

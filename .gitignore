@@ -1,4 +1,5 @@
-*.Rproj
+inst/doc
+test.pdf
 .Rproj.user
 .Rhistory
 .RData
