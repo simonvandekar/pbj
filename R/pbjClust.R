@@ -54,7 +54,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     statMap$sqrtSigma
   }
   rm(statMap)
-  
+
   n = ncol(sqrtSigma)
   if(is.null(rdf)) rdf=n
 
@@ -73,8 +73,8 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   sqrtSigma <- as.big.matrix(sqrtSigma)
   Fs = matrix(NA, nboot, length(cfts))
 
-  if(.Platform$OS.type=='windows')
-  {
+  # if(.Platform$OS.type=='windows')
+  # {
     pb = txtProgressBar(style=3, title='Generating null distribution')
     for(i in 1:nboot)
     {
@@ -86,24 +86,28 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
       setTxtProgressBar(pb, round(i/nboot,2))
     }
     close(pb)
-  } else { # Support for Shared memory
-    
-    cat('Generating null distribution in parallel.\n')
-
-    jobs <- lapply(1:nboot, function(i) {
-      mcparallel({
-        tmp     <- mask
-        S       <- matrix(rnorm(r*df), r, df)
-        statimg <- rowSums((sqrtSigma %*% S)^2)
-        tmp     <- lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
-        sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
-      }, name=i)
-      
-    })
-    results <- mccollect(jobs) # Wait for all jobs to finish and get results
-    for(i in 1:nboot) Fs[i,] <- results[[i]] # Assignment of parallel result
-    cat('Completed generation of null distribution.\n')
-  }
+  # } else { # Support for Shared memory
+  #
+  #   cat('Generating null distribution in parallel.\n')
+  #
+  #   jobs <- lapply(1:nboot, function(i) {
+  #     mcparallel({
+  #       require(bigalgebra)
+  #       tmp     <- mask
+  #       S       <- matrix(rnorm(r*df), r, df)
+  #       statimg <- rowSums((sqrtSigma %*% S)^2)
+  #       tmp     <- lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
+  #       sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
+  #       return(123)
+  #     }, detached=FALSE)
+  #
+  #   })
+  #   Fs = mccollect(jobs, wait=TRUE)
+  #   Fs = mccollect(jobs)
+  #   browser()
+  #   Fs = do.call(rbind, Fs)
+  #   cat('Completed generation of null distribution.\n')
+  # }
   rm(sqrtSigma) # Free large big memory matrix object
 
   # add the stat max
