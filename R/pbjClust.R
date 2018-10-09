@@ -70,7 +70,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     sqrtSigma = sweep(sqrtSigma$u, 2, sqrtSigma$d[1:r], "*")
   }
 
-  sqrtSigma <- as.big.matrix(sqrtSigma)
+  #sqrtSigma <- as.big.matrix(sqrtSigma)
   Fs = matrix(NA, nboot, length(cfts))
 
   # if(.Platform$OS.type=='windows')
