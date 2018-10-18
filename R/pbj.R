@@ -34,12 +34,11 @@ summary.pbj <- function(object, ...)
 }
 
 #' Image a pbj object
-#'
 #' See image.statMap for additional arguments
 #'
 #' @export
 #' @param x pbj object to create images for
-#' @param alpha numeric; threshold to apply for threshold mask of significant voxels
+#' @param alpha numeric; threshold to apply to adjusted p-values.
 #' @param ... Arguments passed to image.statMap
 #' @importFrom graphics image
 #' @importFrom graphics par
