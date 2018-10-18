@@ -44,17 +44,9 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)), Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=rep(1,  length(images)), Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
-
-  # check if inverse weights are given
-  if(!is.null(Winv)){
-    W = Winv
-    Winv = TRUE
-  } else {
-    Winv = FALSE
-  }
 
   if(!is.matrix(form) & !is.matrix(formred)){
     X = getDesign(form, data)
@@ -63,10 +55,23 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     X = form
     Xred = formred
     form <- formred <- NULL
+
   }
 
-  if(is.character(images)){
+  # check if inverse weights are given
+  # this way if you pass Winv=NULL it will error out still
+  if(is.null(Winv)){
+    Winv = FALSE
+    if(all(W == rep(1, length(images) ) ))
+      cat('Note: weights are uniform!\n')
+  } else {
+    W = Winv
+    Winv = TRUE
+  }
+
+  if(class(images)[1] != 'niftiImage'){
     n=length(images)
+    images = as.character(images)
     if(nrow(X)!=n)
       stop('length(images) and nrow(X) must be the same.')
     res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
@@ -75,15 +80,36 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
       res = images
       rm(images)
     }
+    dims = dim(res)
 
   # load mask
-  if(is.character(mask)){
-    maskimg=mask
-    mask = RNifti::readNifti(mask)
+  if(class(mask) !='niftiImage'){
+    maskimg=as.character(mask)
+    mask = RNifti::readNifti(maskimg)
+  }
+
+  # check that first input image and mask dimensions are the same
+  ndims = length(dim(mask))
+  if(any(dims[1:ndims] != dim(mask))  ){
+    stop('images and mask dimensions do not match.\n')
+  }
+
+  # check that template and mask dimensions are the same
+  if( !is.null(template)){
+    if(class(template)!='niftiImage'){
+      temp = readNifti(as.character(template))
+    } else {
+      temp = template
+    }
+      dims = dim(temp)
+      rm(temp)
+      if(any(dims[1:ndims] != dim(mask))  ){
+        stop('template image and mask dimensions (or pixel dimensions) do not match.\n')
+      }
   }
 
   # load images
-  res = t(apply(res, 4, function(x) x[mask==1]))
+  res = t(apply(res, 4, function(x) x[mask!=0]))
 
   peind = which(!colnames(X) %in% colnames(Xred))
   df = length(peind)
@@ -95,7 +121,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     cat('Weights are voxel-wise.\n')
     voxwts = TRUE
     W = do.call(abind::abind, list(RNifti::readNifti(W), along=4))
-    W = t(apply(W, 4, function(x) x[mask==1]))
+    W = t(apply(W, 4, function(x) x[mask!=0]))
     W = sqrt(W)
   } else {
     voxwts=FALSE
@@ -222,7 +248,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
       stattemp = qchisq(pf(stattemp, df1=df, df2=rdf), df=df)
     }
     stat = mask
-    stat[ mask==1] = stattemp
+    stat[ stat!=0] = stattemp
   }
 
   if(robust){
@@ -230,7 +256,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1, nrow(X)
     stattemp = stat*A/sqrt(rowSums(res^2))
     # get niftiImage from mask
     stat = mask
-    stat[ stat==1] = stattemp
+    stat[ stat!=0] = stattemp
   }
 
   # used later to indicated t-statistic
