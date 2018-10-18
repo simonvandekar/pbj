@@ -5,7 +5,7 @@
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
 computeStats(images, form, formred, mask, data = NULL, W = rep(1,
-  nrow(X)), Winv = NULL, template = NULL, formImages = NULL,
+  length(images)), Winv = NULL, template = NULL, formImages = NULL,
   robust = TRUE, outdir = NULL, mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{

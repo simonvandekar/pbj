@@ -137,6 +137,7 @@ Note that we are passing the weights using the `W=` argument this time because t
 We include the `template` argument here for downstream aesthetics.
 
 ```{r, cache=TRUE}
+library(pbj)
 # formulas can be passed as strings
 form = '~ 1'
 formred = NULL

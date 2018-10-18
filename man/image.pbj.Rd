@@ -2,17 +2,19 @@
 % Please edit documentation in R/pbj.R
 \name{image.pbj}
 \alias{image.pbj}
-\title{Image a pbj object}
+\title{Image a pbj object
+See image.statMap for additional arguments}
 \usage{
 \method{image}{pbj}(x, alpha = 0.05, ...)
 }
 \arguments{
 \item{x}{pbj object to create images for}
 
-\item{alpha}{numeric; threshold to apply for threshold mask of significant voxels}
+\item{alpha}{numeric; threshold to apply to adjusted p-values.}
 
 \item{...}{Arguments passed to image.statMap}
 }
 \description{
+Image a pbj object
 See image.statMap for additional arguments
 }
