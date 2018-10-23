@@ -104,14 +104,14 @@ library(pbj)
 # setup model equations
 form = ~ 1
 formred = NULL
-outdir = tempfile()
-dir.create(outdir)
+#outdir = tempfile()
+#dir.create(outdir)
 
 comptime = system.time(
   statmap <- computeStats(pain$data$images, form = form, 
                           formred, pain$mask,
                           data = pain$data, 
-                          Winv = pain$data$varimages, outdir=outdir)
+                          Winv = pain$data$varimages) #, outdir=outdir)
   )
 
 statmap
