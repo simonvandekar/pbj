@@ -108,9 +108,9 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     # permuted image dimensions
 
     # crop image and get image dimensions
-    xinds = apply(mask!=0, 1, any)
-    yinds = apply(mask!=0, 2, any)
-    zinds = apply(mask!=0, 3, any)
+    xinds = apply(x!=0, 1, any)
+    yinds = apply(x!=0, 2, any)
+    zinds = apply(x!=0, 3, any)
     x = x[xinds,,]
     x = x[,yinds,]
     x = x[,,zinds]
