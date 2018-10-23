@@ -1,8 +1,8 @@
 
 [![AppVeyor build
-status](https://ci.appveyor.com/api/projects/status/github/muschellij2/pbj?branch=master&svg=true)](https://ci.appveyor.com/project/muschellij2/pbj)
+status](https://ci.appveyor.com/api/projects/status/github/simonvandekar/pbj?branch=master&svg=true)](https://ci.appveyor.com/project/simonvandekar/pbj)
 [![Travis build
-status](https://travis-ci.com/muschellij2/pbj.svg?branch=master)](https://travis-ci.com/muschellij2/pbj)
+status](https://travis-ci.com/simonvandekar/pbj.svg?branch=master)](https://travis-ci.com/simonvandekar/pbj)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
