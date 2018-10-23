@@ -104,9 +104,12 @@ library(pbj)
 # setup model equations
 form = ~ 1
 formred = NULL
-#outdir = tempfile()
-#dir.create(outdir)
+outdir = tempfile()
+dir.create(outdir)
+```
 
+```{r, eval=FALSE}
+## Not run
 comptime = system.time(
   statmap <- computeStats(pain$data$images, form = form, 
                           formred, pain$mask,
@@ -176,9 +179,6 @@ In our paper, for group level analyses of subject level data, motion was a very 
 We will see here that our (somewhat arbitrary) sample size approximation leads to reductions in power.
 
 
-```{r}
-print(c('voxel weights'=comptime[3], 'study weights'=comptimen[3]))
-```
 
 ### Visualizing and saving `statMap` objects
 
@@ -186,12 +186,12 @@ At this point we may want to view the statistical images to see what the results
 We can do this using `statMap` method for the `image` function.
 The default threshold for visualization is 2.32, which is a one-sided p-value of approximately 0.01.
 ```{r, eval=FALSE}
-image(statmap)
+#image(statmap)
 image(statmapn)
 ```
 
 ```{r, fig.width=3.4, fig.height=2.5, fig.cap="A comparison of using voxel-wise level standard error estimates for parameter estimates versus using study-level standard error estimates based on sample size.", echo=FALSE}
-image(statmap)
+#image(statmap)
 image(statmapn)
 ```
 
@@ -201,12 +201,12 @@ If no mask image is passed then `pbjClust` will error.
 
 I like to view other slices for subcortical structures:
 ```{r, eval=FALSE}
-image(statmap, plane='coronal')
+#image(statmap, plane='coronal')
 image(statmapn, plane='sagittal')
 ```
 
 ```{r, fig.width=3.4, fig.height=2.5, fig.cap="Other image views.", echo=FALSE}
-image(statmap, plane='coronal')
+#image(statmap, plane='coronal')
 image(statmapn, plane='sagittal')
 ```
 
@@ -244,14 +244,14 @@ We again use `system.time` here to track computing times.
 
 
 ```{r, results=FALSE}
-pbjcomptime  = system.time(sPBJ  <- pbjClust(statmap,  nboot=200))
+#pbjcomptime  = system.time(sPBJ  <- pbjClust(statmap,  nboot=200))
 pbjcomptimen = system.time(sPBJn <- pbjClust(statmapn, nboot=200))
 ```
 
 The bootstrap time doesn't differ between voxel-wise or study/subject level weights.
 
 ```{r}
-print(c('voxel weights'=pbjcomptime[3], 'study weights'=pbjcomptimen[3]))
+print(c('study weights'=pbjcomptimen[3]))
 ```
 
 The `pbjClust` function returns a `pbj` object which contains information about which clusters are large enough to be unlikely to have occurred by chance under the global null.
