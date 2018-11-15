@@ -59,7 +59,6 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
 
   p=nrow(sqrtSigma)
-  r = min(rdf, p)
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   Fs = matrix(NA, nboot, length(cfts))
@@ -70,7 +69,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     for(i in 1:nboot)
     {
       tmp = mask
-      S = matrix(rnorm(r*df), r, df)
+      S = matrix(rnorm(n*df), n, df)
       statimg = rowSums((sqrtSigma %*% S)^2)
       tmp = lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
       Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
