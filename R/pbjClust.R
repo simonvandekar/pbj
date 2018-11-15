@@ -59,13 +59,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
 
   p=nrow(sqrtSigma)
-  # This SVD is not strictly necessary
-  # If rdf<<n than n and there is a large number of simulations it might save time
   r = min(rdf, p)
-  if(rdf != n){
-    sqrtSigma = svd(sqrtSigma, nu=r, nv=0)
-    sqrtSigma = sweep(sqrtSigma$u, 2, sqrtSigma$d[1:r], "*")
-  }
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   Fs = matrix(NA, nboot, length(cfts))
