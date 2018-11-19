@@ -254,6 +254,8 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1,  length
   if(robust){
     cat('Computing robust stat image.\n')
     stattemp = stat*A/sqrt(rowSums(res^2))
+    # Use T-to-Z transform
+    stattemp = qnorm(pt(stattemp, df=rdf))
     # get niftiImage from mask
     stat = mask
     stat[ stat!=0] = stattemp
