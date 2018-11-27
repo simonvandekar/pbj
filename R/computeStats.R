@@ -44,7 +44,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=rep(1,  length(images)), Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -56,17 +56,6 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1,  length
     Xred = formred
     form <- formred <- NULL
 
-  }
-
-  # check if inverse weights are given
-  # this way if you pass Winv=NULL it will error out still
-  if(is.null(Winv)){
-    Winv = FALSE
-    if(all(W == rep(1, length(images) ) ))
-      cat('Note: weights are uniform!\n')
-  } else {
-    W = Winv
-    Winv = TRUE
   }
 
   if(class(images)[1] != 'niftiImage'){
@@ -82,8 +71,20 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1,  length
     }
     dims = dim(res)
 
+  # check if inverse weights are given
+  # this way if you pass Winv=NULL it will error out still
+  if(is.null(Winv)){
+    Winv = FALSE
+    if(is.null(W)) W = rep(1,n)
+    if(all(W == rep(1, n ) ))
+      cat('Note: weights are uniform!\n')
+  } else {
+    W = Winv
+    Winv = TRUE
+  }
+
   # load mask
-  if(class(mask) !='niftiImage'){
+  if(class(mask)[1] !='niftiImage'){
     maskimg=as.character(mask)
     mask = RNifti::readNifti(maskimg)
   }
@@ -96,7 +97,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=rep(1,  length
 
   # check that template and mask dimensions are the same
   if( !is.null(template)){
-    if(class(template)!='niftiImage'){
+    if(class(template)[1]!='niftiImage'){
       temp = readNifti(as.character(template))
     } else {
       temp = template
