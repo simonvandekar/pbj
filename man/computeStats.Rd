@@ -4,9 +4,9 @@
 \alias{computeStats}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-computeStats(images, form, formred, mask, data = NULL, W = rep(1,
-  length(images)), Winv = NULL, template = NULL, formImages = NULL,
-  robust = TRUE, outdir = NULL, mc.cores = getOption("mc.cores", 2L))
+computeStats(images, form, formred, mask, data = NULL, W = NULL,
+  Winv = NULL, template = NULL, formImages = NULL, robust = TRUE,
+  outdir = NULL, mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
 \item{images}{Character vector of subject images to be modeled as an outcome
