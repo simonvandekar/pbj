@@ -122,4 +122,3 @@ regionmean = function(input=NULL, label=NULL){
 	# remove zero label get first two columns
 	vec = read.table(text=vec, strip.white=TRUE, skip=1)[-1,1:2]
 }
-

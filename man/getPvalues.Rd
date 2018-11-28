@@ -5,7 +5,7 @@
 \title{Gets p-values for Simulation Study}
 \usage{
 getPvalues(pmap, betamap = NULL, kernel = "box", pfunc = function(x)
-  10^(-x))
+  10^(-abs(x)))
 }
 \arguments{
 \item{pmap}{A cluster-extent p-value map (nii, nii.gz, or Nifti object),
