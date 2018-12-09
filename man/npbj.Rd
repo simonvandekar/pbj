@@ -16,6 +16,8 @@ npbj(images, form, formred, mask, data = NULL, W = NULL,
 
 \item{mask}{A character string of niftiImage object identifying voxels to be included in the analysis.}
 
+\item{data}{A data frame with the variables in form for associated with subject images.}
+
 \item{W}{A weight vector for the weighted least squares regression.}
 
 \item{template}{A template image that will be included in the returned statMap object.}
