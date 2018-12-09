@@ -11,16 +11,20 @@
 #' @importFrom stats as.formula model.matrix update.formula
 #' @export
 getDesign = function(form, data){
-  # if it looks like a gam formula
-  if(any(grepl("s\\(", form))){
-    # 1:n because you need to give gam an outcome to easily get the design matrix
-    data$x = 1:nrow(data)
-    lmfull = if(class(form)=='formula') update.formula(form, x ~ .) else paste('x', form)
-    lmfull = model.matrix(mgcv::gam(as.formula(lmfull), data=data) )
-
-  # else it's a linear model
+  if(is.matrix(form)){
+    return(form)
   } else {
-    lmfull = model.matrix(as.formula(form), data=data)
+    # if it looks like a gam formula
+    if(any(grepl("s\\(", form))){
+      # 1:n because you need to give gam an outcome to easily get the design matrix
+      data$x = 1:nrow(data)
+      lmfull = if(class(form)=='formula') update.formula(form, x ~ .) else paste('x', form)
+      lmfull = model.matrix(mgcv::gam(as.formula(lmfull), data=data) )
+  
+    # else it's a linear model
+    } else {
+      lmfull = model.matrix(as.formula(form), data=data)
+    }
+    return(lmfull)
   }
-  return(lmfull)
 }
