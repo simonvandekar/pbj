@@ -75,7 +75,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
 
   # Compute coefficients
   QR = qr(X * W)
-  coefficients = qr.coef(QR, images * W)[peind,]
+  coefficients = qr.coef(QR, res * W)[peind,]
 
   # Perform bootstrap using loop or apply or whatever
   bootStats(images=res, coefficients=coefficients, mask=mask, X=X, Xred=Xred, W=W, statistic=statistic, ...=...)
