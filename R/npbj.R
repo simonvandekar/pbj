@@ -4,6 +4,7 @@
 #' @param form A formula describing the full model.
 #' @param formred A formula describing the reduced model.
 #' @param mask A character string of niftiImage object identifying voxels to be included in the analysis.
+#' @param data A data frame with the variables in form for associated with subject images.
 #' @param W A weight vector for the weighted least squares regression.
 #' @param template A template image that will be included in the returned statMap object.
 #' @param nboot Number of bootstraps to perform.
