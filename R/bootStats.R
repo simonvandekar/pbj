@@ -52,7 +52,8 @@ bootStats = function(images, coefficients, mask, X, Xred, W=NULL, statistic=func
     # p X V
     bcoefs = qr.coef(QR, images * W)[peind,] - coefficients
     # compute the part of the inverse covariance of beta hat
-    varX1 = chol2inv(qr.R(qr( qr.resid(qr(Xred * W), X[,peind] * W)) ) )
+    varX1 = qr.resid(qr(Xred * W), X[,peind] * W)
+    varX1 = t(varX1) %*% varX1
     images = t(qr.resid(QR, images * W))
     # overwrite images with the other part of the inverse covariance of beta hat
     images = rowSums(images^2)/rdf
