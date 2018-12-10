@@ -78,7 +78,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
   coefficients = qr.coef(QR, res * W)[peind,]
 
   # Perform bootstrap using loop or apply or whatever
-  samp = sample(1:nrow(pain$data), replace=TRUE)
+  samp = sample(1:nrow(X), replace=TRUE)
   # mask and df are passed to the statistic function
   bootStats(images=res[samp,], coefficients=coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, mask=mask, df=df, ...)
 }
