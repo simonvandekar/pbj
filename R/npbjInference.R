@@ -3,6 +3,7 @@
 #' @export
 #' @param stat A vector of statistics for locations where mask!=0
 #' @param mask A niftiImage object where mask!=0 corresponds to the elements of stat
+#' @param df Degrees of freedom for chi-square statistic.
 #' @param cfts A vector of cluster forming thresholds
 #' @param kernel A kernel to define neighbors. "diamond" is another sensible option.
 #' @importFrom mmand shapeKernel

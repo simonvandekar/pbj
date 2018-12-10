@@ -13,6 +13,8 @@ sei(stat, mask, cfts = c(0.01, 0.005), df = 1, kernel = "box")
 
 \item{cfts}{A vector of cluster forming thresholds}
 
+\item{df}{Degrees of freedom for chi-square statistic.}
+
 \item{kernel}{A kernel to define neighbors. "diamond" is another sensible option.}
 }
 \description{
