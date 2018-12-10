@@ -29,7 +29,7 @@
 #' @export
 bootStats = function(images, coefficients, mask, X, Xred, W=NULL, statistic=function(stat) stat, ...){
 
-  n = nrow(images)  
+  n = nrow(images)
   peind = which(!colnames(X) %in% colnames(Xred))
   df = length(peind)
   rdf = n - ncol(X)
@@ -50,10 +50,10 @@ bootStats = function(images, coefficients, mask, X, Xred, W=NULL, statistic=func
     stat = qnorm(pt(stat, df=rdf))
   } else {
     # p X V
-    bcoefs = qr.coef(qr(Xred * W), images * W)[peind,] - coefficients
+    bcoefs = qr.coef(QR, images * W)[peind,] - coefficients
     # compute the part of the inverse covariance of beta hat
-    varX1 = chol2inv(qr.R(qr( qr.resid(QR, X[,peind] * W)) ) )
-    images = t(qr.resid(qr(X * W), images * W))
+    varX1 = chol2inv(qr.R(qr( qr.resid(qr(Xred * W), X[,peind] * W)) ) )
+    images = t(qr.resid(QR, images * W))
     # overwrite images with the other part of the inverse covariance of beta hat
     images = rowSums(images^2)
     # diag( t(bcoefs) %*% varX1 %*% bcoefs)
