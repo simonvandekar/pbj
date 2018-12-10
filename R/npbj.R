@@ -20,7 +20,7 @@
 #' @export
 #' @importFrom RNifti readNifti
 #' @importFrom abind abind
-npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=sei, ...=...){
+npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=sei, ...){
   X = getDesign(form, data=data)
   Xred = getDesign(formred, data=data)
   n = nrow(X)
@@ -43,7 +43,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
       rm(images)
     }
     dims = dim(res)
-  
+
   # load mask
   if(class(mask)[1] !='niftiImage'){
     maskimg=as.character(mask)
@@ -78,5 +78,5 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
   coefficients = qr.coef(QR, res * W)[peind,]
 
   # Perform bootstrap using loop or apply or whatever
-  bootStats(images=res, coefficients=coefficients, mask=mask, X=X, Xred=Xred, W=W, statistic=statistic, ...=...)
+  bootStats(images=res, coefficients=coefficients, mask=mask, X=X, Xred=Xred, W=W, statistic=statistic, ...)
 }

@@ -64,6 +64,6 @@ bootStats = function(images, coefficients, mask, X, Xred, W=NULL, statistic=func
     #stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
   }
 
-  out = statistic(stat, mask, ...=...)
+  out = statistic(stat, mask, ...)
   return(out)
 }
