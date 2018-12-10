@@ -55,7 +55,7 @@ bootStats = function(images, coefficients, mask, X, Xred, W=NULL, statistic=func
     varX1 = chol2inv(qr.R(qr( qr.resid(qr(Xred * W), X[,peind] * W)) ) )
     images = t(qr.resid(QR, images * W))
     # overwrite images with the other part of the inverse covariance of beta hat
-    images = rowSums(images^2)
+    images = rowSums(images^2)/rdf
     # diag( t(bcoefs) %*% varX1 %*% bcoefs)
     stat = colSums((varX1 %*% bcoefs) * bcoefs)
     # This is a chi-square statistic
