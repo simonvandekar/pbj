@@ -4,15 +4,13 @@
 \alias{bootStats}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-bootStats(images, coefficients, mask, X, Xred, W = NULL,
+bootStats(images, coefficients, X, Xred, W = NULL,
   statistic = function(stat) stat, ...)
 }
 \arguments{
 \item{images}{An n by V  matrix of voxels inside the brain.}
 
 \item{coefficients}{An n by V matrix of parameter estimates.}
-
-\item{mask}{A nifti image that defines where the columns of images comes from.}
 
 \item{X}{Design matrix for the full model.}
 

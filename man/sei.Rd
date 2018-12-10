@@ -4,7 +4,7 @@
 \alias{sei}
 \title{Spatial extent inference function called by npbj function}
 \usage{
-sei(stat, mask, cfts = c(0.01, 0.005), kernel = "box")
+sei(stat, mask, cfts = c(0.01, 0.005), df = 1, kernel = "box")
 }
 \arguments{
 \item{stat}{A vector of statistics for locations where mask!=0}
