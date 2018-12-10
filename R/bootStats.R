@@ -5,7 +5,6 @@
 #'  procedure.
 #' @param images An n by V  matrix of voxels inside the brain.
 #' @param coefficients An n by V matrix of parameter estimates.
-#' @param mask A nifti image that defines where the columns of images comes from.
 #' @param X Design matrix for the full model.
 #' @param Xred Design matrix for the reduced model.
 #' @param W A vector of weights for the regression. Voxel specific weights not accepted
@@ -27,7 +26,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-bootStats = function(images, coefficients, mask, X, Xred, W=NULL, statistic=function(stat) stat, ...){
+bootStats = function(images, coefficients, X, Xred, W=NULL, statistic=function(stat) stat, ...){
 
   n = nrow(images)
   peind = which(!colnames(X) %in% colnames(Xred))
@@ -37,33 +36,20 @@ bootStats = function(images, coefficients, mask, X, Xred, W=NULL, statistic=func
   W = sqrt(W)
   QR = qr(X * W)
   # fit model to all image data
-  if(df==1){
-    num = qr.coef(QR, images * W)[peind,]
-    seX1 = sqrt(chol2inv(qr.R(QR))[peind,peind])
-    images = t(qr.resid(QR, images * W))
-    rm(QR)
-    # overwrite images
-    images = rowSums(images^2)
-    stat = sqrt(images/rdf)
-    stat = num/stat / seX1
-    # convert to z-statistics
-    stat = qnorm(pt(stat, df=rdf))
-  } else {
-    # p X V
-    bcoefs = qr.coef(QR, images * W)[peind,] - coefficients
-    # compute the part of the inverse covariance of beta hat
-    varX1 = qr.resid(qr(Xred * W), X[,peind] * W)
-    varX1 = t(varX1) %*% varX1
-    images = t(qr.resid(QR, images * W))
-    # overwrite images with the other part of the inverse covariance of beta hat
-    images = rowSums(images^2)/rdf
-    # diag( t(bcoefs) %*% varX1 %*% bcoefs)
-    stat = colSums((varX1 %*% bcoefs) * bcoefs)
-    # This is a chi-square statistic
-    stat = stat/images # * rdf/df
-    # convert to chisquared
-    #stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
-  }
+  # p X V
+  bcoefs = qr.coef(QR, images * W)[peind,] - coefficients
+  # compute the part of the inverse covariance of beta hat
+  varX1 = qr.resid(qr(Xred * W), X[,peind] * W)
+  varX1 = t(varX1) %*% varX1
+  images = t(qr.resid(QR, images * W))
+  # overwrite images with the other part of the inverse covariance of beta hat
+  images = rowSums(images^2)/rdf
+  # diag( t(bcoefs) %*% varX1 %*% bcoefs)
+  stat = colSums((varX1 %*% bcoefs) * bcoefs)
+  # This is a chi-square statistic
+  stat = stat/images # * rdf/df
+  # convert to chisquared
+  #stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
 
   out = statistic(stat, ...)
   return(out)
