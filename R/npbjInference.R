@@ -6,7 +6,7 @@
 #' @param cfts A vector of cluster forming thresholds
 #' @param kernel A kernel to define neighbors. "diamond" is another sensible option.
 #' @importFrom mmand shapeKernel
-sei = function(stat, mask, cfts=c(0.01, 0.005), kernel='box'){
+sei = function(stat, mask, cfts=c(0.01, 0.005), df=1, kernel='box'){
   k = mmand::shapeKernel(3, 3, type=kernel)
   tmp = mask
   tmp = lapply(cfts, function(th){ tmp[ mask==1] = (stat>th); tmp})
