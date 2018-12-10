@@ -79,5 +79,6 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
 
   # Perform bootstrap using loop or apply or whatever
   samp = sample(1:nrow(pain$data), replace=TRUE)
-  bootStats(images=res[samp,], coefficients=coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, df=df, ...)
+  # mask and df are passed to the statistic function
+  bootStats(images=res[samp,], coefficients=coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, mask=mask, df=df, ...)
 }
