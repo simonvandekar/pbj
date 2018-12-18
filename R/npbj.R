@@ -22,11 +22,35 @@
 #' @importFrom abind abind
 npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=sei, coefficients=TRUE, ...){
 
-  statmap = computeStats(images=images, form=form, formred=formred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, flat=TRUE)
+  X = getDesign(form, data=data)
+  Xred = getDesign(formred, data=data)
+  statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, flat=TRUE)
+
+  if(class(images)[1] != 'niftiImage'){
+    n=length(images)
+    images = as.character(images)
+    if(nrow(X)!=n)
+      stop('length(images) and nrow(X) must be the same.')
+    res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
+  } else {
+    n = nrow(X)
+    res = images
+    rm(images)
+  }
+  dims = dim(res)
+
+  # load mask
+  if(class(mask)[1] !='niftiImage'){
+    maskimg=as.character(mask)
+    mask = RNifti::readNifti(maskimg)
+  }
+
+  # load images
+  res = t(apply(res, 4, function(x) x[mask!=0]))
 
   result = lapply(1:nboot, function(ind){
     samp = sample(1:nrow(X), replace=TRUE)
-    bootStats(images=res[samp,], coefficients=coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, mask=mask, df=df, ...)
+    bootStats(images=statmap$res[samp,], coefficients=statmap$coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, ...)
   }
   )
 
