@@ -4,7 +4,9 @@
 #'  objects necessary to perform the parametric bootstrap joint (PBJ) inference
 #'  procedure.
 #' @param images An n by V  matrix of voxels inside the brain.
-#' @param coefficients An n by V matrix of parameter estimates.
+#' @param coefficients An n by V matrix of parameter estimates to subtract from the bootstrapped values.
+#' If computing p-values this should be the observed parameter estimates. If computing confidence intervals
+#' then this should be 0 (the default).
 #' @param X Design matrix for the full model.
 #' @param Xred Design matrix for the reduced model.
 #' @param W A vector of weights for the regression. Voxel specific weights not accepted
@@ -26,7 +28,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-bootStats = function(images, coefficients, X, Xred, W=NULL, statistic=function(stat) stat, ...){
+bootStats = function(images, coefficients=0, X, Xred, W=NULL, statistic=function(stat) stat, ...){
 
   n = nrow(images)
   peind = which(!colnames(X) %in% colnames(Xred))

@@ -20,8 +20,12 @@
 #' @param template Template image used for visualization.
 #' @param formImages n X p matrix of images where n is the number of subjects and
 #'  each column corresponds to an imaging covariate. Currently, not supported.
-#' @param robust Compute robust standard error estimates? Defaults to TRUE.
-#'   Uses HC3 SE estimates from REF.
+#' @param robust Logical, compute robust standard error estimates? Defaults to TRUE.
+#'   Uses HC3 SE estimates from Long and Ervin 2000.
+#' @param sqrtSigma Logical, return V X n matrix sqrtSigma? Defaults to TRUE (described below).
+#' Required to use pbj function.
+#' @param flat Logical, return stat as V X n matrix and coef as m1 X V matrix
+#' (instead of niftiImage objects; defaults to FALSE).
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
 #' saved as strings. This approach conserves memory, but has longer IO time.
 #' Currently, not supported.
@@ -31,7 +35,8 @@
 #' @return Returns a list with the following values:
 #' \describe{
 #'   \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
-#'   \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
+#'   \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
+#'   \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = hatSigma.}
 #'   \item{mask}{The input mask.}
 #'   \item{template}{The background template used for visualization.}
 #'   \item{formulas}{A list containing the full and reduced models.}
@@ -44,7 +49,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, flat=FALSE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -116,7 +121,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   df = length(peind)
   rdf = n - ncol(X)
   if(df>1 & robust)
-    stop('Robust covariance only available for testing a single parameter.')
+    stop('Robust covariance is only available for testing a single parameter.')
 
   if(is.character(W)){
     cat('Weights are voxel-wise.\n')
@@ -193,12 +198,13 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   # else weights are the same for all voxels
   } else {
     if(!robust){
+      QR = qr(X * W)
+      coef = num = qr.coef(QR, res)[peind,,drop=FALSE]
       if(df==1){
-	QR = qr(X * W)
-        num = qr.coef(QR, res)[peind,]
+        num = coef
         seX1 = sqrt(chol2inv(qr.R(QR))[peind,peind])
         res = t(qr.resid(QR, res))
-	rm(QR)
+	      rm(QR)
       } else {
         num = colSums(qr.resid(qr(Xred * W), res)^2)
         res = t(qr.resid(qr(X * W), res))
@@ -210,7 +216,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
       res = lm(res ~ -1 + I(X * W), model=FALSE)
 
       # get parameter estimates
-      stat=coefficients(res)[peind,]
+      coef = stat = coefficients(res)[peind,,drop=FALSE]
 
       # compute hat values
       cat('Computing hat values.\n')
@@ -248,8 +254,6 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
       # convert to chisquared
       stattemp = qchisq(pf(stattemp, df1=df, df2=rdf), df=df)
     }
-    stat = mask
-    stat[ stat!=0] = stattemp
   }
 
   if(robust){
@@ -257,15 +261,27 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
     stattemp = stat*A/sqrt(rowSums(res^2))
     # Use T-to-Z transform
     stattemp = qnorm(pt(stattemp, df=rdf))
+  }
+
+  if(!flat){
     # get niftiImage from mask
     stat = mask
     stat[ stat!=0] = stattemp
+
+    # output 4D coefficient image
+    coef = do.call(abind, c(lapply(1:nrow(coef), function(coefv){ mask[mask!=0] = coefv; mask}), 'along'=4))
+    coef = updateNifti(coef, template=mask)
+  } else {
+    stat = stattemp
   }
+
+  if(!sqrtSigma) res=NULL
+
 
   # used later to indicated t-statistic
   if(df==1)
     df=0
-  out = list(stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf)
+  out = list(stat=stat, coef=coef, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf)
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir

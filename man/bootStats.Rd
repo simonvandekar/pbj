@@ -4,13 +4,15 @@
 \alias{bootStats}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-bootStats(images, coefficients, X, Xred, W = NULL,
+bootStats(images, coefficients = 0, X, Xred, W = NULL,
   statistic = function(stat) stat, ...)
 }
 \arguments{
 \item{images}{An n by V  matrix of voxels inside the brain.}
 
-\item{coefficients}{An n by V matrix of parameter estimates.}
+\item{coefficients}{An n by V matrix of parameter estimates to subtract from the bootstrapped values.
+If computing p-values this should be the observed parameter estimates. If computing confidence intervals
+then this should be 0 (the default).}
 
 \item{X}{Design matrix for the full model.}
 

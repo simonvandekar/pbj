@@ -6,7 +6,8 @@
 \usage{
 computeStats(images, form, formred, mask, data = NULL, W = NULL,
   Winv = NULL, template = NULL, formImages = NULL, robust = TRUE,
-  outdir = NULL, mc.cores = getOption("mc.cores", 2L))
+  sqrtSigma = TRUE, flat = FALSE, outdir = NULL,
+  mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
 \item{images}{Character vector of subject images to be modeled as an outcome
@@ -35,8 +36,14 @@ passing variance images as the inverse weights.}
 \item{formImages}{n X p matrix of images where n is the number of subjects and
 each column corresponds to an imaging covariate. Currently, not supported.}
 
-\item{robust}{Compute robust standard error estimates? Defaults to TRUE.
-Uses HC3 SE estimates from REF.}
+\item{robust}{Logical, compute robust standard error estimates? Defaults to TRUE.
+Uses HC3 SE estimates from Long and Ervin 2000.}
+
+\item{sqrtSigma}{Logical, return V X n matrix sqrtSigma? Defaults to TRUE (described below).
+Required to use pbj function.}
+
+\item{flat}{Logical, return stat as V X n matrix and coef as m1 X V matrix
+(instead of niftiImage objects; defaults to FALSE).}
 
 \item{outdir}{If specified, output is saved as NIfTIs and statMap object is
 saved as strings. This approach conserves memory, but has longer IO time.
@@ -48,7 +55,8 @@ Currently, not supported.}
 Returns a list with the following values:
 \describe{
   \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
-  \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
+  \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
+  \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = hatSigma.}
   \item{mask}{The input mask.}
   \item{template}{The background template used for visualization.}
   \item{formulas}{A list containing the full and reduced models.}

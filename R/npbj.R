@@ -20,65 +20,17 @@
 #' @export
 #' @importFrom RNifti readNifti
 #' @importFrom abind abind
-npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=sei, ...){
-  X = getDesign(form, data=data)
-  Xred = getDesign(formred, data=data)
-  n = nrow(X)
-  if(is.null(W)) W = rep(1, n)
-  W = sqrt(W)
-  peind = which(!colnames(X) %in% colnames(Xred))
-  df = length(peind)
-  rdf = n - ncol(X)
+npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=sei, coefficients=TRUE, ...){
 
-  # load in images
-  if(class(images)[1] != 'niftiImage'){
-    n=length(images)
-    images = as.character(images)
-    if(nrow(X)!=n)
-      stop('length(images) and nrow(X) must be the same.')
-    res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
-    } else {
-      n = nrow(X)
-      res = images
-      rm(images)
-    }
-    dims = dim(res)
+  statmap = computeStats(images=images, form=form, formred=formred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, flat=TRUE)
 
-  # load mask
-  if(class(mask)[1] !='niftiImage'){
-    maskimg=as.character(mask)
-    mask = RNifti::readNifti(maskimg)
+  result = lapply(1:nboot, function(ind){
+    samp = sample(1:nrow(X), replace=TRUE)
+    bootStats(images=res[samp,], coefficients=coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, mask=mask, df=df, ...)
   }
+  )
 
-  # check that first input image and mask dimensions are the same
-  ndims = length(dim(mask))
-  if(any(dims[1:ndims] != dim(mask))  ){
-    stop('images and mask dimensions do not match.\n')
-  }
-
-  # check that template and mask dimensions are the same
-  if( !is.null(template)){
-    if(class(template)[1]!='niftiImage'){
-      temp = readNifti(as.character(template))
-    } else {
-      temp = template
-    }
-      dims = dim(temp)
-      rm(temp)
-      if(any(dims[1:ndims] != dim(mask))  ){
-        stop('template image and mask dimensions (or pixel dimensions) do not match.\n')
-      }
-  }
-
-  # subset images to mask
-  res = t(apply(res, 4, function(x) x[mask!=0]))
-
-  # Compute coefficients
-  QR = qr(X * W)
-  coefficients = qr.coef(QR, res * W)[peind,]
-
-  # Perform bootstrap using loop or apply or whatever
-  samp = sample(1:nrow(X), replace=TRUE)
-  # mask and df are passed to the statistic function
-  bootStats(images=res[samp,], coefficients=coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, mask=mask, df=df, ...)
+  # output will depend on function "statistic"
+  result = do.call(rbind, result)
+  class(result) = c(statmap, result)
 }
