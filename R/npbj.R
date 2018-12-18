@@ -32,5 +32,5 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
 
   # output will depend on function "statistic"
   result = do.call(rbind, result)
-  class(result) = c(statmap, result)
+  result = c(statmap, result)
 }
