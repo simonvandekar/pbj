@@ -185,10 +185,21 @@ write.statMap <- function(x,outdir)
   return(list(stat=statimg, sqrtSigma=resimg, summary=summaryf))
 }
 
-
-#'Gets a 4D niftiImage of the coefficient image from a statMap object
+#' Gets a 4D niftiImage of the coefficient image from a statMap object
 #'
-#' Given a statMap object and a directory write the objects as stat.nii.gz, sqrtSigma.nii.gz and summary.txt
+#' Returns a statistical niftiImage object from a statMap object
+#' @param x the statMap object to extract a coefficient niftiImage from
+#' @return a niftiImage object of the coefficient image
+#' @export
+stat.statMap = function(x){
+  # output 4D coefficient image
+  stat = x$mask
+  stat[ stat!=0 ] = x$stat
+}
+
+#' Gets a 4D niftiImage of the coefficient image from a statMap object
+#'
+#' Returns a 4D coefficient niftiImage object from a statMap object
 #' @param x the statMap object to extract a coefficient niftiImage from
 #' @return a niftiImage object of the coefficient image
 #' @export
