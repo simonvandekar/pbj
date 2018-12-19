@@ -155,11 +155,13 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
           seX1 = sqrt(do.call(c, lapply(qrs, function(qrval) chol2inv(qr.R(qrval))[peind,peind])))
         }
         # cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
-        num = do.call(c, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind]) )
+        coef = num = do.call(cbind, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind]) )
         # cannot be parallelized due to memory use
         res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qrs[[ind]], res[,ind])) )
         rm(qrs, W)
       } else {
+        # cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
+        coef = num = do.call(cbind, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind]) )
         num = do.call(c, lapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2)) )
         res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind])) )
       }
@@ -170,13 +172,13 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
 
       # get parameter estimates
       if(.Platform$OS.type!='windows'){
-        stat = do.call(rbind, parallel::mclapply(res, coefficients, mc.cores=mc.cores ))[,peind]
+        coef = stat = do.call(cbind, parallel::mclapply(res, coefficients, mc.cores=mc.cores ))[peind,, drop=FALSE]
         cat('Getting voxel-wise hat values.\n')
         h = do.call(rbind, parallel::mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
         cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
         res = do.call(rbind, parallel::mclapply(res, residuals, mc.cores=mc.cores))
       } else {
-        stat = do.call(rbind, lapply(res, coefficients ))[,peind]
+        coef = stat = do.call(rbind, lapply(res, coefficients ))[peind,,drop=FALSE]
         cat('Getting voxel-wise hat values.\n')
         h = do.call(rbind, lapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}))
         cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
@@ -196,9 +198,9 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
 
   # else weights are the same for all voxels
   } else {
+    QR = qr(X * W)
+    coef = num = qr.coef(QR, res)[peind,,drop=FALSE]
     if(!robust){
-      QR = qr(X * W)
-      coef = num = qr.coef(QR, res)[peind,,drop=FALSE]
       if(df==1){
         num = coef
         seX1 = sqrt(chol2inv(qr.R(QR))[peind,peind])

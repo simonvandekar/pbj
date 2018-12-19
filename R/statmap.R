@@ -20,6 +20,15 @@ statMatrix <- function(label, mm)
   )
 }
 
+statVector <- function(label, mm)
+{
+  paste0(
+    label, "vector[",
+    length(mm),
+    "]\n"
+  )
+}
+
 statInner <- function(label, obj)
 {
   if(is.null(obj))    return("")
@@ -28,6 +37,7 @@ statInner <- function(label, obj)
   if(class(obj)[1] == "character")  return(statFile(label, obj))
   if(class(obj)[1] == "niftiImage") return(statNifti(label, obj))
   if(class(obj)[1] == "matrix")     return(statMatrix(label, obj))
+  if(class(obj)[1] == "matrix")     return(statVector(label, obj))
 
   paste0(label, "Unhandled Class(",class(obj)[1],")\n")
 }
@@ -195,6 +205,7 @@ stat.statMap = function(x){
   # output 4D coefficient image
   stat = x$mask
   stat[ stat!=0 ] = x$stat
+  return(stat)
 }
 
 #' Gets a 4D niftiImage of the statistical image from a statMap object
@@ -205,8 +216,9 @@ stat.statMap = function(x){
 #' @export
 coef.statMap = function(x){
   # output 4D coefficient image
-  coef = do.call(abind, c(lapply(1:nrow(x$coef), function(coefv){ x$mask[x$mask!=0] = coefv; x$mask}), 'along'=(dim(mask)+1) ))
+  coef = do.call(abind, c(lapply(1:nrow(x$coef), function(coefv){ x$mask[x$mask!=0] = coefv; x$mask}), 'along'=(dim(x$mask)+1) ))
   coef = updateNifti(coef, template=mask)
+  return(coef)
 }
 
 #' Gets a niftiImage of the variance image from a statMap object
@@ -221,4 +233,5 @@ var.statMap = function(x){
   # get niftiImage from mask
   varimg = x$mask
   varimg[ varimg!=0] = rowSums(x$sqrtSigma^2)/x$rdf
+  return(varimg)
 }

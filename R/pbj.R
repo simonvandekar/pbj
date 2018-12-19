@@ -45,7 +45,7 @@ summary.pbj <- function(object, ...)
 image.pbj <- function(x, alpha=0.05, ...)
 {
   for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
-    stat = x$stat
+    stat = stat.statMap(x)
     x[[cft]]
     # mask stat image with significant voxels
     stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
