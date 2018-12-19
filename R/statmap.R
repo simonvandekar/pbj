@@ -90,7 +90,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     x = if(is.character(object$template)) readNifti(object$template) else object$template
     pixdim = RNifti::pixdim(x)
     mask = if(is.character(object$mask)) readNifti(object$mask) else object$mask
-    stat = if(is.character(object$stat)) readNifti(object$stat) else object$stat
+    stat = if(is.character(object$stat)) readNifti(object$stat) else stat.statMap(object)
 
     switch(plane[1], axial = {
         aspect <- pixdim[3]/pixdim[2]
@@ -154,21 +154,23 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
 #' Given a statMap object and a directory write the objects as stat.nii.gz, sqrtSigma.nii.gz and summary.txt
 #' @param x the statMap object to write out
 #' @param outdir the directory to write into
-#' @param ... additional arugment, unused
 #' @return a list of what was written
 #' @export
-write.statMap <- function(x,outdir, ...)
+write.statMap <- function(x,outdir)
 {
   statimg  = file.path(outdir, 'stat.nii.gz')
+  coefimg   = file.path(outdir, 'coef.nii.gz')
   resimg   = file.path(outdir, 'sqrtSigma.nii.gz')
   summaryf = file.path(outdir, 'summary.txt')
   if(is.character(x$stat)){
     file.copy(x$stat, statimg)
     file.copy(x$sqrtSigma, resimg)
+    file.copy(x$coef, coefimg)
   } else {
     cat('Writing output images.\n')
     dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
-    writeNifti(x$stat, statimg)
+    writeNifti(stat.statMap(x), statimg)
+    writeNifti(coef.statMap(x), coefimg)
 
     cat('Writing sqrtSigma 4d image.\n')
     # reshape res matrix into 4d image
@@ -183,3 +185,29 @@ write.statMap <- function(x,outdir, ...)
   return(list(stat=statimg, sqrtSigma=resimg, summary=summaryf))
 }
 
+
+#'Gets a 4D niftiImage of the coefficient image from a statMap object
+#'
+#' Given a statMap object and a directory write the objects as stat.nii.gz, sqrtSigma.nii.gz and summary.txt
+#' @param x the statMap object to extract a coefficient niftiImage from
+#' @return a niftiImage object of the coefficient image
+#' @export
+coef.statMap = function(x){
+  # output 4D coefficient image
+  coef = do.call(abind, c(lapply(1:nrow(x$coef), function(coefv){ x$mask[x$mask!=0] = coefv; x$mask}), 'along'=(dim(mask)+1) ))
+  coef = updateNifti(coef, template=mask)
+}
+
+#' Gets a niftiImage of the variance image from a statMap object
+#'
+#' Will return a niftiImage of the variance image
+#' @param x the statMap to extract the variance image from
+#' @return a niftiImage object of the variance image
+#' @export
+var.statMap = function(x){
+  if(x$df>1)
+    stop('Only supported for df<1.')
+  # get niftiImage from mask
+  varimg = x$mask
+  varimg[ varimg!=0] = rowSums(x$sqrtSigma^2)/x$rdf
+}

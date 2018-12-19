@@ -4,14 +4,12 @@
 \alias{write.statMap}
 \title{Write the statMap objects out}
 \usage{
-write.statMap(x, outdir, ...)
+write.statMap(x, outdir)
 }
 \arguments{
 \item{x}{the statMap object to write out}
 
 \item{outdir}{the directory to write into}
-
-\item{...}{additional arugment, unused}
 }
 \value{
 a list of what was written

@@ -6,8 +6,8 @@
 \usage{
 computeStats(images, form, formred, mask, data = NULL, W = NULL,
   Winv = NULL, template = NULL, formImages = NULL, robust = TRUE,
-  sqrtSigma = TRUE, flat = FALSE, outdir = NULL,
-  mc.cores = getOption("mc.cores", 2L))
+  sqrtSigma = TRUE, outdir = NULL, mc.cores = getOption("mc.cores",
+  2L))
 }
 \arguments{
 \item{images}{Character vector of subject images to be modeled as an outcome
@@ -40,9 +40,7 @@ each column corresponds to an imaging covariate. Currently, not supported.}
 Uses HC3 SE estimates from Long and Ervin 2000.}
 
 \item{sqrtSigma}{Logical, return V X n matrix sqrtSigma? Defaults to TRUE (described below).
-Required to use pbj function.}
-
-\item{flat}{Logical, return stat as V X n matrix and coef as m1 X V matrix
+Required to use pbj function.
 (instead of niftiImage objects; defaults to FALSE).}
 
 \item{outdir}{If specified, output is saved as NIfTIs and statMap object is

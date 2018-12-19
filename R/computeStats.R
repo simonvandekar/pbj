@@ -24,7 +24,6 @@
 #'   Uses HC3 SE estimates from Long and Ervin 2000.
 #' @param sqrtSigma Logical, return V X n matrix sqrtSigma? Defaults to TRUE (described below).
 #' Required to use pbj function.
-#' @param flat Logical, return stat as V X n matrix and coef as m1 X V matrix
 #' (instead of niftiImage objects; defaults to FALSE).
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
 #' saved as strings. This approach conserves memory, but has longer IO time.
@@ -49,7 +48,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, flat=FALSE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -241,38 +240,26 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   # compute statistical image
   if(!robust){
     cat('Computing stat image.\n')
-    stattemp = rowSums(res^2)
+    stat = rowSums(res^2)
     # assume t-statistics if df==1
     if(df==1){
-      stattemp = sqrt(stattemp/rdf)
-      stattemp = num/stattemp / seX1
+      stat = sqrt(stat/rdf)
+      stat = num/stat / seX1
       # convert to z-statistics
-      stattemp = qnorm(pt(stattemp, df=rdf))
+      stat = qnorm(pt(stattemp, df=rdf))
     } else {
-      num = num - stattemp
-      stattemp = num/stattemp * rdf/df
+      num = num - stat
+      stat = num/stat * rdf/df
       # convert to chisquared
-      stattemp = qchisq(pf(stattemp, df1=df, df2=rdf), df=df)
+      stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
     }
   }
 
   if(robust){
     cat('Computing robust stat image.\n')
-    stattemp = stat*A/sqrt(rowSums(res^2))
+    stat = stat*A/sqrt(rowSums(res^2))
     # Use T-to-Z transform
-    stattemp = qnorm(pt(stattemp, df=rdf))
-  }
-
-  if(!flat){
-    # get niftiImage from mask
-    stat = mask
-    stat[ stat!=0] = stattemp
-
-    # output 4D coefficient image
-    coef = do.call(abind, c(lapply(1:nrow(coef), function(coefv){ mask[mask!=0] = coefv; mask}), 'along'=4))
-    coef = updateNifti(coef, template=mask)
-  } else {
-    stat = stattemp
+    stat = qnorm(pt(stat, df=rdf))
   }
 
   if(!sqrtSigma) res=NULL

@@ -24,7 +24,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     warning('Class of first argument is not \'statMap\'.')
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
-  stat = if(is.character(statMap$stat)) readNifti(statMap$stat) else statMap$stat
+  stat = if(is.character(statMap$stat)) readNifti(statMap$stat) else stat.statMap(statMap)
   template = statMap$template
   df = statMap$df
   rdf = statMap$rdf
