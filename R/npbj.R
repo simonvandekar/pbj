@@ -24,7 +24,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
 
   X = getDesign(form, data=data)
   Xred = getDesign(formred, data=data)
-  statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, flat=TRUE)
+  statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE)
 
   if(class(images)[1] != 'niftiImage'){
     n=length(images)
@@ -50,7 +50,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
 
   result = lapply(1:nboot, function(ind){
     samp = sample(1:nrow(X), replace=TRUE)
-    bootStats(images=statmap$res[samp,], coefficients=statmap$coefficients, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, ...)
+    bootStats(images=res[samp,], coefficients=statmap$coef, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, ...)
   }
   )
 

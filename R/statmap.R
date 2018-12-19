@@ -197,7 +197,7 @@ stat.statMap = function(x){
   stat[ stat!=0 ] = x$stat
 }
 
-#' Gets a 4D niftiImage of the coefficient image from a statMap object
+#' Gets a 4D niftiImage of the statistical image from a statMap object
 #'
 #' Returns a 4D coefficient niftiImage object from a statMap object
 #' @param x the statMap object to extract a coefficient niftiImage from
