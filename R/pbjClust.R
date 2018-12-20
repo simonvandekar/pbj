@@ -8,8 +8,8 @@
 #' @param kernel Kernel to use for computing connected components. Box is
 #'  default (26 neighbors), but Diamond may also be reasonable.
 #'
-#' @return Returns a list of length length(cfts)+2. The first two elements contain
-#' statMap$stat and statMap$template. The remaining elements are lists containing the following:
+#' @return Returns a list of length length(cfts)+3. The first three elements contain
+#' statMap$stat, statMap$template, and statMap$mask. The remaining elements are lists containing the following:
 #' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
@@ -125,7 +125,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
-  out = c(stat=list(stat), template=list(template), out)
+  out = c(stat=list(stat), template=list(template), mask=list(mask), out)
   class(out) = c('pbj', 'list')
   return(out)
 }

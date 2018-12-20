@@ -45,12 +45,12 @@ summary.pbj <- function(object, ...)
 image.pbj <- function(x, alpha=0.05, ...)
 {
   for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
-    stat = stat.statMap(x)
+    stat = x$stat
     x[[cft]]
     # mask stat image with significant voxels
     stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
     # create a barebones statmap object
-    statmap = list(stat=stat, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL)
+    statmap = list(stat=stat, sqrtSigma=NULL, mask=x$mask, template=x$template, formulas=NULL, robust=NULL)
     class(statmap) = "statMap"
     # call image.statMap
     image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft)) )  )
