@@ -22,8 +22,10 @@
 #'  each column corresponds to an imaging covariate. Currently, not supported.
 #' @param robust Logical, compute robust standard error estimates? Defaults to TRUE.
 #'   Uses HC3 SE estimates from Long and Ervin 2000.
-#' @param sqrtSigma Logical, return V X n matrix sqrtSigma? Defaults to TRUE (described below).
+#' @param sqrtSigma Logical: return V X n matrix sqrtSigma? Defaults to TRUE (described below).
 #' Required to use pbj function.
+#' @param transform Logical: use transformation from equation (5) of Vandekar et al. 2019 (Biometrics)?
+#' Defaults to TRUE.
 #' (instead of niftiImage objects; defaults to FALSE).
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
 #' saved as strings. This approach conserves memory, but has longer IO time.
@@ -48,7 +50,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -80,8 +82,6 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   if(is.null(Winv)){
     Winv = FALSE
     if(is.null(W)) W = rep(1,n)
-    if(all(W == rep(1, n ) ))
-      cat('Note: weights are uniform!\n')
   } else {
     W = Winv
     Winv = TRUE
@@ -251,17 +251,20 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
       stat = qnorm(pt(stattemp, df=rdf))
     } else {
       num = num - stat
-      stat = num/stat * rdf/df
+      stat = num/stat * rdf
       # convert to chisquared
-      stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
-    }
+      if(transform){
+        stat = stat/df
+        stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
+      }
+   }
   }
 
   if(robust){
     cat('Computing robust stat image.\n')
     stat = stat*A/sqrt(rowSums(res^2))
     # Use T-to-Z transform
-    stat = qnorm(pt(stat, df=rdf))
+    if(transform) stat = qnorm(pt(stat, df=rdf))
   }
 
   if(!sqrtSigma) res=NULL

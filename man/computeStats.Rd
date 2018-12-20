@@ -6,8 +6,8 @@
 \usage{
 computeStats(images, form, formred, mask, data = NULL, W = NULL,
   Winv = NULL, template = NULL, formImages = NULL, robust = TRUE,
-  sqrtSigma = TRUE, outdir = NULL, mc.cores = getOption("mc.cores",
-  2L))
+  sqrtSigma = TRUE, transform = TRUE, outdir = NULL,
+  mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
 \item{images}{Character vector of subject images to be modeled as an outcome
@@ -39,8 +39,11 @@ each column corresponds to an imaging covariate. Currently, not supported.}
 \item{robust}{Logical, compute robust standard error estimates? Defaults to TRUE.
 Uses HC3 SE estimates from Long and Ervin 2000.}
 
-\item{sqrtSigma}{Logical, return V X n matrix sqrtSigma? Defaults to TRUE (described below).
-Required to use pbj function.
+\item{sqrtSigma}{Logical: return V X n matrix sqrtSigma? Defaults to TRUE (described below).
+Required to use pbj function.}
+
+\item{transform}{Logical: use transformation from equation (5) of Vandekar et al. 2019 (Biometrics)?
+Defaults to TRUE.
 (instead of niftiImage objects; defaults to FALSE).}
 
 \item{outdir}{If specified, output is saved as NIfTIs and statMap object is

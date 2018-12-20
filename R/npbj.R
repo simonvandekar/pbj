@@ -9,7 +9,7 @@
 #' @param template A template image that will be included in the returned statMap object.
 #' @param nboot Number of bootstraps to perform.
 #' @param statistic A function of the form statistic(stat, ...) that takes a vector stat and other arguments
-#' to compute an image summary statistic for each bootstrap.
+#' to compute an image summary statistic for each bootstrap. E.g. \code{\link{npbj.sei}}.
 #' @param ... Arguments passed to statistic function.
 #' @return Returns a list of length length(cfts)+2. The first two elements contain
 #' statMap$stat and statMap$template. The remaining elements are lists containing the following:
@@ -17,14 +17,15 @@
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
 #' \item{CDF}{A bootstrap CDF.}
+#' @seealso \code{\link{sei}}
 #' @export
 #' @importFrom RNifti readNifti
 #' @importFrom abind abind
-npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=sei, coefficients=TRUE, ...){
+npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=npbj.sei, ...){
 
   X = getDesign(form, data=data)
   Xred = getDesign(formred, data=data)
-  statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE)
+  statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, transform=FALSE)
 
   if(class(images)[1] != 'niftiImage'){
     n=length(images)
@@ -37,7 +38,6 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
     res = images
     rm(images)
   }
-  dims = dim(res)
 
   # load mask
   if(class(mask)[1] !='niftiImage'){
@@ -48,13 +48,14 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
   # load images
   res = t(apply(res, 4, function(x) x[mask!=0]))
 
+  cat('Running bootstrap\n')
   result = lapply(1:nboot, function(ind){
     samp = sample(1:nrow(X), replace=TRUE)
-    bootStats(images=res[samp,], coefficients=statmap$coef, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, ...)
+    bootStats(images=res[samp,], coefficients=statmap$coef, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, mask=mask, df=statmap$df, ...)
   }
   )
 
   # output will depend on function "statistic"
   result = do.call(rbind, result)
-  result = c(statmap, result)
+  result = list(statmap, stats=result)
 }

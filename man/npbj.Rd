@@ -5,8 +5,7 @@
 \title{Performs nonParametric Bootstrap Joint (nPBJ) Inference}
 \usage{
 npbj(images, form, formred, mask, data = NULL, W = NULL,
-  template = NULL, nboot = 1000, statistic = sei,
-  coefficients = TRUE, ...)
+  template = NULL, nboot = 1000, statistic = sei, ...)
 }
 \arguments{
 \item{images}{A character vector of subjects' images or a 4D niftiImage object.}
@@ -26,7 +25,7 @@ npbj(images, form, formred, mask, data = NULL, W = NULL,
 \item{nboot}{Number of bootstraps to perform.}
 
 \item{statistic}{A function of the form statistic(stat, ...) that takes a vector stat and other arguments
-to compute an image summary statistic for each bootstrap.}
+to compute an image summary statistic for each bootstrap. E.g. \code{\link{npbj.sei}}.}
 
 \item{...}{Arguments passed to statistic function.}
 }
@@ -40,4 +39,7 @@ statMap$stat and statMap$template. The remaining elements are lists containing t
 }
 \description{
 Performs nonParametric Bootstrap Joint (nPBJ) Inference
+}
+\seealso{
+\code{\link{sei}}
 }

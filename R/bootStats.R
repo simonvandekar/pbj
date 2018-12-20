@@ -34,6 +34,7 @@ bootStats = function(images, coefficients=0, X, Xred, W=NULL, statistic=function
   peind = which(!colnames(X) %in% colnames(Xred))
   df = length(peind)
   rdf = n - ncol(X)
+  if(is.null(W)) W = rep(1, n)
 
   W = sqrt(W)
   QR = qr(X * W)
@@ -43,11 +44,11 @@ bootStats = function(images, coefficients=0, X, Xred, W=NULL, statistic=function
   # compute the part of the inverse covariance of beta hat
   varX1 = qr.resid(qr(Xred * W), X[,peind] * W)
   varX1 = t(varX1) %*% varX1
-  images = t(qr.resid(QR, images * W))
+  images = qr.resid(QR, images * W)
   # overwrite images with the other part of the inverse covariance of beta hat
-  images = rowSums(images^2)/rdf
+  images = colSums(images^2)/rdf
   # diag( t(bcoefs) %*% varX1 %*% bcoefs)
-  stat = colSums((varX1 %*% bcoefs) * bcoefs)
+  stat = colSums(bcoefs * (varX1 %*% bcoefs))
   # This is a chi-square statistic
   stat = stat/images # * rdf/df
   # convert to chisquared
