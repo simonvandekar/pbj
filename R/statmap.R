@@ -100,7 +100,11 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     x = if(is.character(object$template)) readNifti(object$template) else object$template
     pixdim = RNifti::pixdim(x)
     mask = if(is.character(object$mask)) readNifti(object$mask) else object$mask
-    stat = if(is.character(object$stat)) readNifti(object$stat) else stat.statMap(object)
+    stat = if(is.character(object$stat)){
+      readNifti(object$stat)
+    } else if (ndim(object$stat)!= ndim(mask))
+       stat.statMap(object)
+      else object$stat
 
     switch(plane[1], axial = {
         aspect <- pixdim[3]/pixdim[2]

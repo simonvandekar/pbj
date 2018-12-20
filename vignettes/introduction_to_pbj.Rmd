@@ -259,6 +259,7 @@ This object is a list containing the following things:
 
 * `stat` This is the statistical map from the `statMap` object without changes
 * `template` This is the template you passed to the `statMap` object
+* `mask` This is the mask image from the `statMap` object without changes
 * `cft*` This is a list containing the following:
     + `pvalues` This is a vector of the SEI p-values, ordered relative to space, not value
     + `clustmap` This is a `niftiImage` object of cluster indices where each index in `clustmap` corresponds to that particular index of the vector of SEI p-values

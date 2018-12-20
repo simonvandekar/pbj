@@ -21,7 +21,7 @@ summary.pbj <- function(object, ...)
     statInner("  Template:   ", object$template)
   )
 
-  for(cft in names(object)[ ! names(object) %in% c('stat', 'template') ]){
+  for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask') ]){
     cat0('\n', cft, ':\n')
 
     cat0("  P-Values:\n")
@@ -44,9 +44,9 @@ summary.pbj <- function(object, ...)
 #' @importFrom graphics par
 image.pbj <- function(x, alpha=0.05, ...)
 {
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
+  x$mask = if(is.character(x$mask)) readNifti(x$mask) else x$mask
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask') ]){
     stat = x$stat
-    x[[cft]]
     # mask stat image with significant voxels
     stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
     # create a barebones statmap object
