@@ -186,13 +186,13 @@ write.statMap <- function(x,outdir)
     # reshape res matrix into 4d image
     # memory intensive
     # overwriting res
-    x$sqrtSigma = lapply(1:ncol(x$sqrtSigma), function(ind){ x$mask[ x$mask==1] = x$sqrtSigma[,ind]; x$mask} )
+    x$sqrtSigma = lapply(1:ncol(x$sqrtSigma), function(ind){ x$mask[ x$mask!=0] = x$sqrtSigma[,ind]; x$mask} )
     # combine into 4d array
-    x$sqrtSigma = do.call(abind::abind, c(x$sqrtSigma, along=4))
+    x$sqrtSigma = do.call(abind::abind, c(x$sqrtSigma, list(along=ndim(x$mask)+1)))
     writeNifti(updateNifti(x$sqrtSigma, x$mask), resimg)
     res = resimg
   }
-  return(list(stat=statimg, sqrtSigma=resimg, summary=summaryf))
+  return(list(stat=statimg, coef=coefimg, sqrtSigma=resimg, summary=summaryf))
 }
 
 #' Gets a 4D niftiImage of the coefficient image from a statMap object
@@ -216,8 +216,8 @@ stat.statMap = function(x){
 #' @export
 coef.statMap = function(x){
   # output 4D coefficient image
-  coef = do.call(abind, c(lapply(1:nrow(x$coef), function(coefv){ x$mask[x$mask!=0] = coefv; x$mask}), 'along'=(dim(x$mask)+1) ))
-  coef = updateNifti(coef, template=mask)
+  coef = do.call(abind, c(lapply(1:nrow(x$coef), function(coefv){ x$mask[x$mask!=0] = coefv; x$mask}), list('along'=(ndim(x$mask)+1)) ))
+  coef = updateNifti(coef, template=x$mask)
   return(coef)
 }
 
