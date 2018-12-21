@@ -273,7 +273,7 @@ This object is a list containing the following things:
 If multiple CFTs were used it produces the images for each of those thresholds.
 
 ```{r}
-image(sPBJn)
+image(sPBJn, alpha = 0.2)
 ```
 
 The `write.pbj` function can be used to export the the images contained in the `pbj` object.
