@@ -216,9 +216,10 @@ stat.statMap = function(x){
 #'
 #' Returns a 4D coefficient niftiImage object from a statMap object
 #' @param object the statMap object to extract a coefficient niftiImage from
+#' @param ... additional arguments (ignored)
 #' @return a niftiImage object of the coefficient image
 #' @export
-coef.statMap = function(object){
+coef.statMap = function(object, ...){
   # output 4D coefficient image
   coef = do.call(abind, c(lapply(1:nrow(object$coef), function(coefv){ object$mask[object$mask!=0] = coefv; object$mask}), list('along'=(length(dim(object$mask))+1)) ))
   coef = updateNifti(coef, template=object$mask)
