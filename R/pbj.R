@@ -18,7 +18,8 @@ summary.pbj <- function(object, ...)
   cat0(
     "\nContents:\n",
     statInner("  Stat:       ", object$stat),
-    statInner("  Template:   ", object$template)
+    statInner("  Template:   ", object$template),
+    statInner("  Mask:   ", object$mask)
   )
 
   for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask') ]){
@@ -75,7 +76,7 @@ write.pbj <- function(x, outdir, ...)
       writeNifti(x$stat, statimg)
     }
   }
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template') ]){
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask') ]){
     pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz'))
     clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz'))
     writeNifti(x[[cft]]$pmap, pmapimg)
