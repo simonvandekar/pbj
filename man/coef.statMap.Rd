@@ -4,10 +4,10 @@
 \alias{coef.statMap}
 \title{Gets a 4D niftiImage of the statistical image from a statMap object}
 \usage{
-\method{coef}{statMap}(x)
+\method{coef}{statMap}(object, ...)
 }
 \arguments{
-\item{x}{the statMap object to extract a coefficient niftiImage from}
+\item{object}{the statMap object to extract a coefficient niftiImage from}
 }
 \value{
 a niftiImage object of the coefficient image

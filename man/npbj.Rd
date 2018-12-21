@@ -41,5 +41,5 @@ statMap$stat and statMap$template. The remaining elements are lists containing t
 Performs nonParametric Bootstrap Joint (nPBJ) Inference
 }
 \seealso{
-\code{\link{sei}}
+\code{\link{npbj.sei}}
 }
