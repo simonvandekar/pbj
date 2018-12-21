@@ -17,7 +17,7 @@
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
 #' \item{CDF}{A bootstrap CDF.}
-#' @seealso \code{\link{sei}}
+#' @seealso \code{\link{npbj.sei}}
 #' @export
 #' @importFrom RNifti readNifti
 #' @importFrom abind abind
