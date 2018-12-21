@@ -215,7 +215,7 @@ stat.statMap = function(x){
 #' Gets a 4D niftiImage of the statistical image from a statMap object
 #'
 #' Returns a 4D coefficient niftiImage object from a statMap object
-#' @param x the statMap object to extract a coefficient niftiImage from
+#' @param object the statMap object to extract a coefficient niftiImage from
 #' @return a niftiImage object of the coefficient image
 #' @export
 coef.statMap = function(object, ...){
