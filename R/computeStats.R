@@ -248,7 +248,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
       stat = sqrt(stat/rdf)
       stat = num/stat / seX1
       # convert to z-statistics
-      stat = qnorm(pt(stattemp, df=rdf))
+      stat = qnorm(pt(stat, df=rdf))
     } else {
       num = num - stat
       stat = num/stat * rdf
