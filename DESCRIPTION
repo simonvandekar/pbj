@@ -47,7 +47,7 @@ Imports:
 Remotes: simonvandekar/pain21
 LinkingTo: Rcpp,
   RcppArmadillo
-RoxygenNote: 6.1.0.9000
+RoxygenNote: 6.1.1
 Suggests: knitr,
     rmarkdown,
     pain21
