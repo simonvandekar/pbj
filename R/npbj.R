@@ -23,6 +23,7 @@
 #' @importFrom abind abind
 npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=npbj.sei, ...){
 
+
   X = getDesign(form, data=data)
   Xred = getDesign(formred, data=data)
   statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, transform=FALSE)
@@ -49,9 +50,19 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
   res = t(apply(res, 4, function(x) x[mask!=0]))
 
   cat('Running bootstrap\n')
+
+  # Apply weighting before bootstrap
+  if(!is.null(W))
+  {
+    W      <- sqrt(W)
+    X      <- X * W
+    Xred   <- Xred * W
+    images <- images * W
+  }
+
   result = lapply(1:nboot, function(ind){
     samp = sample(1:nrow(X), replace=TRUE)
-    bootStats(images=res[samp,], coefficients=statmap$coef, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], W=W[samp], statistic=statistic, mask=mask, df=statmap$df, ...)
+    bootStats(images=res[samp,], coefficients=statmap$coef, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], statistic=statistic, mask=mask, df=statmap$df, ...)
   }
   )
 

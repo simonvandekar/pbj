@@ -28,32 +28,27 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-bootStats = function(images, coefficients=0, X, Xred, W=NULL, statistic=function(stat) stat, ...){
+bootStats = function(images, coefficients=0, X, Xred, statistic=function(stat) stat, ...){
 
-  n = nrow(images)
-  peind = which(!colnames(X) %in% colnames(Xred))
-  df = length(peind)
-  rdf = n - ncol(X)
-  if(is.null(W)) W = rep(1, n)
+  n     <- nrow(images)
+  peind <- which(!colnames(X) %in% colnames(Xred))
+  df    <- length(peind)
+  rdf   <- n - ncol(X)
 
-  W = sqrt(W)
-  QR = qr(X * W)
   # fit model to all image data
   # p X V
-  bcoefs = qr.coef(QR, images * W)[peind,] - coefficients
-  # compute the part of the inverse covariance of beta hat
-  varX1 = qr.resid(qr(Xred * W), X[,peind] * W)
-  varX1 = t(varX1) %*% varX1
-  images = qr.resid(QR, images * W)
-  # overwrite images with the other part of the inverse covariance of beta hat
-  images = colSums(images^2)/rdf
-  # diag( t(bcoefs) %*% varX1 %*% bcoefs)
-  stat = colSums(bcoefs * (varX1 %*% bcoefs))
-  # This is a chi-square statistic
-  stat = stat/images # * rdf/df
-  # convert to chisquared
-  #stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
+  QR     <- qr(X)
+  bcoefs <- qr.coef(QR, images)[peind,] - coefficients
 
-  out = statistic(stat, ...)
-  return(out)
+  # compute the part of the inverse covariance of beta hat
+  varX1  <- qr.resid(qr(Xred), X[,peind])
+  varX1  <- t(varX1) %*% varX1
+  images <- qr.resid(QR, images)
+
+  # overwrite images with the other part of the inverse covariance of beta hat
+  images <- colSums(images^2)/rdf
+  stat   <- colSums(bcoefs * (varX1 %*% bcoefs))
+
+  # This is the statistic
+  statistic(stat/images, ...)
 }
