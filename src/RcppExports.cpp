@@ -6,6 +6,21 @@
 
 using namespace Rcpp;
 
+// calcBootStats
+arma::mat calcBootStats(arma::mat images, arma::mat X, arma::mat Xred, arma::mat coefficients, arma::uvec peind);
+RcppExport SEXP _pbj_calcBootStats(SEXP imagesSEXP, SEXP XSEXP, SEXP XredSEXP, SEXP coefficientsSEXP, SEXP peindSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type images(imagesSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type Xred(XredSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type coefficients(coefficientsSEXP);
+    Rcpp::traits::input_parameter< arma::uvec >::type peind(peindSEXP);
+    rcpp_result_gen = Rcpp::wrap(calcBootStats(images, X, Xred, coefficients, peind));
+    return rcpp_result_gen;
+END_RCPP
+}
 // pbjES
 arma::mat pbjES(arma::vec mu, arma::mat M, signed long chsq, int df, int nboot);
 RcppExport SEXP _pbj_pbjES(SEXP muSEXP, SEXP MSEXP, SEXP chsqSEXP, SEXP dfSEXP, SEXP nbootSEXP) {
@@ -35,6 +50,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_pbj_calcBootStats", (DL_FUNC) &_pbj_calcBootStats, 5},
     {"_pbj_pbjES", (DL_FUNC) &_pbj_pbjES, 5},
     {"_pbj_pbjESboundary", (DL_FUNC) &_pbj_pbjESboundary, 2},
     {NULL, NULL, 0}

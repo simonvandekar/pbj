@@ -49,7 +49,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
   # load images
   res = t(apply(res, 4, function(x) x[mask!=0]))
 
-  cat('Running bootstrap\n')
+  cat(format(Sys.time(), "%a %b %d %X %Y"), ' Running bootstrap\n')
 
   # Apply weighting before bootstrap
   if(!is.null(W))
@@ -62,9 +62,11 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
 
   result = lapply(1:nboot, function(ind){
     samp = sample(1:nrow(X), replace=TRUE)
-    bootStats(images=res[samp,], coefficients=statmap$coef, X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], statistic=statistic, mask=mask, df=statmap$df, ...)
+    bootStats(images=res[samp,], X=X[samp,, drop=FALSE], Xred=Xred[samp,,drop=FALSE], coefficients=statmap$coef, statistic=statistic, mask=mask, df=statmap$df, ...)
   }
   )
+
+  cat(format(Sys.time(), "%a %b %d %X %Y"), ' Finished bootstrap\n')
 
   # output will depend on function "statistic"
   result = do.call(rbind, result)
