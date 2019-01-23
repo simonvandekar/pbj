@@ -10,7 +10,7 @@
 #' @param coefficients An n by V matrix of parameter estimates to subtract from the bootstrapped values.
 #' If computing p-values this should be the observed parameter estimates. If computing confidence intervals
 #' then this should be NULL (the default).
-#' @param statistic A function of the form statistic(statimg, mask) that returns a statistic of interest.
+#' @param statistic A function of the form statistic(stat, ...) that returns a statistic of interest.
 #' @keywords statistical parametric map, nonparametric bootstrap
 #' @param ... Arguments passed to statistic function.
 #' @return Returns a vector of the resulting estimate
