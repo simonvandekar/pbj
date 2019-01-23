@@ -4,12 +4,11 @@
 #'  objects necessary to perform the parametric bootstrap joint (PBJ) inference
 #'  procedure.
 #' @param images An n by V  matrix of voxels inside the brain.
-#' @param X Design matrix for the full model.
-#' @param Xred Design matrix for the reduced model.
-#' @param W A vector of weights for the regression. Voxel specific weights not accepted
 #' @param coefficients An n by V matrix of parameter estimates to subtract from the bootstrapped values.
 #' If computing p-values this should be the observed parameter estimates. If computing confidence intervals
 #' then this should be NULL (the default).
+#' @param X Design matrix for the full model.
+#' @param Xred Design matrix for the reduced model.
 #' @param statistic A function of the form statistic(stat, ...) that returns a statistic of interest.
 #' @keywords statistical parametric map, nonparametric bootstrap
 #' @param ... Arguments passed to statistic function.

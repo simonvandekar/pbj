@@ -21,8 +21,6 @@ then this should be NULL (the default).}
 \item{statistic}{A function of the form statistic(stat, ...) that returns a statistic of interest.}
 
 \item{...}{Arguments passed to statistic function.}
-
-\item{W}{A vector of weights for the regression. Voxel specific weights not accepted}
 }
 \value{
 Returns a vector of the resulting estimate
