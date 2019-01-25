@@ -27,9 +27,9 @@ on_failure:
 
 environment:
   global:
-  - _R_CHECK_FORCE_SUGGESTS_=false
-  - _R_CHECK_SYSTEM_CLOCK_=false
-  - MAKEFLAGS="-j 2"
+    _R_CHECK_FORCE_SUGGESTS_: false
+    _R_CHECK_SYSTEM_CLOCK_: false
+    MAKEFLAGS: "-j 2"
 
 artifacts:
   - path: '*.Rcheck\**\*.log'
