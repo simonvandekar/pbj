@@ -6,54 +6,40 @@
 #' @param images An n by V  matrix of voxels inside the brain.
 #' @param coefficients An n by V matrix of parameter estimates to subtract from the bootstrapped values.
 #' If computing p-values this should be the observed parameter estimates. If computing confidence intervals
-#' then this should be 0 (the default).
+#' then this should be NULL (the default).
 #' @param X Design matrix for the full model.
 #' @param Xred Design matrix for the reduced model.
-#' @param W A vector of weights for the regression. Voxel specific weights not accepted
-#' @param statistic A function of the form statistic(statimg, mask) that returns a statistic of interest.
+#' @param statistic A function of the form statistic(stat, ...) that returns a statistic of interest.
 #' @keywords statistical parametric map, nonparametric bootstrap
 #' @param ... Arguments passed to statistic function.
-#' @return Returns a list with the fo:
-#' \describe{
-#'   \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
-#'   \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
-#'   \item{mask}{The input mask.}
-#'   \item{template}{The background template used for visualization.}
-#'   \item{formulas}{A list containing the full and reduced models.}
-#'   \item{robust}{A logical indicating the input setting.}
-#'   \item{df}{The numerator degrees of freedom of the test.}
-#'   \item{rdf}{The numerator degrees of freedom of the test.}
-#' }
+#' @return Returns a vector of the resulting estimate
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-bootStats = function(images, coefficients=0, X, Xred, W=NULL, statistic=function(stat) stat, ...){
+bootStats = function(images,                            # M(n, i)
+                     coefficients=NULL,                 # Maybe M(k-r, i)
+                     X,                                 # M(n, k)
+                     Xred,                              # M(n, r)
+                     statistic=function(stat, ...) stat,# V(i) -> argv -> V(i)
+                     ...)                               # argv
+{
+  peind  <- which(!colnames(X) %in% colnames(Xred))     # V(k-r)                  # Need peind :: V(k-r)
+  # Call cpp instead
+  return(statistic(calcBootStats(images, X, Xred, coefficients, peind), ...))
 
-  n = nrow(images)
-  peind = which(!colnames(X) %in% colnames(Xred))
-  df = length(peind)
-  rdf = n - ncol(X)
-  if(is.null(W)) W = rep(1, n)
+  QR     <- qr(X)                                       # M(n, k)                 # Need Q, R
 
-  W = sqrt(W)
-  QR = qr(X * W)
-  # fit model to all image data
-  # p X V
-  bcoefs = qr.coef(QR, images * W)[peind,] - coefficients
-  # compute the part of the inverse covariance of beta hat
-  varX1 = qr.resid(qr(Xred * W), X[,peind] * W)
-  varX1 = t(varX1) %*% varX1
-  images = qr.resid(QR, images * W)
-  # overwrite images with the other part of the inverse covariance of beta hat
-  images = colSums(images^2)/rdf
-  # diag( t(bcoefs) %*% varX1 %*% bcoefs)
-  stat = colSums(bcoefs * (varX1 %*% bcoefs))
-  # This is a chi-square statistic
-  stat = stat/images # * rdf/df
-  # convert to chisquared
-  #stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
+  # compute denominator of inverse covariance of beta hat
+  denom <- qr.resid(QR, images)                         # M(n, i)                 # Need tmp :: M(n,i)
+  denom <- colSums(denom^2)/(nrow(X) - ncol(X))         # V(i)                    # Need denom::V(i)
 
-  out = statistic(stat, ...)
-  return(out)
+  # compute numerator of inverse covariance of beta hat
+  bcoefs <- qr.coef(QR, images)[peind,] - coefficients  # M(k-r, i)               # Reuse Q, R, reuse tmp for bcoefs
+  varX1  <- qr.resid(qr(Xred), X[,peind])               # M(n, k-r)               # Need varX1 :: M(n, k-r)
+  varX1  <- t(varX1) %*% varX1                          # M(k-r, k-r)
+  stat   <- colSums(bcoefs * (varX1 %*% bcoefs))        # V(i)                    # May reuse denom unnamed
+
+  # This is the statistic
+  statistic(stat/denom, ...)                            # V(i)                    # Total direct alloc, Q, R, M(n,i), V(i), V(k-r), M(n, k-r)
 }

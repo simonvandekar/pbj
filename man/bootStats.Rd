@@ -4,38 +4,26 @@
 \alias{bootStats}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-bootStats(images, coefficients = 0, X, Xred, W = NULL,
-  statistic = function(stat) stat, ...)
+bootStats(images, coefficients = NULL, X, Xred,
+  statistic = function(stat, ...) stat, ...)
 }
 \arguments{
 \item{images}{An n by V  matrix of voxels inside the brain.}
 
 \item{coefficients}{An n by V matrix of parameter estimates to subtract from the bootstrapped values.
 If computing p-values this should be the observed parameter estimates. If computing confidence intervals
-then this should be 0 (the default).}
+then this should be NULL (the default).}
 
 \item{X}{Design matrix for the full model.}
 
 \item{Xred}{Design matrix for the reduced model.}
 
-\item{W}{A vector of weights for the regression. Voxel specific weights not accepted}
-
-\item{statistic}{A function of the form statistic(statimg, mask) that returns a statistic of interest.}
+\item{statistic}{A function of the form statistic(stat, ...) that returns a statistic of interest.}
 
 \item{...}{Arguments passed to statistic function.}
 }
 \value{
-Returns a list with the fo:
-\describe{
-  \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
-  \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = Sigma.}
-  \item{mask}{The input mask.}
-  \item{template}{The background template used for visualization.}
-  \item{formulas}{A list containing the full and reduced models.}
-  \item{robust}{A logical indicating the input setting.}
-  \item{df}{The numerator degrees of freedom of the test.}
-  \item{rdf}{The numerator degrees of freedom of the test.}
-}
+Returns a vector of the resulting estimate
 }
 \description{
 This function computes a statistical map and residuals which are the
