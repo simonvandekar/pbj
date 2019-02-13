@@ -54,7 +54,7 @@ image.pbj <- function(x, alpha=0.05, ...)
     statmap = list(stat=stat, sqrtSigma=NULL, mask=x$mask, template=x$template, formulas=NULL, robust=NULL)
     class(statmap) = "statMap"
     # call image.statMap
-    if(df==0){
+    if(x$df==0){
       image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft))/2 )  )
     } else {
       image(statmap, thresh=qchisq(as.numeric(gsub("[^0-9\\.]", "", cft)), df=df, lower.tail=FALSE )  )
