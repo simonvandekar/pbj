@@ -245,7 +245,7 @@ We again use `system.time` here to track computing times.
 
 ```{r, results=FALSE}
 #pbjcomptime  = system.time(sPBJ  <- pbjClust(statmap,  nboot=200))
-pbjcomptimen = system.time(sPBJn <- pbjClust(statmapn, nboot=200))
+pbjcomptimen = system.time(sPBJn <- pbjClust(statmapn, cfts=c(0.02, 0.01), nboot=200))
 ```
 
 The bootstrap time doesn't differ between voxel-wise or study/subject level weights.
