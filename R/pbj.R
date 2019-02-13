@@ -86,6 +86,17 @@ write.pbj <- function(x, outdir, ...)
     clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz'))
     writeNifti(x[[cft]]$pmap, pmapimg)
     writeNifti(x[[cft]]$clustermap, clustmapimg)
+
+    ### WRITE OUT CLUSTER STATISTICS TABLE ###
+    clustmapinds = unique(c(x[[cft]]$clustermap))
+    clustmapinds = sort(clustmapinds[ clustmapinds>0])
+    clusttab = data.frame('Index'=numeric(0), 'Adjusted p-value'=numeric(0), 'Volume (vox)'=numeric(0), 'Centroid'= character(0), stringsAsFactors = FALSE, check.names = FALSE)
+    tabname = file.path(outdir, paste0('sei_table_', cft, '.csv') )
+    for(ind in clustmapinds){
+      clusttab[ind,c('Index','Adjusted p-value', 'Volume (vox)')] = c(ind, 10^(-x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1]), sum(x[[cft]]$clustermap==ind))
+      clusttab[ind, 'Centroid'] = paste(round(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 0), collapse=', ')
+    }
+    write.csv(clusttab, row.names=FALSE, file=tabname)
   }
 }
 
