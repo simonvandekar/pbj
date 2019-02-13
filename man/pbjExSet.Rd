@@ -4,13 +4,13 @@
 \alias{pbjExSet}
 \title{Builds (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets}
 \usage{
-pbjExSet(statMap, rsq = 0.05, nboot = 5000, boundary = FALSE,
+pbjExSet(statMap, ses = 0.2, nboot = 5000, boundary = FALSE,
   eps = 0.01)
 }
 \arguments{
 \item{statMap}{statMap object as obtained from computeStats.}
 
-\item{rsq}{minimum effect size of interest. Currently, only supported for length(rsq)=1.}
+\item{ses}{minimum effect size of interest for.}
 
 \item{nboot}{Number of bootstraps to perform.}
 

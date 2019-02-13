@@ -22,7 +22,7 @@ summary.pbj <- function(object, ...)
     statInner("  Mask:   ", object$mask)
   )
 
-  for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask') ]){
+  for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask', 'df') ]){
     cat0('\n', cft, ':\n')
 
     cat0("  P-Values:\n")
@@ -46,7 +46,7 @@ summary.pbj <- function(object, ...)
 image.pbj <- function(x, alpha=0.05, ...)
 {
   x$mask = if(is.character(x$mask)) readNifti(x$mask) else x$mask
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask') ]){
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
     stat = x$stat
     # mask stat image with significant voxels
     stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
@@ -81,7 +81,7 @@ write.pbj <- function(x, outdir, ...)
       writeNifti(x$stat, statimg)
     }
   }
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask') ]){
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
     pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz'))
     clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz'))
     writeNifti(x[[cft]]$pmap, pmapimg)
