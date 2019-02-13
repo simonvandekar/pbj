@@ -31,7 +31,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 
   if(df==0){
     ts = qchisq(cfts, 1, lower.tail=FALSE)
-    sgnstat = sign(stat)
+    sgnstat = sign(rawstat)
     stat = rawstat^2
     df=1; zerodf=TRUE
   } else {
