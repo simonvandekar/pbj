@@ -54,7 +54,11 @@ image.pbj <- function(x, alpha=0.05, ...)
     statmap = list(stat=stat, sqrtSigma=NULL, mask=x$mask, template=x$template, formulas=NULL, robust=NULL)
     class(statmap) = "statMap"
     # call image.statMap
-    image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft)) )  )
+    if(df==0){
+      image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft))/2 )  )
+    } else {
+      image(statmap, thresh=qchisq(as.numeric(gsub("[^0-9\\.]", "", cft)), df=df, lower.tail=FALSE )  )
+    }
   }
 }
 
@@ -68,6 +72,7 @@ image.pbj <- function(x, alpha=0.05, ...)
 #' @export
 write.pbj <- function(x, outdir, ...)
 {
+  if(!file.exists(outdir)) dir.create(outdir)
   statimg = file.path(outdir, 'stat.nii.gz')
   if(!file.exists(statimg)){
     if(is.character(x$stat)){

@@ -206,9 +206,13 @@ write.statMap <- function(x,outdir)
 #' @return a niftiImage object of the coefficient image
 #' @export
 stat.statMap = function(x){
-  # output 4D coefficient image
-  stat = x$mask
-  stat[ stat!=0 ] = x$stat
+  if(is.character(statMap$stat))
+    readNifti(statMap$stat)
+  } else {
+    # output 4D coefficient image
+    stat = x$mask
+    stat[ stat!=0 ] = x$stat
+  }
   return(stat)
 }
 

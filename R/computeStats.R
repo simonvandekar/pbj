@@ -35,7 +35,7 @@
 #' @importFrom abind abind
 #' @return Returns a list with the following values:
 #' \describe{
-#'   \item{stat}{The statistical nifti object. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
+#'   \item{stat}{The statistical values where mask!=0. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
 #'   \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
 #'   \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = hatSigma.}
 #'   \item{mask}{The input mask.}
@@ -67,6 +67,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   if(class(images)[1] != 'niftiImage'){
     n=length(images)
     images = as.character(images)
+    images = gsub(" +$", "", images) 
     if(nrow(X)!=n)
       stop('length(images) and nrow(X) must be the same.')
     res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))

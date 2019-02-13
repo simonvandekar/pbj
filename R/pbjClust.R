@@ -24,7 +24,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     warning('Class of first argument is not \'statMap\'.')
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
-  stat = if(is.character(statMap$stat)) readNifti(statMap$stat) else stat.statMap(statMap)
+  rawstat = stat.statMap(statMap)
   template = statMap$template
   df = statMap$df
   rdf = statMap$rdf
@@ -32,7 +32,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if(df==0){
     ts = qchisq(cfts, 1, lower.tail=FALSE)
     sgnstat = sign(stat)
-    stat = stat^2
+    stat = rawstat^2
     df=1; zerodf=TRUE
   } else {
     ts = qchisq(cfts, df, lower.tail=FALSE)
@@ -125,7 +125,8 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
-  out = c(stat=list(stat), template=list(template), mask=list(mask), out)
+  if(zerodf) df=0
+  out = c(stat=list(raw), template=list(template), mask=list(mask), df=list(df), out)
   class(out) = c('pbj', 'list')
   return(out)
 }
