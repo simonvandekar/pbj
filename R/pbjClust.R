@@ -1,9 +1,8 @@
 #' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
 #'
 #' @param statMap statMap object as obtained from computeStats.
-#' @param cfts Numeric vector of cluster forming thresholds to use. These are
-#'  single-tailed for chi-squared (or F) statistics or two tailed for
-#'  Z-statistics probabilities.
+#' @param cfts Numeric vector of cluster forming thresholds to use. Consistent
+#' with other imaging software these thresholds are one tailed (e.g. p<0.01 imples z>2.32).
 #' @param nboot Number of bootstraps to perform.
 #' @param kernel Kernel to use for computing connected components. Box is
 #'  default (26 neighbors), but Diamond may also be reasonable.
@@ -22,6 +21,8 @@
 pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
+  cftsnominal = cfts
+  cfts = cfts * 2
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   rawstat = stat.statMap(statMap)
@@ -40,13 +41,13 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   }
 
   tmp = mask
-  tmp = lapply(ts, function(th){ tmp[ mask==1] = (stat[mask==1]>th); tmp})
+  tmp = lapply(ts, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
   k = mmand::shapeKernel(3, 3, type=kernel)
   clustmaps = lapply(tmp, function(tm, mask) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)}, mask=mask)
   ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
   sqrtSigma <- if(is.character(statMap$sqrtSigma)) {
-    apply(readNifti(statMap$sqrtSigma), 4, function(x) x[mask==1])
+    apply(readNifti(statMap$sqrtSigma), 4, function(x) x[mask!=0])
   } else {
     statMap$sqrtSigma
   }
@@ -71,7 +72,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
       tmp = mask
       S = matrix(rnorm(n*df), n, df)
       statimg = rowSums((sqrtSigma %*% S)^2)
-      tmp = lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
+      tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
       setTxtProgressBar(pb, round(i/nboot,2))
     }
@@ -86,7 +87,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   #       tmp     <- mask
   #       S       <- matrix(rnorm(r*df), r, df)
   #       statimg <- rowSums((sqrtSigma %*% S)^2)
-  #       tmp     <- lapply(ts, function(th){ tmp[ mask==1] = (statimg>th); tmp})
+  #       tmp     <- lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
   #       sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
   #       return(123)
   #     }, detached=FALSE)
@@ -120,7 +121,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
       clustmaps[[ind]]
     } )
   }
-  names(pvals) <- names(pmaps) <- names(clustmaps) <- paste('cft', cfts, sep='')
+  names(pvals) <- names(pmaps) <- names(clustmaps) <- paste('cft', cftsnominal, sep='')
 
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
   # changes indexing order of out

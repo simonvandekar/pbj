@@ -10,9 +10,8 @@ pbjClust(statMap, cfts = c(0.01, 0.005), nboot = 5000,
 \arguments{
 \item{statMap}{statMap object as obtained from computeStats.}
 
-\item{cfts}{Numeric vector of cluster forming thresholds to use. These are
-single-tailed for chi-squared (or F) statistics or two tailed for
-Z-statistics probabilities.}
+\item{cfts}{Numeric vector of cluster forming thresholds to use. Consistent
+with other imaging software these thresholds are one tailed (e.g. p<0.01 imples z>2.32).}
 
 \item{nboot}{Number of bootstraps to perform.}
 
