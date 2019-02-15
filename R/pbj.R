@@ -81,6 +81,8 @@ write.pbj <- function(x, outdir, ...)
       writeNifti(x$stat, statimg)
     }
   }
+  if(is.null(x$template)) x$template = x$mask
+  sform = do.call(rbind, niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
   for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
     pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz'))
     clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz'))
@@ -94,7 +96,7 @@ write.pbj <- function(x, outdir, ...)
     tabname = file.path(outdir, paste0('sei_table_', cft, '.csv') )
     for(ind in clustmapinds){
       clusttab[ind,c('Index','Adjusted p-value', 'Volume (vox)')] = c(ind, 10^(-x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1]), sum(x[[cft]]$clustermap==ind))
-      clusttab[ind, 'Centroid'] = paste(round(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 0), collapse=', ')
+      clusttab[ind, 'Centroid'] = paste(round(sform %*% c(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 1 ), 0), collapse=', ')
     }
     write.csv(clusttab, row.names=FALSE, file=tabname)
   }
