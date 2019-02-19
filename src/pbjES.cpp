@@ -48,18 +48,35 @@ arma::vec randChi( arma::mat V, int df){
 // f is a positive constant that is a function of the minimum R^2 required
 // df is numerator dof for the test
 // [[Rcpp::export]]
-arma::mat pbjES(arma::vec mu, arma::mat M, signed long chsq, int df, int nboot) {
+arma::mat pbjES(arma::vec mu, arma::mat M, signed long k, int df, int nboot) {
   arma::mat O(nboot, 2);
   for(int i = 0; i < nboot; i++) {
     // The expected value of the F-stat is \beta^T\Sigma^{1}_\beta \beta + df
     //Rcout << randChi( M, df).size() << '\n' << mu.size() << '\n';
     // subtract out df because it gets added in by randChi
     arma::vec U = randChi( M, df) + mu - df;
-    O(i, 0) = arma::min(U( find(mu>chsq) ));
-    O(i, 1) = arma::max(U( find(mu<=chsq) ));
+    // This is for \hat A^-
+    O(i, 0) = arma::min(U( find(mu>k) ));
+    // This is for \hat A^+
+    O(i, 1) = arma::max(U( find(mu<=k) ));
   }
   return O;
 }
+
+// [[Rcpp::export]]
+arma::mat pbjESdfzero(arma::vec mu, arma::mat M, signed long k, int nboot) {
+  arma::mat O(nboot, 2);
+  for(int i = 0; i < nboot; i++) {
+    arma::mat X = arma::randn<arma::mat>(M.n_cols, 1);
+    arma::vec U = M * X;
+    // This is for \hat A^-
+    O(i, 0) = arma::min(U( find(mu>k) ));
+    // This is for \hat A^+
+    O(i, 1) = arma::max(U( find(mu<=k) ));
+  }
+  return O;
+}
+
 
 // [[Rcpp::export]]
 arma::mat pbjESboundary(arma::mat M, int nboot) {

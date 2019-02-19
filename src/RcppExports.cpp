@@ -22,17 +22,31 @@ BEGIN_RCPP
 END_RCPP
 }
 // pbjES
-arma::mat pbjES(arma::vec mu, arma::mat M, signed long chsq, int df, int nboot);
-RcppExport SEXP _pbj_pbjES(SEXP muSEXP, SEXP MSEXP, SEXP chsqSEXP, SEXP dfSEXP, SEXP nbootSEXP) {
+arma::mat pbjES(arma::vec mu, arma::mat M, signed long k, int df, int nboot);
+RcppExport SEXP _pbj_pbjES(SEXP muSEXP, SEXP MSEXP, SEXP kSEXP, SEXP dfSEXP, SEXP nbootSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< arma::vec >::type mu(muSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
-    Rcpp::traits::input_parameter< signed long >::type chsq(chsqSEXP);
+    Rcpp::traits::input_parameter< signed long >::type k(kSEXP);
     Rcpp::traits::input_parameter< int >::type df(dfSEXP);
     Rcpp::traits::input_parameter< int >::type nboot(nbootSEXP);
-    rcpp_result_gen = Rcpp::wrap(pbjES(mu, M, chsq, df, nboot));
+    rcpp_result_gen = Rcpp::wrap(pbjES(mu, M, k, df, nboot));
+    return rcpp_result_gen;
+END_RCPP
+}
+// pbjESdfzero
+arma::mat pbjESdfzero(arma::vec mu, arma::mat M, signed long k, int nboot);
+RcppExport SEXP _pbj_pbjESdfzero(SEXP muSEXP, SEXP MSEXP, SEXP kSEXP, SEXP nbootSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type M(MSEXP);
+    Rcpp::traits::input_parameter< signed long >::type k(kSEXP);
+    Rcpp::traits::input_parameter< int >::type nboot(nbootSEXP);
+    rcpp_result_gen = Rcpp::wrap(pbjESdfzero(mu, M, k, nboot));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -52,6 +66,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_pbj_calcBootStats", (DL_FUNC) &_pbj_calcBootStats, 5},
     {"_pbj_pbjES", (DL_FUNC) &_pbj_pbjES, 5},
+    {"_pbj_pbjESdfzero", (DL_FUNC) &_pbj_pbjESdfzero, 4},
     {"_pbj_pbjESboundary", (DL_FUNC) &_pbj_pbjESboundary, 2},
     {NULL, NULL, 0}
 };

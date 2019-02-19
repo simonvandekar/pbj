@@ -5,8 +5,12 @@ calcBootStats <- function(images, X, Xred, coefficients, peind) {
     .Call(`_pbj_calcBootStats`, images, X, Xred, coefficients, peind)
 }
 
-pbjES <- function(mu, M, chsq, df, nboot) {
-    .Call(`_pbj_pbjES`, mu, M, chsq, df, nboot)
+pbjES <- function(mu, M, k, df, nboot) {
+    .Call(`_pbj_pbjES`, mu, M, k, df, nboot)
+}
+
+pbjESdfzero <- function(mu, M, k, nboot) {
+    .Call(`_pbj_pbjESdfzero`, mu, M, k, nboot)
 }
 
 pbjESboundary <- function(M, nboot) {

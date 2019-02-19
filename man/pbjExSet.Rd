@@ -20,12 +20,12 @@ pbjExSet(statMap, ses = 0.2, nboot = 5000, boundary = FALSE,
 \code{boundary} is \code{TRUE} and the degrees of freedom is 1.}
 }
 \value{
-Returns a list of length length(rsq)+2. The first two elements contain
+Returns a list of length length(ses)+2. The first two elements contain
 statMap$stat and statMap$template. The remaining elements are lists containing the following:
 \item{Aminus}{Aminus<=1-alpha contains E{statMap$stat}>chsq with probability 1-alpha.}
 \item{Aplus}{Aplus>1-alpha is contained in E{statMap$stat}>chsq with probability 1-alpha.}
-\item{rsq}{A minimum threshold to define interesting locations. It is the proportion of signal in the chi-square statistic.}
-\item{chsq}{rsq converted to the chi-squared scale using chsq = ( (n-1) \* rsq + 1) /(1-rsq) \* df.}
+\item{ses}{A minimum threshold to define interesting locations. It is the proportion of signal in the chi-square statistic.}
+\item{chsq}{ses converted to the chi-squared scale using chsq = ( (n-1) \* ses + 1) /(1-ses) \* df.}
 \item{CDFs}{The bootstrap CDFs used to compute Aminus and Aplus.}
 }
 \description{
