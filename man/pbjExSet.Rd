@@ -2,7 +2,7 @@
 % Please edit documentation in R/pbjExSet.R
 \name{pbjExSet}
 \alias{pbjExSet}
-\title{Builds (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets}
+\title{Constructs (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets}
 \usage{
 pbjExSet(statMap, ses = 0.2, nboot = 5000, boundary = FALSE,
   eps = 0.01)
@@ -29,5 +29,5 @@ statMap$stat and statMap$template. The remaining elements are lists containing t
 \item{CDFs}{The bootstrap CDFs used to compute Aminus and Aplus.}
 }
 \description{
-Builds (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets
+Constructs (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets
 }

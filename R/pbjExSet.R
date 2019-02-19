@@ -1,4 +1,4 @@
-#' Builds (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets
+#' Constructs (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets
 #'
 #' @param statMap statMap object as obtained from computeStats.
 #' @param ses minimum effect size of interest for.
@@ -72,7 +72,7 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     }
   }
 
-  out = list(stat=stat, template=template, ses=list(Aminus=Aminus, Aplus=Aplus, ses=ses, chsq=chsq, CDFs=Fs) )
+  out = list(stat=stat, template=template, ses=list(Aminus=Aminus, Aplus=Aplus, ses=ses, CDFs=Fs) )
   names(out)[3] =  paste0('ses', ses)
   class(out) = c('CoPE', 'list')
   return(out)
