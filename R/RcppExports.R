@@ -9,8 +9,8 @@ pbjES <- function(mu, M, k, df, nboot) {
     .Call(`_pbj_pbjES`, mu, M, k, df, nboot)
 }
 
-pbjESdfzero <- function(mu, M, k, nboot) {
-    .Call(`_pbj_pbjESdfzero`, mu, M, k, nboot)
+pbjESzerodf <- function(mu, M, k, nboot) {
+    .Call(`_pbj_pbjESzerodf`, mu, M, k, nboot)
 }
 
 pbjESboundary <- function(M, nboot) {
