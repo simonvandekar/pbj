@@ -49,18 +49,18 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
   # second column is max in stat<=chisq
   # boundary only uses the boundary voxels as in Sommerfeld et al. 2018
   if(boundary & df==0){
-    bmask = which(stat <= sqrt(chsq_threshold)+eps & stat >= sqrt(chsq_threshold)-eps )
+    bmask = which(stat <= sqrt(chsq_threshold-df)+eps & stat >= sqrt(chsq_threshold-df)-eps )
     # only need the second column here
     # In this case set chisq=0, so that we are taking max over all voxels in the boundary
     Fs = pbjESboundary(sqrtSigma[bmask,], nboot)
     Fs = ecdf(Fs)
-    Aminus[mask!=0] = 1-Fs( Aminus[mask!=0 ] + sqrt(chsq_threshold-df) )
-    Aplus[mask!=0] = 1-Fs( Aplus[mask!=0] - sqrt(chsq_threshold-df))
+    Aminus[mask!=0] = 1-Fs( stat + sqrt(chsq_threshold-df) )
+    Aplus[mask!=0] = 1-Fs( stat - sqrt(chsq_threshold-df))
   } else if(!boundary & df==0){
     Fs = pbjESzerodf(stat[mask!=0], sqrtSigma, sqrt(chsq_threshold - df), nboot)
     Fs = apply(Fs, 2, ecdf)
-    Aminus[mask!=0] = 1-Fs[[1]](Aminus[mask!=0])
-    Aplus[mask!=0] = Fs[[2]](Aplus[mask!=0])
+    Aminus[mask!=0] = 1-Fs[[1]](stat)
+    Aplus[mask!=0] = Fs[[2]](stat)
   } else {
     Aminus = Aplus = mask
     Fs = pbjES(stat, sqrtSigma, chsq_threshold, df, nboot)
