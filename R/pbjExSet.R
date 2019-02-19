@@ -57,7 +57,7 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     Aminus[mask!=0] = 1-Fs( stat + sqrt(chsq_threshold-df) )
     Aplus[mask!=0] = Fs( stat - sqrt(chsq_threshold-df))
   } else if(!boundary & df==0){
-    Fs = pbjESzerodf(stat[mask!=0], sqrtSigma, sqrt(chsq_threshold - df), nboot)
+    Fs = pbjESzerodf(stat, sqrtSigma, sqrt(chsq_threshold - df), nboot)
     Fs = apply(Fs, 2, ecdf)
     Aminus[mask!=0] = 1-Fs[[1]](stat)
     Aplus[mask!=0] = Fs[[2]](stat)
