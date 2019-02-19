@@ -44,7 +44,7 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
   }
   n = ncol(sqrtSigma)
   chsq_threshold = n * ses + df
-  Aminus = Aplus = stat
+  Aminus = Aplus = mask
   # first column is min in stat>chsq
   # second column is max in stat<=chisq
   # boundary only uses the boundary voxels as in Sommerfeld et al. 2018
