@@ -64,7 +64,7 @@ arma::mat pbjES(arma::vec mu, arma::mat M, signed long k, int df, int nboot) {
 }
 
 // [[Rcpp::export]]
-arma::mat pbjESdfzero(arma::vec mu, arma::mat M, signed long k, int nboot) {
+arma::mat pbjESzerodf(arma::vec mu, arma::mat M, signed long k, int nboot) {
   arma::mat O(nboot, 2);
   for(int i = 0; i < nboot; i++) {
     arma::mat X = arma::randn<arma::mat>(M.n_cols, 1);
