@@ -62,11 +62,11 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     Aminus[mask!=0] = 1-Fs[[1]](Aminus[mask!=0])
     Aplus[mask!=0] = Fs[[2]](Aplus[mask!=0])
   } else {
-    Aminus = Aplus = stat
-    Fs = pbjES(stat[mask!=0], sqrtSigma, chsq_threshold, df, nboot)
+    Aminus = Aplus = mask
+    Fs = pbjES(stat, sqrtSigma, chsq_threshold, df, nboot)
     Fs = apply(Fs, 2, ecdf)
-    Aminus[mask!=0] = 1-Fs[[1]](Aminus[mask!=0])
-    Aplus[mask!=0] = Fs[[2]](Aplus[mask!=0])
+    Aminus[mask!=0] = 1-Fs[[1]](stat)
+    Aplus[mask!=0] = Fs[[2]](stat)
     if(zerodf){
       stat = sqrt(stat) * sgnstat
     }
