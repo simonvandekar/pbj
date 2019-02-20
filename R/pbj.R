@@ -82,7 +82,7 @@ write.pbj <- function(x, outdir, ...)
     }
   }
   if(is.null(x$template)) x$template = x$mask
-  sform = do.call(rbind, niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
+  sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
   voxvol = prod(pixdim(x$template))
   for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
     pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz'))
