@@ -96,7 +96,7 @@ write.pbj <- function(x, outdir, ...)
     clusttab = data.frame('Index'=numeric(0), 'Adjusted p-value'=numeric(0), 'Volume (mm)'=numeric(0), 'Centroid'= character(0), stringsAsFactors = FALSE, check.names = FALSE)
     tabname = file.path(outdir, paste0('sei_table_', cft, '.csv') )
     for(ind in clustmapinds){
-      clusttab[ind,c('Index','Adjusted p-value', 'Volume (mm)')] = c(ind, 10^(-x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1]), sum(x[[cft]]$clustermap==ind)*voxvol)
+      clusttab[ind,c('Index','Adjusted p-value', 'Volume (mm)')] = c(ind, 10^(-abs(x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1])), sum(x[[cft]]$clustermap==ind)*voxvol)
       clusttab[ind, 'Centroid'] = paste(round(sform %*% c(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 1 ), 0), collapse=', ')
     }
     write.csv(clusttab, row.names=FALSE, file=tabname)
