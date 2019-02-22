@@ -54,12 +54,12 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     # In this case set chisq=0, so that we are taking max over all voxels in the boundary
     Fs = pbjESboundary(sqrtSigma[bmask,], nboot)
     Fs = ecdf(Fs)
-    Aminus[mask!=0] = 1-Fs( stat + sqrt(chsq_threshold-df) )
+    Aminus[mask!=0] = Fs( stat + sqrt(chsq_threshold-df) )
     Aplus[mask!=0] = Fs( stat - sqrt(chsq_threshold-df))
   } else if(!boundary & df==0){
     Fs = pbjESzerodf(stat, sqrtSigma, sqrt(chsq_threshold - df), nboot)
     Fs = apply(Fs, 2, ecdf)
-    Aminus[mask!=0] = 1-Fs[[1]](stat)
+    Aminus[mask!=0] = Fs[[1]](stat)
     Aplus[mask!=0] = Fs[[2]](stat)
   } else {
     Aminus = Aplus = mask
