@@ -39,6 +39,7 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
   if(is.character(betaimg)) betaimg = RNifti::readNifti(betaimg)
 
   # make images with signal
+  signalimage = betaimg * sdy/sdx
   y = outer(betaimg * sdy/sdx, c(x)) + y
 
   # write out images
@@ -47,4 +48,5 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
     trash=lapply(1:length(outfiles), function(ind) RNifti::writeNifti(y[,,,ind], outfiles[ind]) )
   # return if requested
   y = y
+  signalimage = signalimage
 }

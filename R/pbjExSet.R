@@ -53,7 +53,7 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     # only need the second column here
     # In this case set chisq=0, so that we are taking max over all voxels in the boundary
     Fs = pbjESboundary(sqrtSigma[bmask,], nboot)
-    a = quantile(0.95)
+    a = quantile(Fs, 0.95)
     #Fs = ecdf(Fs)
     #Aminus[mask!=0] = Fs( stat + sqrt(chsq_threshold-df) )
     #Aplus[mask!=0] = Fs( stat - sqrt(chsq_threshold-df))
