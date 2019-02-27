@@ -44,14 +44,15 @@ Collate:
 Imports:
   abind,
   fslr,
+  misc3d,
+  mgcv,
   mmand,
   parallel,
   progress,
   pbapply,
   Rcpp (>= 0.12.18),
   RcppArmadillo,
-  RNifti,
-  mgcv
+  RNifti
 Remotes: simonvandekar/pain21
 LinkingTo: Rcpp,
   RcppArmadillo
