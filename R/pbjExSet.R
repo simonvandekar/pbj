@@ -49,10 +49,14 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
   # second column is max in stat<=chisq
   # boundary only uses the boundary voxels as in Sommerfeld et al. 2018
   if(boundary & df==0){
-    bmask = which(stat <= sqrt(chsq_threshold-df)+eps & stat >= sqrt(chsq_threshold-df)-eps )
-    bmask = misc3d::contour3d(stat.statMap(statMap), level=sqrt(n*ses), engine='none')
+    bmask = misc3d::computeContour3d(stat.statMap(statMap), level=sqrt(n*ses))
     # only need the second column here
     # In this case set chisq=0, so that we are taking max over all voxels in the boundary
+    #Fs = apply(sqrtSigma %*% matrix(rnorm(n*sum(mask)), nrow=sum(mask), ncol=n), 2,
+    #           function(img){
+    #             mask[ mask!=0 ] = img
+    #           } )
+    #bmask = which(stat <= sqrt(chsq_threshold-df)+eps & stat >= sqrt(chsq_threshold-df)-eps )
     Fs = pbjESboundary(sqrtSigma[bmask,], nboot)
     a = quantile(Fs, 0.95)
     #Fs = ecdf(Fs)
