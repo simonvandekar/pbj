@@ -43,6 +43,7 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL, standardize=FALSE){
   if(standardize){
     y = outer(betaimg, c(x)/sdx) + sweep(y, 1:3, sdy)
     y[ is.nan(y)] = 0
+    signalimg = betaimg
   } else {
     signalimg = betaimg * sdy/sdx
     y = outer(betaimg * sdy/sdx, c(x)) + y
