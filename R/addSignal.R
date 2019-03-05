@@ -21,7 +21,7 @@
 #' @importFrom RNifti writeNifti
 #' @export
 # @examples
-addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
+addSignal = function(files, betaimg, X, Xred, outfiles=NULL, standardize=FALSE){
 
   # get column of interest
   nullinds = which(!colnames(X) %in% colnames(Xred))
@@ -39,8 +39,13 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
   if(is.character(betaimg)) betaimg = RNifti::readNifti(betaimg)
 
   # make images with signal
-  signalimg = betaimg * sdy/sdx
-  y = outer(betaimg * sdy/sdx, c(x)) + y
+  if(standardize){
+    y = outer(betaimg, c(x)/sdx) + sweep(y, 4, sdy)
+    y[ is.nan(y)] = 0
+  } else {
+    signalimg = betaimg * sdy/sdx
+    y = outer(betaimg * sdy/sdx, c(x)) + y
+  }
 
   # write out images
   cat('writing output images.\n')
