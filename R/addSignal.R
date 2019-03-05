@@ -34,7 +34,7 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL, standardize=FALSE){
   cat('loading images.\n')
   y = do.call(abind, list(RNifti::readNifti(files), along=4))
   cat('computing standard deviation.\n')
-  sdy = apply(y, 1:3, sd)
+  sdy = if(standardize) apply(y, 1:3, function(ycol) sqrt(sum(qr.resid(qr(X), ycol)^2)/(length(ycol)-2) ) ) else apply(y, 1:3,sd)
 
   # load signal file
   if(is.character(betaimg)) betaimg = RNifti::readNifti(betaimg)
