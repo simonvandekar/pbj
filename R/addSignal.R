@@ -48,5 +48,5 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
     trash=lapply(1:length(outfiles), function(ind) RNifti::writeNifti(y[,,,ind], outfiles[ind]) )
   # return if requested
   y = y
-  list(sdy, sdx, signalimg = signalimg)
+  list(sdy=sdy, sdx=sdx, signalimg = signalimg)
 }
