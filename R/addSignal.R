@@ -41,7 +41,7 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL, standardize=FALSE){
 
   # make images with signal
   if(standardize){
-    y = outer(betaimg, c(x)/sdx) + sweep(y, 1:3, sdy)
+    y = outer(betaimg, c(x)) + sweep(y, 1:3, sdy/sdx, FUN='/')
     y[ is.nan(y)] = 0
     signalimg = betaimg
   } else {
