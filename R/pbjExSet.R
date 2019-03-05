@@ -58,7 +58,7 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     Aminus[ mask!=0] = stat > sqrt(chsq_threshold-df) - a
     Aplus[ mask!=0] = stat > sqrt(chsq_threshold-df) + a
   } else if(!boundary & df==0){
-    Fs = pbjESzerodf(stat, sqrtSigma, sqrt(chsq_threshold - df), nboot)
+    Fs = pbjESzerodf(stat, sqrtSigma, sqrt(n * ses), nboot)
     #Fs = apply(Fs, 2, ecdf)
     a0 = quantile(Fs[,1], 0.025)  + sqrt(n * ses) # = 1-Fs[[2]]
     a1 = quantile(Fs[,2], 0.975) + sqrt(n * ses)
