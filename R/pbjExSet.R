@@ -50,7 +50,9 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
   # boundary only uses the boundary voxels as in Sommerfeld et al. 2018
   if(boundary & df==0){
     # convoluted way to index the sqrtSigma matrix correctly
-    bmask = misc3d::computeContour3d(stat.statMap(statMap), level=sqrt(n*ses))
+    bmask = statMap <= sqrt(n*ses)
+    #bmask = erode(bmask, kernel = mmand::shapeKernel(3, 3, type='diamond') )
+    bmask = skeletonize(bmask, kernel = mmand::shapeKernel(3, 3, type='diamond'), method='beucher' )
     tmp = mask
     tmp[,,,] = 0
     tmp[ unique(round(bmask)) ] = 1
