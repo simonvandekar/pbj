@@ -45,26 +45,12 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
   n = ncol(sqrtSigma)
   chsq_threshold = n * ses + df
   Aminus = Aplus = mask
-  # first column is min in stat>chsq
-  # second column is max in stat<=chisq
   # boundary only uses the boundary voxels as in Sommerfeld et al. 2018
   if(boundary & df==0){
-    # convoluted way to index the sqrtSigma matrix correctly
-    bmask = statMap <= sqrt(n*ses)
-    #bmask = erode(bmask, kernel = mmand::shapeKernel(3, 3, type='diamond') )
-    bmask = skeletonize(bmask, kernel = mmand::shapeKernel(3, 3, type='diamond'), method='beucher' )
-    tmp = mask
-    tmp[,,,] = 0
-    tmp[ unique(round(bmask)) ] = 1
-    tmp = tmp[ mask!=0 ]
-    # only need the second column here
-    # In this case set chisq=0, so that we are taking max over all voxels in the boundary
-    #Fs = apply(sqrtSigma %*% matrix(rnorm(n*sum(mask)), nrow=sum(mask), ncol=n), 2,
-    #           function(img){
-    #             mask[ mask!=0 ] = img
-    #           } )
-    #bmask = which(stat <= sqrt(chsq_threshold-df)+eps & stat >= sqrt(chsq_threshold-df)-eps )
-    Fs = pbjESboundary(sqrtSigma[which(tmp!=0),], nboot)
+    bmask = (stat.statMap(statMap) > sqrt(n*ses) & mask != 0)
+    bmask = (dilate(bmask, kernel = mmand::shapeKernel(3, 3, type='box')) - bmask) * as.numeric(mask!=0)
+    bmask = bmask[ which(mask!=0) ]
+    Fs = pbjESboundary(sqrtSigma[which(bmask!=0),], nboot)
     a = quantile(Fs, 0.95)
     #Fs = ecdf(Fs)
     #Aminus[mask!=0] = Fs( stat + sqrt(chsq_threshold-df) )
