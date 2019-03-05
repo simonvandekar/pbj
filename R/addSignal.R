@@ -14,6 +14,7 @@
 #' @param Xred the design matrix for all covariates except the column that is
 #'  being multiplied by betaimg. Xred must have only one less column than X.
 #' @param outfiles a vector of images to save the output.
+#' @param standardize Roughly standardize X and Y, so that the signal is homogenous across voxels and equal to effect size (roughly).
 #' @return Returns a 4d array of imaging data with synthetic signal added. The first three dimensions are equal to dim(betaimg) and the 4th dimension indexes subject.
 #' @keywords power simulation
 #' @importFrom abind abind
@@ -40,7 +41,7 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL, standardize=FALSE){
 
   # make images with signal
   if(standardize){
-    y = outer(betaimg, c(x)/sdx) + sweep(y, 4, sdy)
+    y = outer(betaimg, c(x)/sdx) + sweep(y, 1:3, sdy)
     y[ is.nan(y)] = 0
   } else {
     signalimg = betaimg * sdy/sdx
