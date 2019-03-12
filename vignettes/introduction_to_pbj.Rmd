@@ -2,7 +2,9 @@
 title: "Introduction to Robust Spatial Extent Inference using the pbj Package"
 author: "Simon N. Vandekar"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:
+  - rmarkdown::html_vignette
+  - rmakrdown::pdf_vignette
 bibliography: bib.bib
 vignette: >
     %\VignetteIndexEntry{Introduction to Robust Spatial Extent Inference Using the pbj Package}

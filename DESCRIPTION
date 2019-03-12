@@ -59,5 +59,6 @@ LinkingTo: Rcpp,
 RoxygenNote: 6.1.1
 Suggests: knitr,
     rmarkdown,
-    pain21
-VignetteBuilder: knitr
+    pain21,
+    R.rsp
+VignetteBuilder: R.rsp
