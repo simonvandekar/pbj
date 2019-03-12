@@ -69,6 +69,7 @@ image.pbj <- function(x, alpha=0.05, ...)
 #' @param x pbj object to write
 #' @param outdir output directory to write pbj pieces
 #' @param ... additional arguments; unused.
+#' @importFrom utils write.csv
 #' @export
 write.pbj <- function(x, outdir, ...)
 {
