@@ -55,8 +55,8 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     #Fs = ecdf(Fs)
     #Aminus[mask!=0] = Fs( stat + sqrt(chsq_threshold-df) )
     #Aplus[mask!=0] = Fs( stat - sqrt(chsq_threshold-df))
-    Aminus[ mask!=0] = stat > sqrt(chsq_threshold-df) - a
-    Aplus[ mask!=0] = stat > sqrt(chsq_threshold-df) + a
+    Aminus[ mask!=0] = stat > sqrt(n*ses) - a
+    Aplus[ mask!=0] = stat > sqrt(n*ses) + a
   } else if(!boundary & df==0){
     Fs = pbjESzerodf(stat, sqrtSigma, sqrt(n * ses), nboot)
     #Fs = apply(Fs, 2, ecdf)
@@ -72,9 +72,6 @@ pbjExSet = function(statMap, ses=0.2, nboot=5000, boundary=FALSE, eps=0.01){
     Fs = apply(Fs, 2, ecdf)
     Aminus[mask!=0] = 1-Fs[[1]](stat)
     Aplus[mask!=0] = Fs[[2]](stat)
-    if(zerodf){
-      stat = sqrt(stat) * sgnstat
-    }
   }
 
   out = list(stat=stat, template=template, ses=list(Aminus=Aminus, Aplus=Aplus, ses=ses, CDFs=Fs) )
