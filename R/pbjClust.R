@@ -22,7 +22,6 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
   cftsnominal = cfts
-  cfts = cfts * 2
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   rawstat = stat.statMap(statMap)
@@ -31,6 +30,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   rdf = statMap$rdf
 
   if(df==0){
+    cfts = cfts * 2
     ts = qchisq(cfts, 1, lower.tail=FALSE)
     sgnstat = sign(rawstat)
     stat = rawstat^2

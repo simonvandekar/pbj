@@ -49,6 +49,7 @@ summary.statMap <- function(object, ...)
     "\nFormula: ", paste0(as.character(object$formulas[[2]]), collapse=''), paste0(as.character(object$formulas[[1]]), collapse=''), "\n",
     "\nContents:\n",
     statInner("  Stat:       ", object$stat),
+    statInner("  Coef:       ", object$coef),
     statInner("  Sqrt Sigma: ", object$sqrtSigma),
     statInner("  Mask:       ", object$mask),
     statInner("  Template:   ", object$template),
@@ -165,7 +166,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
 
 #' Write the statMap objects out
 #'
-#' Given a statMap object and a directory write the objects as stat.nii.gz, sqrtSigma.nii.gz and summary.txt
+#' Given a statMap object and a directory write the objects as stat.nii.gz, coef.nii.gz and sqrtSigma.nii.gz
 #' @param x the statMap object to write out
 #' @param outdir the directory to write into
 #' @return a list of what was written
@@ -175,7 +176,6 @@ write.statMap <- function(x,outdir)
   statimg  = file.path(outdir, 'stat.nii.gz')
   coefimg   = file.path(outdir, 'coef.nii.gz')
   resimg   = file.path(outdir, 'sqrtSigma.nii.gz')
-  summaryf = file.path(outdir, 'summary.txt')
   if(is.character(x$stat)){
     file.copy(x$stat, statimg)
     file.copy(x$sqrtSigma, resimg)
@@ -196,7 +196,7 @@ write.statMap <- function(x,outdir)
     writeNifti(updateNifti(x$sqrtSigma, x$mask), resimg)
     res = resimg
   }
-  return(list(stat=statimg, coef=coefimg, sqrtSigma=resimg, summary=summaryf))
+  return(list(stat=statimg, coef=coefimg, sqrtSigma=resimg))
 }
 
 #' Gets a 4D niftiImage of the coefficient image from a statMap object
@@ -207,7 +207,7 @@ write.statMap <- function(x,outdir)
 #' @export
 stat.statMap = function(x){
   if(is.character(x$stat)){
-    readNifti(x$stat)
+    stat = readNifti(x$stat)
   } else {
     # output 4D coefficient image
     stat = x$mask
