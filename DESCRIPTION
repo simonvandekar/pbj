@@ -47,10 +47,8 @@ Imports:
   mgcv,
   mmand,
   parallel,
-  Rcpp (>= 0.12.18),
-  RcppArmadillo,
   RNifti
-LinkingTo: Rcpp,
+LinkingTo: Rcpp (>= 0.12.18),
   RcppArmadillo
 RoxygenNote: 6.1.1
 Suggests: knitr,
