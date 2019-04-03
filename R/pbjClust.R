@@ -7,7 +7,7 @@
 #' @param kernel Kernel to use for computing connected components. Box is
 #'  default (26 neighbors), but Diamond may also be reasonable.
 #'
-#' @return Returns a list of length length(cfts)+4. The first three elements contain
+#' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
 #' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermap}{A niftiImage object with the cluster labels.}

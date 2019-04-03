@@ -19,7 +19,7 @@ with other imaging software these thresholds are one tailed (e.g. p<0.01 imples 
 default (26 neighbors), but Diamond may also be reasonable.}
 }
 \value{
-Returns a list of length length(cfts)+4. The first three elements contain
+Returns a list of length length(cfts)+4. The first four elements contain
 statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
 \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 \item{clustermap}{A niftiImage object with the cluster labels.}
