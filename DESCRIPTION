@@ -5,8 +5,7 @@ Version: 0.1.4
 Authors@R: c(person("Simon", "Vandekar", email="simon.vandekar@vanderbilt.edu", role=c('aut', 'cre')),
              person("Shawn", "Garbett", email= "shawn.garbett@vumc.org", role=c('aut')),
              person("Jiajing", "Niu", email="", role=c('aut'))) 
-Description: The pbj package includes a set of parametric bootstrap joint (PBJ)
-    testing procedures designed for neuroimaging data. The statistical tools
+Description: Parametric bootstrap joint (PBJ) inference procedures are designed for neuroimaging data. The statistical tools
     are more generally applicable, but this package is designed to allow input
     and output data for NIfTI images. The PBJ tools are designed for voxel-wise
     and cluster-extent hypothesis testing methods and include semi-PBJ (sPBJ)
@@ -14,7 +13,7 @@ Description: The pbj package includes a set of parametric bootstrap joint (PBJ)
     equations approach. [see Vandekar, Simon N., Satterthwaite, Theodore D.,
     Xia, Cedric H., Ruparel, Kosha, Gur, Ruben C., Gur, Raquel E., Shinohara,
     Russell T.. 2018. "Robust Spatial Extent Inference with a Semiparametric
-    Bootstrap Joint Testing Procedure}". arXiv: 1808.07449] or [Vandekar, Simon N.,
+    Bootstrap Joint Testing Procedure}". <arXiv:1808.07449>] or [Vandekar, Simon N.,
     Satterthwaite, Theodore D. and Rosen, Adon and Ciric, Rastko and Roalf, David
     R. and Ruparel, Kosha and Gur, Ruben C. and Gur, Raquel E. and Shinohara,
     Russell T.. 2018. "Faster family-wise error control for neuroimaging with a
