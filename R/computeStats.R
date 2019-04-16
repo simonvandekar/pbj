@@ -67,7 +67,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   if(class(images)[1] != 'niftiImage'){
     n=length(images)
     images = as.character(images)
-    images = gsub(" +$", "", images) 
+    images = gsub(" +$", "", images)
     if(nrow(X)!=n)
       stop('length(images) and nrow(X) must be the same.')
     res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
@@ -124,7 +124,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
     stop('Robust covariance is only available for testing a single parameter.')
 
   if(is.character(W)){
-    cat('Weights are voxel-wise.\n')
+    message('Weights are voxel-wise.\n')
     voxwts = TRUE
     W = do.call(abind::abind, list(RNifti::readNifti(W), along=4))
     W = t(apply(W, 4, function(x) x[mask!=0]))
@@ -143,7 +143,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   # fit model to all image data
   # if weights are voxel specific then design must also be treated separately
   if(voxwts){
-    cat('Running voxel-wise weighted linear models.\n')
+    message('Running voxel-wise weighted linear models.\n')
 
     if(!robust){
       if(df==1){
@@ -174,15 +174,15 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
       # get parameter estimates
       if(.Platform$OS.type!='windows'){
         coef = stat = do.call(cbind, parallel::mclapply(res, coefficients, mc.cores=mc.cores ))[peind,, drop=FALSE]
-        cat('Getting voxel-wise hat values.\n')
+        message('Getting voxel-wise hat values.\n')
         h = do.call(rbind, parallel::mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
-        cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
+        message('Getting voxel-wise residuals for covariate and outcome vectors.\n')
         res = do.call(rbind, parallel::mclapply(res, residuals, mc.cores=mc.cores))
       } else {
         coef = stat = do.call(rbind, lapply(res, coefficients ))[peind,,drop=FALSE]
-        cat('Getting voxel-wise hat values.\n')
+        message('Getting voxel-wise hat values.\n')
         h = do.call(rbind, lapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}))
-        cat('Getting voxel-wise residuals for covariate and outcome vectors.\n')
+        message('Getting voxel-wise residuals for covariate and outcome vectors.\n')
         res = do.call(rbind, lapply(res, residuals))
       }
 
@@ -214,19 +214,19 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
     }
 
     if(robust){
-      cat('Performing voxel regression.\n')
+      message('Performing voxel regression.\n')
       res = lm(res ~ -1 + I(X * W), model=FALSE)
 
       # get parameter estimates
       coef = stat = coefficients(res)[peind,,drop=FALSE]
 
       # compute hat values
-      cat('Computing hat values.\n')
+      message('Computing hat values.\n')
       h = rowSums(qr.Q(res$qr)^2)
       h = ifelse(h>=1, 1-eps, h)
 
       # get residuals
-      cat('Getting residuals\n')
+      message('Getting residuals\n')
       res = residuals(res)
 
       # residualize variable of interest to covariates
@@ -242,7 +242,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
 
   # compute statistical image
   if(!robust){
-    cat('Computing stat image.\n')
+    message('Computing stat image.\n')
     stat = rowSums(res^2)
     # assume t-statistics if df==1
     if(df==1){
@@ -262,7 +262,7 @@ computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NUL
   }
 
   if(robust){
-    cat('Computing robust stat image.\n')
+    message('Computing robust stat image.\n')
     stat = stat*A/sqrt(rowSums(res^2))
     # Use T-to-Z transform
     if(transform) stat = qnorm(pt(stat, df=rdf))
