@@ -4,8 +4,8 @@
 \alias{simulationSetup}
 \title{Prepares Simulation Data for Bootstrapping}
 \usage{
-simulationSetup(files, form, dat, mask, outfiles, smoutfiles = NULL,
-  sm = 0, mc.cores = getOption("mc.cores", 2L))
+simulationSetup(files, form, dat, mask, outfiles, smoutfiles = NULL, sm = 0,
+  mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
 \item{files}{Character vector of subject images to be modeled as an outcome

@@ -4,8 +4,8 @@
 \alias{npbj}
 \title{Performs nonParametric Bootstrap Joint (nPBJ) Inference}
 \usage{
-npbj(images, form, formred, mask, data = NULL, W = NULL,
-  template = NULL, nboot = 1000, statistic = npbj.sei, ...)
+npbj(images, form, formred, mask, data = NULL, W = NULL, template = NULL,
+  nboot = 1000, statistic = npbj.sei, ...)
 }
 \arguments{
 \item{images}{A character vector of subjects' images or a 4D niftiImage object.}

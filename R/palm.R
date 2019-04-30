@@ -16,10 +16,11 @@
 #' @param whole not functional.
 #' @param ee exchangeable errors assumed.
 #' @param T Run TFCE.
+#' @param nonniiclass Allow gzipped niftis.
 #'
 #' @return Returns a string of the command that was evaluated.
 #' @export
-palm = function(i,m,s,d, o, C, t=NULL,f=NULL,fonly=TRUE, n=10000, eb=NULL, within=NULL, whole=NULL, ee=TRUE, T=FALSE){
+palm = function(i,m,s=NULL,d, o, C=NULL, Cstat='extent', tc=NULL,f=NULL,fonly=TRUE, n=10000, eb=NULL, within=NULL, whole=NULL, ee=TRUE, T=FALSE, noniiclass=TRUE, logp=TRUE){
   # if multiple arguments are passed assume it is a list of 3d niftis
   if(length(i)!=1){
      temp = paste0(tempfile(), '.nii.gz')
@@ -27,21 +28,21 @@ palm = function(i,m,s,d, o, C, t=NULL,f=NULL,fonly=TRUE, n=10000, eb=NULL, withi
      i = temp
   }
   # convert data frame to csv file
-  if(is.data.frame(d)){
+  if(is.matrix(d) | is.data.frame(d)){
      temp = paste0(tempfile(), '.csv')
      write.table(d, temp, row.names=FALSE, col.names=FALSE, quote=FALSE, sep=',')
      d = temp
   }
-  X = read.csv(d,)
+  X = read.csv(d)
 
   # T-contrasts
-  if(is.null(t)){
-    t = diag(ncol(X))
+  if(is.null(tc)){
+    tc = diag(ncol(X))
   }
-  if(is.matrix(t) | is.data.frame(t)){
+  if(is.matrix(tc) | is.data.frame(tc)){
     temp = paste0(tempfile(), '.csv')
-    write.table(as.matrix(t), temp, row.names=FALSE, col.names=FALSE, quote=FALSE, sep=',')
-    t = temp
+    write.table(as.matrix(tc), temp, row.names=FALSE, col.names=FALSE, quote=FALSE, sep=',')
+    tc = temp
   }
 
   # F-contrasts
@@ -50,23 +51,29 @@ palm = function(i,m,s,d, o, C, t=NULL,f=NULL,fonly=TRUE, n=10000, eb=NULL, withi
   }
   if(is.matrix(f) | is.data.frame(f)){
     temp = paste0(tempfile(), '.csv')
-    write.table(as.matrix(t), temp, row.names=FALSE, col.names=FALSE, quote=FALSE, sep=',')
+    write.table(as.matrix(f), temp, row.names=FALSE, col.names=FALSE, quote=FALSE, sep=',')
     f = temp
   }
 
   cmd = 'palm'
-  argnames = names(match.call())[-1]
+  argnames = names(formals())
   args = lapply(argnames, function(x) eval(parse(text=x)))
   names(args) = argnames
   for( arg in names(args)){
     if(!is.null(args[[arg]])){
       if(is.logical(args[[arg]])){
-        cmd = paste0(cmd, ' -', arg)
+        if(args[[arg]])
+          cmd = paste0(cmd, ' -', arg)
       } else {
-        cmd = paste0(cmd, ' -', arg, ' ', args[[arg]])
+          if(arg=='tc'){ # special case for t argument
+            cmd = paste0(cmd, ' -t', ' ', args[[arg]])
+          } else {
+            cmd = paste0(cmd, ' -', arg, ' ', args[[arg]])
+          }
       }
     }
   }
+  message(cmd)
   system(cmd)
   cmd
 }

@@ -5,8 +5,9 @@
 \title{this is an R wrapper function for PALM
 it has limited functionality for the features that PALM offers}
 \usage{
-palm(i, m, s, d, o, C, t = NULL, f = NULL, fonly = TRUE, n = 10000,
-  eb = NULL, within = NULL, whole = NULL, ee = TRUE, T = FALSE)
+palm(i, m, s = NULL, d, o, C = NULL, Cstat = "extent", tc = NULL,
+  f = NULL, fonly = TRUE, n = 10000, eb = NULL, within = NULL,
+  whole = NULL, ee = TRUE, T = FALSE, noniiclass = TRUE, logp = TRUE)
 }
 \arguments{
 \item{i}{vector of strings pointing to input images or a single 4d nifti string.}
@@ -20,8 +21,6 @@ palm(i, m, s, d, o, C, t = NULL, f = NULL, fonly = TRUE, n = 10000,
 \item{o}{output directory and prefix.}
 
 \item{C}{cluster forming threshold as a Z-value}
-
-\item{t}{T-contrast matrix that randomise takes as matrix, data frame, or csv.}
 
 \item{f}{F-contrast matrix that randomise takes, as matrix data frame, or csv.}
 
@@ -38,6 +37,10 @@ palm(i, m, s, d, o, C, t = NULL, f = NULL, fonly = TRUE, n = 10000,
 \item{ee}{exchangeable errors assumed.}
 
 \item{T}{Run TFCE.}
+
+\item{t}{T-contrast matrix that randomise takes as matrix, data frame, or csv.}
+
+\item{nonniiclass}{Allow gzipped niftis.}
 }
 \value{
 Returns a string of the command that was evaluated.

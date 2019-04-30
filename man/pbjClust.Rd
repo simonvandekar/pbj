@@ -4,8 +4,7 @@
 \alias{pbjClust}
 \title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference}
 \usage{
-pbjClust(statMap, cfts = c(0.01, 0.005), nboot = 5000,
-  kernel = "box")
+pbjClust(statMap, cfts = c(0.01, 0.005), nboot = 5000, kernel = "box")
 }
 \arguments{
 \item{statMap}{statMap object as obtained from computeStats.}
