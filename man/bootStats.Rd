@@ -4,8 +4,8 @@
 \alias{bootStats}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-bootStats(images, coefficients = NULL, X, Xred, statistic = function(stat,
-  ...) stat, ...)
+bootStats(images, coefficients = NULL, X, Xred,
+  statistic = function(stat, ...) stat, ...)
 }
 \arguments{
 \item{images}{An n by V  matrix of voxels inside the brain.}

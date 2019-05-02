@@ -32,6 +32,7 @@ Collate:
     'functions.R'
     'getDesign.R'
     'getPvalues.R'
+    'niftiImage.R'
     'npbj.R'
     'npbjInference.R'
     'palm.R'

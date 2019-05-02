@@ -2,6 +2,7 @@
 
 S3method(coef,statMap)
 S3method(image,CoPE)
+S3method(image,niftiImage)
 S3method(image,pbj)
 S3method(image,statMap)
 S3method(print,pbj)

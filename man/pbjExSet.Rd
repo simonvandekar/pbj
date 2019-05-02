@@ -4,7 +4,8 @@
 \alias{pbjExSet}
 \title{Constructs (semi)Parametric Bootstrap Joint ((s)PBJ) Coverage Probability Excursion (CoPE) Sets}
 \usage{
-pbjExSet(statMap, ses = 0.2, nboot = 5000, boundary = FALSE, eps = 0.01)
+pbjExSet(statMap, ses = 0.2, nboot = 5000, boundary = FALSE,
+  eps = 0.01)
 }
 \arguments{
 \item{statMap}{statMap object as obtained from computeStats.}

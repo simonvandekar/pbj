@@ -145,7 +145,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
     breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
     if(is.null(index)) index = 1:imgdim[3]
     oldpar <- par(no.readonly = TRUE)
-    par(mfrow = ceiling(rep(sqrt(imgdim[3]), 2)), oma = oma, mar = mar, bg = bg)
+    par(mfrow = ceiling(rep(sqrt(length(index)), 2)), oma = oma, mar = mar, bg = bg)
     for (z in index) {
       # background image
       graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
