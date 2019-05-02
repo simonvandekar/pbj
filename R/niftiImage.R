@@ -73,9 +73,10 @@ image.niftiImage = function (x, bgimg=NULL, thresh=0, index = NULL, col = gray(0
   breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos)-1), maxstat)
   breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
   if(is.null(index)) index = 1:imgdim[3]
-  oldpar <- par(no.readonly = TRUE)
-  if(length(index)!=1)
+  if(length(index)!=1){
     par(mfrow = ceiling(rep(sqrt(length(index)), 2)), oma = oma, mar = mar, bg = bg)
+    oldpar <- par(no.readonly = TRUE)
+  }
   for (z in index) {
     # background image
     graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
@@ -92,6 +93,7 @@ image.niftiImage = function (x, bgimg=NULL, thresh=0, index = NULL, col = gray(0
                     breaks = breaksneg, asp = aspect, axes = axes, add=TRUE,
                     xlab = xlab, ylab = ylab, ...)
   }
-  par(oldpar)
+  if(length(index)!=1)
+    par(oldpar)
   invisible()
 }
