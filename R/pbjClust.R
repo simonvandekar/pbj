@@ -103,7 +103,7 @@ pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
 
   # add the stat max
   ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
-  Fs = rbind(Fs, sapply(ccomps, max)+0.01) # + 0.01 to make it larger than observed data
+  Fs = rbind(Fs, sapply(ccomps, max)) + 0.01 # plus 0.01 to get bootstrap precision (nonzero) p-values
   # compute empirical CDFs
   Fs = apply(Fs, 2, ecdf)
   pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](ccomps[[ind]]) )
