@@ -175,21 +175,32 @@ panel.niftiImage = function (x, bgimg=NULL, thresh=0, index, col = gray(0:64/64)
   # breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
    if(length(index)!=1){
     stop('index must be a single slice.')
-  }
+   }
+
+
     # background image
-    grid::grid.raster(x[, , z]/zlim[2], 1:imgdim[1], 1:imgdim[2], col = col,
-                      just=c('left', 'bottom'), add=TRUE,
+    f = function(img){
+      col[cut(img, length(col))]
+    }
+    grid::grid.raster(f(x[, , z]), 1:imgdim[1], 1:imgdim[2],
+                      just=c('left', 'bottom'),
                       name = trellis.grobname(paste(identifier, "raster", sep = "."),
                                               type = "panel", group = group), ...)
     # overlay positive
+    f = function(img){
+      colpos[cut(img, length(colpos))]
+    }
     if(thresh!=maxstat)
-      grid::grid.raster(stat[, , z]/maxstat, 1:imgdim[1], 1:imgdim[2], col = colpos,
+      grid::grid.raster(f(stat[, , z]), 1:imgdim[1], 1:imgdim[2],
                       just=c('left', 'bottom'), add=TRUE,
                       name = trellis.grobname(paste(identifier, "raster", sep = "."),
                                               type = "panel", group = group), ...)
     # overlay negative
+    f = function(img){
+      colneg[cut(img, length(colneg))]
+    }
     if(thresh != maxstatneg)
-      grid::grid.raster(statneg[, , z]/maxstatneg, 1:imgdim[1], 1:imgdim[2], col = colneg,
+      grid::grid.raster(f(statneg[, , z]), 1:imgdim[1], 1:imgdim[2], col = colneg,
                         just=c('left', 'bottom'), add=TRUE,
                       name = trellis.grobname(paste(identifier, "raster", sep = "."),
                                               type = "panel", group = group), ...)
