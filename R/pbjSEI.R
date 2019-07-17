@@ -18,7 +18,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjClust = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
+pbjSEI = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
   cftsnominal = cfts

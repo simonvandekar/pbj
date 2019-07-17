@@ -24,7 +24,7 @@
 #' @importFrom parallel mclapply
 #' @export
 # @examples
-simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0, mc.cores=getOption("mc.cores", 2L)){
+residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0, mc.cores=getOption("mc.cores", 2L)){
 
   # smooth using susan
   if(sm>0){

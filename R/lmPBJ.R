@@ -37,7 +37,7 @@
 #' \describe{
 #'   \item{stat}{The statistical values where mask!=0. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
 #'   \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
-#'   \item{sqrtSigma}{The 4d covariance object. This is a V by n matrix R, such that R \%*\% t(R) = hatSigma.}
+#'   \item{sqrtSigma}{The covariance object. This is a V by n matrix R, such that R \%*\% t(R) = hatSigma.}
 #'   \item{mask}{The input mask.}
 #'   \item{template}{The background template used for visualization.}
 #'   \item{formulas}{A list containing the full and reduced models.}
@@ -50,7 +50,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-computeStats = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 

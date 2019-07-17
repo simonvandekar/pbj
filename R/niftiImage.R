@@ -12,7 +12,7 @@
 #' @param colneg a vector of colors to use for negative values.
 #' @param plane the plane to display, can be axial, coronal or sagittal.
 #' @param xlab a title for the x axis.
-#' @param ylab a title for the u axis.
+#' @param ylab a title for the y axis.
 #' @param axes display axes, defaults to false
 #' @param oma A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.
 #' @param mar A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.
