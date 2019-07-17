@@ -28,20 +28,20 @@ Collate:
     'addSignal.R'
     'bootStats.R'
     'cluster_functions.R'
-    'computeStats.R'
     'functions.R'
     'getDesign.R'
     'getPvalues.R'
+    'lmPBJ.R'
     'niftiImage.R'
     'npbj.R'
     'npbjInference.R'
     'palm.R'
     'statmap.R'
     'pbj.R'
-    'pbjClust.R'
     'pbjExSet.R'
+    'pbjSEI.R'
     'resave.R'
-    'simulationSetup.R'
+    'residualizeImages.R'
 Imports:
   abind,
   fslr,

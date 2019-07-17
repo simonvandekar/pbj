@@ -29,7 +29,7 @@
 
 \item{xlab}{a title for the x axis.}
 
-\item{ylab}{a title for the u axis.}
+\item{ylab}{a title for the y axis.}
 
 \item{axes}{display axes, defaults to false}
 
