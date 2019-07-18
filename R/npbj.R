@@ -26,7 +26,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
 
   X = getDesign(form, data=data)
   Xred = getDesign(formred, data=data)
-  statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, transform=FALSE)
+  statmap = lmPBJ(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, transform=FALSE)
 
   if(class(images)[1] != 'niftiImage'){
     n=length(images)

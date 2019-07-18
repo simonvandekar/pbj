@@ -23,6 +23,10 @@ palm(i, m, s = NULL, d, o, C = NULL, Cstat = "extent", tc = NULL,
 
 \item{C}{cluster forming threshold as a Z-value}
 
+\item{Cstat}{cluster statistic}
+
+\item{tc}{T-contrast matrix that randomise takes as matrix, data frame, or csv.}
+
 \item{f}{F-contrast matrix that randomise takes, as matrix data frame, or csv.}
 
 \item{fonly}{only run the F-tests.}
@@ -39,9 +43,9 @@ palm(i, m, s = NULL, d, o, C = NULL, Cstat = "extent", tc = NULL,
 
 \item{T}{Run TFCE.}
 
-\item{t}{T-contrast matrix that randomise takes as matrix, data frame, or csv.}
+\item{noniiclass}{Allow gzipped niftis.}
 
-\item{nonniiclass}{Allow gzipped niftis.}
+\item{logp}{Compute log10p-values.}
 }
 \value{
 Returns a string of the command that was evaluated.

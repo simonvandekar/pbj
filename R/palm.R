@@ -7,7 +7,8 @@
 #' @param d design matrix as a data frame or csv file.
 #' @param o output directory and prefix.
 #' @param C cluster forming threshold as a Z-value
-#' @param t T-contrast matrix that randomise takes as matrix, data frame, or csv.
+#' @param Cstat cluster statistic
+#' @param tc T-contrast matrix that randomise takes as matrix, data frame, or csv.
 #' @param f F-contrast matrix that randomise takes, as matrix data frame, or csv.
 #' @param fonly only run the F-tests.
 #' @param n number of permutations to run.
@@ -16,10 +17,11 @@
 #' @param whole not functional.
 #' @param ee exchangeable errors assumed.
 #' @param T Run TFCE.
-#' @param nonniiclass Allow gzipped niftis.
+#' @param noniiclass Allow gzipped niftis.
+#' @param logp Compute log10p-values.
 #'
+#' @importFrom utils read.csv
 #' @return Returns a string of the command that was evaluated.
-#' @export
 palm = function(i,m,s=NULL,d, o, C=NULL, Cstat='extent', tc=NULL,f=NULL,fonly=TRUE, n=10000, eb=NULL, within=NULL, whole=NULL, ee=TRUE, T=FALSE, noniiclass=TRUE, logp=TRUE){
   # if multiple arguments are passed assume it is a list of 3d niftis
   if(length(i)!=1){

@@ -48,11 +48,12 @@ Imports:
   mgcv,
   mmand,
   parallel,
-  RNifti
+  RNifti,
+  R.rsp,
+  utils
 LinkingTo: Rcpp (>= 0.12.18),
   RcppArmadillo
 RoxygenNote: 6.1.1
 Suggests: knitr,
-    rmarkdown,
-    R.rsp
+    rmarkdown
 VignetteBuilder: R.rsp
