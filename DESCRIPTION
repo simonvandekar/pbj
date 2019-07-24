@@ -1,7 +1,7 @@
 Package: pbj
 Type: Package
 Title: Parametric Bootstrap Joint Testing Procedures for Neuroimaging
-Version: 0.1.4
+Version: 0.1.5
 Date: 2019
 Authors@R: c(person("Simon", "Vandekar", email="simon.vandekar@vanderbilt.edu", role=c('aut', 'cre')),
              person("Shawn", "Garbett", email= "shawn.garbett@vumc.org", role=c('aut')),
