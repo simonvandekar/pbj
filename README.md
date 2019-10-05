@@ -6,15 +6,28 @@ status](https://travis-ci.com/simonvandekar/pbj.svg?branch=master)](https://trav
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# pbj
+<!-- <img align='center' src="inst/images/pbj-jpg.jpg" width="200"> -->
 
-The pbj package includes a set of parametric bootstrap joint (PBJ)
-testing procedures designed for neuroimaging data. The statistical tools
-are more generally applicable, but this package is designed to allow
-input and output data for NIfTI images. The PBJ tools are designed for
-voxel-wise and cluster-extent hypothesis testing methods and include
-semi-PBJ (sPBJ) inference that is robust to variance misspecification
-using an estimating equations approach.
+# <img align='center' src="inst/images/pbj-jpg.jpg" width="200">
+
+The parametric bootstrap joint (pbj) methods are designed for voxel-wise
+and cluster-extent inference and include semi-PBJ (sPBJ) inference that
+is robust to variance misspecification using an estimating equations
+approach. The package is designed for neuroimaging data and allows for
+input and output of neuroimaging data.
+
+# Ongoing projects
+
+The pbj package is in alpha stage as many features are still being
+added.
+
+  - A graphical user interface
+  - Semiparametric multidimensional inference (F-tests)
+  - Semiparametric longitudinal multidimensional inference (F-test in
+    repeated measurements models)
+  - Semiparametric confidence set inference
+  - Effect size based inference
+  - Nonparametric bootstrap-based inference
 
 ## Installation
 
