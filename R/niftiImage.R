@@ -67,8 +67,8 @@ image.niftiImage = function (x, bgimg=NULL, thresh=0, index = NULL, col = gray(0
   stat[ stat<thresh ] = 0
   imgdim = dim(x)
   zlim = range(x, na.rm=TRUE)
-  maxstat = max(c(stat[ stat>0], thresh), na.rm=TRUE)
-  maxstatneg = max(c(statneg[ statneg>0], thresh), na.rm=TRUE)
+  maxstat = max(replace(c(stat[ stat>0], thresh), !is.finite(c(stat[ stat>0], thresh)), NA), na.rm=TRUE)
+  maxstatneg = max(replace(c(statneg[ statneg>0], thresh), !is.finite(c(statneg[ statneg>0], thresh)), NA), na.rm=TRUE)
   breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
   breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos)-1), maxstat)
   breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
