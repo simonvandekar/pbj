@@ -282,6 +282,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   if(!is.null(outdir)){
     files = write.statMap(out, outdir)
     out$stat = files$stat
+    out$coef = files$coef
     out$sqrtSigma = files$sqrtSigma
     # if mask was a character then pass that forward instead if the niftiImage
     if(exists('maskimg'))
