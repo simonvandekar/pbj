@@ -120,8 +120,8 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   peind = which(!colnames(X) %in% colnames(Xred))
   df = length(peind)
   rdf = n - ncol(X)
-  if(df>1 & robust)
-    stop('Robust covariance is only available for testing a single parameter.')
+ # if(df>1 & robust)
+ #   stop('Robust covariance is only available for testing a single parameter.')
 
   if(is.character(W)){
     message('Weights are voxel-wise.\n')
@@ -169,6 +169,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
     }
 
     if(robust){
+      if(df==1){
       res = lapply(1:ncol(res), function(ind) lm(res[,ind] ~ -1 + I(X * W[,ind]), model=FALSE) )
 
       # get parameter estimates
@@ -195,7 +196,35 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       res = res * X1res /(1-h)
       A = rowSums(X1res^2)
       rm(h, X1res)
+    } else {
+      # compute qr decompositions
+      qrs = lapply(1:ncol(res), function(ind) qr(X * W[,ind]) )
+      # compute coefficients
+      coef = do.call(cbind, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind] ))
+      # compute Q(v)
+      temp = do.call(cbind, lapply(1:ncol(res), function(ind){r=qr.resid(qrs[[ind]], res[,ind]);
+          h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
+          Q = W[,ind] * r/(1-h); Q }) )
+      rm(qrs)
+      # compute X_1^T W P^{X_0}. m1 X n X V array.
+      # Depends on v here, but does not when weights are the same for all voxels
+      system.time(
+      test <- do.call(abind::abind, c(lapply(1:ncol(W), function(ind){qr.X0 = qr(Xred * W[,ind]); qr.resid(qr.X0, X1 * W[,ind]) }), along=3) ) )
+      # now compute the 3d array that we need
+      A = apply(test, 3, crossprod)
+      # need this to simulate joint distribution
+      res = sweep(test, c(1,3), temp, FUN = "*", check.margin=TRUE)
+      rm(temp)
+      # Compute Omega
+      Omega = apply(res, 3, crossprod)
+      # invert Omega
+      Omega = apply(Omega, 2, function(x) chol2inv(chol(matrix(x, nrow=df, ncol=df))) )
+      bA = do.call(cbind, lapply(1:ncol(A), function(ind) matrix(A[,ind], nrow=df, ncol=df) %*% coef[,1] ))
+      stat = lapply(1:ncol(bA), function(ind) t(bA[,ind]) %*% matrix(Omega[,ind], nrow=df, ncol=df) %*% bA[,ind] )
+      rm(bA, test)
     }
+    }
+
 
   # else weights are the same for all voxels
   } else {
@@ -214,20 +243,34 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
     }
 
     if(robust){
-      message('Performing voxel regression.\n')
-      res = lm(res ~ -1 + I(X * W), model=FALSE)
+      if(df==1){
+      # message('Performing voxel regression.')
+      # res = lm(res ~ -1 + I(X * W), model=FALSE)
+      #
+      # # get parameter estimates
+      # coef = stat = coefficients(res)[peind,,drop=FALSE]
+      #
+      # # compute hat values
+      # message('Computing hat values.')
+      # h = rowSums(qr.Q(res$qr)^2)
+      # h = ifelse(h>=1, 1-eps, h)
+      #
+      # # get residuals
+      # message('Getting residuals.')
+      # res = residuals(res)
 
-      # get parameter estimates
-      coef = stat = coefficients(res)[peind,,drop=FALSE]
 
-      # compute hat values
-      message('Computing hat values.\n')
-      h = rowSums(qr.Q(res$qr)^2)
+      # qr approach
+      message('Performing voxel regression.')
+      qrX = qr(X * W)
+      # PEs
+      coef = stat = qr.coef(qrX, res)
+      message('Computing hat values.')
+      h = rowSums(qr.Q(qrX)^2)
       h = ifelse(h>=1, 1-eps, h)
-
-      # get residuals
-      message('Getting residuals\n')
-      res = residuals(res)
+      # residuals
+      message('Getting residuals.')
+      res = qr.resid(qrX, res)
 
       # residualize variable of interest to covariates
       # null statement is for if X is the intercept (Xred is null)
@@ -237,6 +280,9 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       # divides by 1-h to use the HC3 version discussed by Long and Ervin
       # https://pdfs.semanticscholar.org/1526/72b624b44b12250363eee602554fe49ca782.pdf
       res = t(res *  (X1res/(1-h)))
+      } else {
+        message('blah')
+      }
     }
   } # end if-else voxwts
 
