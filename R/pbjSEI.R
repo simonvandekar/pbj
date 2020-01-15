@@ -4,8 +4,8 @@
 #' @param cfts Numeric vector of cluster forming thresholds to use. Consistent
 #' with other imaging software these thresholds are one tailed (e.g. p<0.01 imples z>2.32).
 #' @param nboot Number of bootstraps to perform.
-#' @param kernel Kernel to use for computing connected components. Box is
-#'  default (26 neighbors), but Diamond may also be reasonable.
+#' @param kernel Kernel to use for computing connected components. box is
+#'  default (26 neighbors), but diamond may also be reasonable.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
@@ -28,6 +28,7 @@ pbjSEI = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   template = statMap$template
   df = statMap$df
   rdf = statMap$rdf
+  robust = statMap$robust
 
   if(df==0){
     cfts = cfts * 2
@@ -38,6 +39,7 @@ pbjSEI = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   } else {
     ts = qchisq(cfts, df, lower.tail=FALSE)
     zerodf=FALSE
+    stat = rawstat
   }
 
   tmp = mask
@@ -53,13 +55,15 @@ pbjSEI = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   }
   rm(statMap)
 
-  n = ncol(sqrtSigma)
+  dims = dim(sqrtSigma)
+  n = dims[2]
+  p=dims[1]
+  ndim = length(dims)
   if(is.null(rdf)) rdf=n
 
   ssqs = sqrt(rowSums(sqrtSigma^2))
   if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
 
-  p=nrow(sqrtSigma)
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   Fs = matrix(NA, nboot, length(cfts))
@@ -71,7 +75,11 @@ pbjSEI = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
     {
       tmp = mask
       S = matrix(rnorm(n*df), n, df)
-      statimg = rowSums((sqrtSigma %*% S)^2)
+      if(!robust | df==1){
+        statimg = rowSums((sqrtSigma %*% S)^2)
+      } else {
+        statimg = rowSums(colSums(aperm(sweep(sqrtSigma, 2:3, S, FUN="*"), perm=c(2,1,3) ), dims=1 )^2)
+      }
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
       setTxtProgressBar(pb, round(i/nboot,2))

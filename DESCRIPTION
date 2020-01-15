@@ -54,6 +54,11 @@ Imports:
 LinkingTo: Rcpp (>= 0.12.18),
   RcppArmadillo
 RoxygenNote: 6.1.1
-Suggests: knitr,
-    rmarkdown
+Suggests: 
+    knitr,
+    lmtest,
+    pain21,
+    rmarkdown,
+    sandwich,
+    testthat
 VignetteBuilder: R.rsp
