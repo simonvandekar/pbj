@@ -31,6 +31,8 @@
 #' saved as strings. This approach conserves memory, but has longer IO time.
 #' Currently, not supported.
 #' @param mc.cores Argument passed to mclapply for parallel things.
+#' @param zeros Exclude voxels that have zeros? Zeros may exist due to differences in masking and
+#' coverage or they may represent locations where the data took the value zero.
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
 #' @importFrom abind abind
 #' @return Returns a list with the following values:
@@ -50,7 +52,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -97,7 +99,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   # check that first input image and mask dimensions are the same
   ndims = length(dim(mask))
   if(any(dims[1:ndims] != dim(mask))  ){
-    stop('images and mask dimensions do not match.\n')
+    stop('images and mask dimensions do not match.')
   }
 
   # check that template and mask dimensions are the same
@@ -110,12 +112,17 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       dims = dim(temp)
       rm(temp)
       if(any(dims[1:ndims] != dim(mask))  ){
-        stop('template image and mask dimensions (or pixel dimensions) do not match.\n')
+        stop('template image and mask dimensions (or pixel dimensions) do not match.')
       }
   }
 
   # load images
+  if(zeros){
+    # removes locations where there are any zeros
+    mask = mask * c(apply(res!=0, 1:3, all))
+  }
   res = t(apply(res, 4, function(x) x[mask!=0]))
+
 
   peind = which(!colnames(X) %in% colnames(Xred))
   df = length(peind)
@@ -124,7 +131,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
  #   stop('Robust covariance is only available for testing a single parameter.')
 
   if(is.character(W)){
-    message('Weights are voxel-wise.\n')
+    message('Weights are voxel-wise.')
     voxwts = TRUE
     W = do.call(abind::abind, list(RNifti::readNifti(W), along=4))
     W = t(apply(W, 4, function(x) x[mask!=0]))
@@ -143,7 +150,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   # fit model to all image data
   # if weights are voxel specific then design must also be treated separately
   if(voxwts){
-    message('Running voxel-wise weighted linear models.\n')
+    message('Running voxel-wise weighted linear models.')
 
     if(!robust){
       if(df==1){
@@ -175,15 +182,16 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       # get parameter estimates
       if(.Platform$OS.type!='windows'){
         coef = stat = do.call(cbind, parallel::mclapply(res, coefficients, mc.cores=mc.cores ))[peind,, drop=FALSE]
-        message('Getting voxel-wise hat values.\n')
+        rownames(coef) = colnames(X)[peind]
+        message('Getting voxel-wise hat values.')
         h = do.call(rbind, parallel::mclapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}, mc.cores=mc.cores ))
-        message('Getting voxel-wise residuals for covariate and outcome vectors.\n')
+        message('Getting voxel-wise residuals for covariate and outcome vectors.')
         res = do.call(rbind, parallel::mclapply(res, residuals, mc.cores=mc.cores))
       } else {
         coef = stat = do.call(rbind, lapply(res, coefficients ))[peind,,drop=FALSE]
-        message('Getting voxel-wise hat values.\n')
+        message('Getting voxel-wise hat values.')
         h = do.call(rbind, lapply(res, function(r){ h=rowSums(qr.Q(r$qr)^2); h = ifelse(h>=1, 1-eps, h); h}))
-        message('Getting voxel-wise residuals for covariate and outcome vectors.\n')
+        message('Getting voxel-wise residuals for covariate and outcome vectors.')
         res = do.call(rbind, lapply(res, residuals))
       }
 
@@ -196,32 +204,38 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       res = res * X1res /(1-h)
       A = rowSums(X1res^2)
       rm(h, X1res)
+
+      message('Computing robust stat image.')
+      stat = stat*A/sqrt(rowSums(res^2))
+
     } else {
       # compute qr decompositions
       qrs = lapply(1:ncol(res), function(ind) qr(X * W[,ind]) )
       # compute coefficients
       coef = do.call(cbind, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind] ))
       # compute Q(v)
-      temp = do.call(cbind, lapply(1:ncol(res), function(ind){r=qr.resid(qrs[[ind]], res[,ind]);
+      Q = do.call(cbind, lapply(1:ncol(res), function(ind){r=qr.resid(qrs[[ind]], res[,ind]);
           h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
-          Q = W[,ind] * r/(1-h); Q }) )
+          Q = r/(1-h); Q }) )
+      ind=1; r=qr.resid(qrs[[ind]], res[,ind]); h=rowSums(qr.Q(qrs[[ind]])^2)
       rm(qrs)
       # compute X_1^T W P^{X_0}. m1 X n X V array.
       # Depends on v here, but does not when weights are the same for all voxels
       system.time(
-      test <- do.call(abind::abind, c(lapply(1:ncol(W), function(ind){qr.X0 = qr(Xred * W[,ind]); qr.resid(qr.X0, X1 * W[,ind]) }), along=3) ) )
-      # now compute the 3d array that we need
-      A = apply(test, 3, crossprod)
+      res <- do.call(abind::abind, c(lapply(1:ncol(W), function(ind){qr.X0 = qr(Xred * W[,ind]); qr.resid(qr.X0, X1 * W[,ind]) }), along=3) ) )
+      # now compute the 3d arrays that we need
+      A = apply(res, 3, crossprod)
+      # solve(matrix(A[,1], nrow=2)) ==  (vcov(model)/summary(model)$sigma^2)[2:3, 2:3]
       # need this to simulate joint distribution
-      res = sweep(test, c(1,3), temp, FUN = "*", check.margin=TRUE)
-      rm(temp)
+      res = sweep(res, c(1,3), Q, FUN = "*", check.margin=TRUE)
+      rm(Q)
       # Compute Omega
       Omega = apply(res, 3, crossprod)
       # invert Omega
       Omega = apply(Omega, 2, function(x) chol2inv(chol(matrix(x, nrow=df, ncol=df))) )
-      bA = do.call(cbind, lapply(1:ncol(A), function(ind) matrix(A[,ind], nrow=df, ncol=df) %*% coef[,1] ))
-      stat = lapply(1:ncol(bA), function(ind) t(bA[,ind]) %*% matrix(Omega[,ind], nrow=df, ncol=df) %*% bA[,ind] )
-      rm(bA, test)
+      bA = do.call(cbind, lapply(1:ncol(A), function(ind) matrix(A[,ind], nrow=df, ncol=df) %*% coef[,ind] ))
+      stat = simplify2array(lapply(1:ncol(bA), function(ind) t(bA[,ind]) %*% matrix(Omega[,ind], nrow=df, ncol=df) %*% bA[,ind] ))
+      rm(bA)
     }
     }
 
@@ -229,7 +243,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   # else weights are the same for all voxels
   } else {
     QR = qr(X * W)
-    coef = num = qr.coef(QR, res)[peind,,drop=FALSE]
+    coef = qr.coef(QR, res)[peind,,drop=FALSE]
     if(!robust){
       if(df==1){
         num = coef
@@ -262,15 +276,14 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
       # qr approach
       message('Performing voxel regression.')
-      qrX = qr(X * W)
       # PEs
-      coef = stat = qr.coef(qrX, res)
+      stat = coef
       message('Computing hat values.')
-      h = rowSums(qr.Q(qrX)^2)
+      h = rowSums(qr.Q(QR)^2)
       h = ifelse(h>=1, 1-eps, h)
       # residuals
       message('Getting residuals.')
-      res = qr.resid(qrX, res)
+      res = qr.resid(QR, res)
 
       # residualize variable of interest to covariates
       # null statement is for if X is the intercept (Xred is null)
@@ -280,15 +293,38 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       # divides by 1-h to use the HC3 version discussed by Long and Ervin
       # https://pdfs.semanticscholar.org/1526/72b624b44b12250363eee602554fe49ca782.pdf
       res = t(res *  (X1res/(1-h)))
+
+      message('Computing robust stat image.')
+      stat = stat*A/sqrt(rowSums(res^2))
       } else {
-        message('blah')
+        # compute Q(v)
+        res=qr.resid(QR, res);
+        h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
+        res = res /(1-h) #was * (W/(1-h)) changed this to fix it.
+        # compute X_1^T W P^{X_0}. m1 X n X V array.
+        # Depends on v here, but does not when weights are the same for all voxels
+        qr.X0 = qr(Xred * W);
+        # a m1 x n matrix
+        X1res = qr.resid(qr.X0, X1 * W)
+        # now compute the 3d arrays that we need
+        A = crossprod(X1res)
+        # need this to simulate joint distribution
+        res = sweep(abind(rep(list(res), df), along=3), c(1,3), X1res, FUN="*" )
+        # Compute Omega
+        AOmegaA = apply(res, 2, crossprod)
+        # invert Omega
+        AOmegaA = apply(AOmegaA, 2, function(x) A %*% chol2inv(chol(matrix(x, nrow=df, ncol=df))) %*% A )
+        stat = colSums(AOmegaA * apply(coef, 2, tcrossprod) )
+        rm(AOmegaA)
+        # reorder to be a V x n x m_1
+        res = aperm(res, c(2,1,3))
       }
     }
   } # end if-else voxwts
 
   # compute statistical image
   if(!robust){
-    message('Computing stat image.\n')
+    message('Computing stat image.')
     stat = rowSums(res^2)
     # assume t-statistics if df==1
     if(df==1){
@@ -308,10 +344,15 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   }
 
   if(robust){
-    message('Computing robust stat image.\n')
-    stat = stat*A/sqrt(rowSums(res^2))
     # Use T-to-Z transform
-    if(transform) stat = qnorm(pt(stat, df=rdf))
+    if(transform){
+      if(df==1){
+        stat = qnorm(pt(stat, df=rdf))
+      } else {
+        stat = stat/df
+        stat = qchisq(pf(stat, df1 = df, df2 = rdf), df = df)
+      }
+    }
   }
 
   if(!sqrtSigma) res=NULL
