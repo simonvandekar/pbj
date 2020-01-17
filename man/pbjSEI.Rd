@@ -14,8 +14,8 @@ with other imaging software these thresholds are one tailed (e.g. p<0.01 imples 
 
 \item{nboot}{Number of bootstraps to perform.}
 
-\item{kernel}{Kernel to use for computing connected components. Box is
-default (26 neighbors), but Diamond may also be reasonable.}
+\item{kernel}{Kernel to use for computing connected components. box is
+default (26 neighbors), but diamond may also be reasonable.}
 }
 \value{
 Returns a list of length length(cfts)+4. The first four elements contain

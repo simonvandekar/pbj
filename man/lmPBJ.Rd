@@ -6,7 +6,7 @@
 \usage{
 lmPBJ(images, form, formred, mask, data = NULL, W = NULL,
   Winv = NULL, template = NULL, formImages = NULL, robust = TRUE,
-  sqrtSigma = TRUE, transform = TRUE, outdir = NULL,
+  sqrtSigma = TRUE, transform = TRUE, outdir = NULL, zeros = FALSE,
   mc.cores = getOption("mc.cores", 2L))
 }
 \arguments{
@@ -49,6 +49,9 @@ Defaults to TRUE.
 \item{outdir}{If specified, output is saved as NIfTIs and statMap object is
 saved as strings. This approach conserves memory, but has longer IO time.
 Currently, not supported.}
+
+\item{zeros}{Exclude voxels that have zeros? Zeros may exist due to differences in masking and
+coverage or they may represent locations where the data took the value zero.}
 
 \item{mc.cores}{Argument passed to mclapply for parallel things.}
 }
