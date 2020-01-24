@@ -4,8 +4,9 @@
 #' @param cfts.s Numeric vector of cluster forming thresholds to use based on the robust effect size index.
 #' @param cfts.p Numeric vector of clusterforming thresholds to use based on p-value thresholding. Consistent
 #' with other imaging software these thresholds are one tailed (e.g. p<0.01 imples z>2.32).
+#' @param nboot Number of bootstrap samples to use.
 #' @param kernel Kernel to use for computing connected components. box is
-#'  default (26 neighbors), but diamond may also be reasonable.
+#'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
