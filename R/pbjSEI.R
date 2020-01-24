@@ -1,9 +1,9 @@
 #' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
 #'
 #' @param statMap statMap object as obtained from computeStats.
-#' @param cfts Numeric vector of cluster forming thresholds to use. Consistent
+#' @param cfts.s Numeric vector of cluster forming thresholds to use based on the robust effect size index.
+#' @param cfts.p Numeric vector of clusterforming thresholds to use based on p-value thresholding. Consistent
 #' with other imaging software these thresholds are one tailed (e.g. p<0.01 imples z>2.32).
-#' @param nboot Number of bootstraps to perform.
 #' @param kernel Kernel to use for computing connected components. box is
 #'  default (26 neighbors), but diamond may also be reasonable.
 #'
@@ -18,10 +18,10 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box'){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
-  cftsnominal = cfts
+
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   rawstat = stat.statMap(statMap)
@@ -30,17 +30,35 @@ pbjSEI = function(statMap, cfts=c(0.01, 0.005), nboot=5000, kernel='box'){
   rdf = statMap$rdf
   robust = statMap$robust
 
+  if(!is.null(cfts.p)){
+    es=FALSE
+    cfts = cfts.p
+  } else {
+    es=TRUE
+    cfts = cfts.s
+  }
+  cftsnominal = cfts
+
   if(df==0){
-    cfts = cfts * 2
-    ts = qchisq(cfts, 1, lower.tail=FALSE)
+    if(es){
+      ts = cfts^2 * rdf + df
+    } else {
+      cfts = cfts * 2
+      ts = qchisq(cfts, 1, lower.tail=FALSE)
+    }
     sgnstat = sign(rawstat)
     stat = rawstat^2
     df=1; zerodf=TRUE
   } else {
-    ts = qchisq(cfts, df, lower.tail=FALSE)
+    if(es){
+      ts = cfts^2 * rdf + df
+    } else {
+      ts = qchisq(cfts, df, lower.tail=FALSE)
+    }
     zerodf=FALSE
     stat = rawstat
   }
+  # ts are chi-squared statistic thresholds
 
   tmp = mask
   tmp = lapply(ts, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
