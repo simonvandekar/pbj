@@ -84,9 +84,10 @@ test_that("Output from PBJ with df=1 and image weights matches output from lmtes
   expect_equal(qf(pchisq(statmap$stat^2, df=1), df1 = 1, df2=statmap$rdf)[1], waldtestres$F[2], tolerance=tol)
 } )
 
-
-# statmap <- lmPBJ(pain$data$images, form = ~ group,
-#                  formred = ~ 1, mask = pain$mask,
-#                  template=pain$template, data = pain$data,
-#                  Winv = pain$data$Winv, zeros=TRUE)
-# pbjtest = pbjSEI(statmap, nboot = 5)
+# check for errors
+statmap <- lmPBJ(pain$data$images, form = ~ group,
+                 formred = ~ 1, mask = pain$mask,
+                 template=pain$template, data = pain$data,
+                 Winv = pain$data$Winv, zeros=TRUE)
+pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25))
+pbjtest = pbjSEI(statmap, nboot = 5, cfts.p = c(0.01, 0.05))
