@@ -13,8 +13,7 @@
 #' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
-#' \item{CDF}{A bootstrap CDF.}
-#' @export
+#' \item{CDF}{A bootstrap CDF.}.
 #' @importFrom stats ecdf qchisq rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
@@ -34,6 +33,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   if(!is.null(cfts.p)){
     es=FALSE
     cfts = cfts.p
+    cfts.s = NULL
   } else {
     es=TRUE
     cfts = cfts.s
@@ -148,7 +148,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
       clustmaps[[ind]]
     } )
   }
-  names(pvals) <- names(pmaps) <- names(clustmaps) <- paste('cft', cftsnominal, sep='')
+  names(pvals) <- names(pmaps) <- names(clustmaps) <- if(es) paste0('cft.s', cftsnominal) else paste0('cft.p', cftsnominal)
 
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
   # changes indexing order of out
