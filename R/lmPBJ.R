@@ -57,8 +57,8 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   eps=0.001
 
   if(!is.matrix(form) & !is.matrix(formred)){
-    X = getDesign(form, data)
-    Xred = if(!is.null(formred)) getDesign(formred, data) else NULL
+    X = model.matrix(form, data)
+    Xred = if(!is.null(formred)) model.matrix(formred, data) else NULL
   } else {
     X = form
     Xred = formred
@@ -125,7 +125,12 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
 
   peind = which(!colnames(X) %in% colnames(Xred))
-  df = length(peind)
+  # this assumes Xred has no linearly dependent columns
+  df = svd(cbind(X, Xred), nu=0, nv=0)$d
+  # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
+  # For example, with ns using spline basis functions.
+  df = sum(round(df/sum(df), 4)>0)
+  df = df - ncol(Xred)
   rdf = n - ncol(X)
  # if(df>1 & robust)
  #   stop('Robust covariance is only available for testing a single parameter.')
