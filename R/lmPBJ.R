@@ -33,8 +33,8 @@
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @param zeros Exclude voxels that have zeros? Zeros may exist due to differences in masking and
 #' coverage or they may represent locations where the data took the value zero.
+#' @param tol Tolerance for determining linearly dependent columns.
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
-#' @importFrom abind abind
 #' @return Returns a list with the following values:
 #' \describe{
 #'   \item{stat}{The statistical values where mask!=0. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
@@ -52,7 +52,7 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L), tol = 1e-7){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -72,7 +72,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
     images = gsub(" +$", "", images)
     if(nrow(X)!=n)
       stop('length(images) and nrow(X) must be the same.')
-    res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
+    res = simplify2array(RNifti::readNifti(images))
     } else {
       n = nrow(X)
       res = images
@@ -124,13 +124,22 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   res = t(apply(res, 4, function(x) x[mask!=0]))
 
 
+  # checking that ncol(X)-ncol(Xred) = df of the test. Only necessary for robust.
+  if(robust){
+    X.svd = svd(qr.resid(qr(Xred), X) )
+    # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
+    # For example, with ns using spline basis functions.
+    df = sum(X.svd$d/sum(X.svd$d)>tol)
+    # This is a special case.
+    if(df< (ncol(X) - sum(colnames(X) %in% colnames(Xred))) ){
+      message('df is less than additional number of columns in full model. \nCreating new lower dimensional basis with df=', df, '. \nCoefficients will be uninterpretable.')
+      X1 = X.svd$u[,1:df]
+      colnames(X1) = paste0('u', 1:df)
+      X = cbind(Xred, X1)
+    }
+  }
+
   peind = which(!colnames(X) %in% colnames(Xred))
-  # this assumes Xred has no linearly dependent columns
-  df = svd(cbind(X, Xred), nu=0, nv=0)$d
-  # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
-  # For example, with ns using spline basis functions.
-  df = sum(round(df/sum(df), 4)>0)
-  df = df - ncol(Xred)
   rdf = n - ncol(X)
  # if(df>1 & robust)
  #   stop('Robust covariance is only available for testing a single parameter.')
@@ -138,7 +147,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   if(is.character(W)){
     message('Weights are voxel-wise.')
     voxwts = TRUE
-    W = do.call(abind::abind, list(RNifti::readNifti(W), along=4))
+    W = simplify2array(RNifti::readNifti(W))
     W = t(apply(W, 4, function(x) x[mask!=0]))
     W = sqrt(W)
   } else {
@@ -227,7 +236,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       # compute X_1^T W P^{X_0}. m1 X n X V array.
       # Depends on v here, but does not when weights are the same for all voxels
       system.time(
-      res <- do.call(abind::abind, c(lapply(1:ncol(W), function(ind){qr.X0 = qr(Xred * W[,ind]); qr.resid(qr.X0, X1 * W[,ind]) }), along=3) ) )
+      res <- simplify2array( lapply(1:ncol(W), function(ind){qr.X0 = qr(Xred * W[,ind]); qr.resid(qr.X0, X1 * W[,ind]) } ) ) )
       # now compute the 3d arrays that we need
       A = apply(res, 3, crossprod)
       # solve(matrix(A[,1], nrow=2)) ==  (vcov(model)/summary(model)$sigma^2)[2:3, 2:3]
@@ -314,7 +323,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
         # now compute the 3d arrays that we need
         A = crossprod(X1res)
         # need this to simulate joint distribution
-        res = sweep(abind(rep(list(res), df), along=3), c(1,3), X1res, FUN="*" )
+        res = sweep(simplify2array(rep(list(res), df)), c(1,3), X1res, FUN="*" )
         # Compute Omega
         AOmegaA = apply(res, 2, crossprod)
         # invert Omega
