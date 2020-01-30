@@ -33,7 +33,6 @@
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @param zeros Exclude voxels that have zeros? Zeros may exist due to differences in masking and
 #' coverage or they may represent locations where the data took the value zero.
-#' @param tol Tolerance for determining linearly dependent columns.
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
 #' @return Returns a list with the following values:
 #' \describe{
@@ -52,19 +51,14 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @export
-lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L), tol = 1e-7){
+lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
-  if(!is.matrix(form) & !is.matrix(formred)){
-    X = model.matrix(form, data)
-    Xred = if(!is.null(formred)) model.matrix(formred, data) else NULL
-  } else {
-    X = form
-    Xred = formred
-    form <- formred <- NULL
-
-  }
+  X = getDesign(form, formred, data=data, robust=robust)
+  Xred = X[['Xred']]
+  df = X[['df']]
+  X = X[['X']]
 
   if(class(images)[1] != 'niftiImage'){
     n=length(images)
@@ -123,26 +117,9 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
   }
   res = t(apply(res, 4, function(x) x[mask!=0]))
 
-
-  # checking that ncol(X)-ncol(Xred) = df of the test. Only necessary for robust.
-  if(robust){
-    X.svd = svd(qr.resid(qr(Xred), X) )
-    # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
-    # For example, with ns using spline basis functions.
-    df = sum(X.svd$d/sum(X.svd$d)>tol)
-    # This is a special case.
-    if(df< (ncol(X) - sum(colnames(X) %in% colnames(Xred))) ){
-      message('df is less than additional number of columns in full model. \nCreating new lower dimensional basis with df=', df, '. \nCoefficients will be uninterpretable.')
-      X1 = X.svd$u[,1:df]
-      colnames(X1) = paste0('u', 1:df)
-      X = cbind(Xred, X1)
-    }
-  }
-
+  # assumes column names in X which aren't in Xred are of interest.
   peind = which(!colnames(X) %in% colnames(Xred))
-  rdf = n - ncol(X)
- # if(df>1 & robust)
- #   stop('Robust covariance is only available for testing a single parameter.')
+  rdf = n - ncol(X) # this is true unless X is rank deficient
 
   if(is.character(W)){
     message('Weights are voxel-wise.')

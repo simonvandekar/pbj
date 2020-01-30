@@ -1,30 +1,46 @@
-#' Gets a Design Matrix for a GAM or Linear Model
+#' Gets a Full and Reduced Design Matrices for a Linear Model
 #'
-#' This function gets a design matrix for a generalized additive model (GAM)
-#'  from the mgcv package or a linear model.
-#' @param form A formula or string beginning with ~ that can be interpreted as an mgcv or lm
-#'  formula without the outcome variable.
+#' This function gets full and reduced design matrix for a linear model as well as the degrees of freedom for the comparison.
+#' @param form A formula or string beginning with ~ that can be interpreted as an lm
+#'  formula without the outcome variable. Alternatively, a design matrix.
+#' @param formred Similar to above. except this should be a simplified model relative to form.
+#'  Put another way, the design matrix for this model should span a subset of the column space of the other model
 #' @param data A data frame containing the variables specified in form.
+#' @param robust Are you computing robust statistics?
+#' @param tol Tolerance for determining the number of linearly independent columns to determine the df of the test.
 #' @keywords design matrix
-#' @return Returns a design matrix constructed from form and data.
-#' @importFrom mgcv gam
+#' @return Returns design matrices for the full and reduced model and the df for the comparison between the two.
+#' @details If robust=TRUE, then the number of parameters being tested has to
+#' be equal to the df of the test, if not, then the covariance matrix of the parameters will be noninvertible.
+#' If robust=TRUE, then the design is rotated to a df lower dimensional space. This problem happens when
+#' testing splines, where the linear component of the full model is parameterized differently than the reduced model.
 #' @importFrom stats as.formula model.matrix update.formula
 #' @export
-getDesign = function(form, data){
-  if(is.matrix(form)){
-    return(form)
+getDesign = function(form, formred, data, robust=TRUE, tol=1e-7){
+
+  if(!is.matrix(form) & !is.matrix(formred)){
+    X = model.matrix(as.formula(form), data)
+    Xred = if(!is.null(formred)) model.matrix(as.formula(formred), data) else NULL
   } else {
-    # if it looks like a gam formula
-    if(any(grepl("s\\(", form))){
-      # 1:n because you need to give gam an outcome to easily get the design matrix
-      data$x = 1:nrow(data)
-      lmfull = if(class(form)=='formula') update.formula(form, x ~ .) else paste('x', form)
-      lmfull = model.matrix(mgcv::gam(as.formula(lmfull), data=data) )
-  
-    # else it's a linear model
-    } else {
-      lmfull = model.matrix(as.formula(form), data=data)
-    }
-    return(lmfull)
+    X = form
+    Xred = formred
+    form <- formred <- NULL
   }
+
+  X.svd = svd(qr.resid(qr(Xred), X) )
+  # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
+  # For example, with ns using spline basis functions.
+  df = sum(X.svd$d/sum(X.svd$d)>tol)
+  cols = sum(!colnames(X) %in% colnames(Xred))
+  if(df< cols ){
+    message('df=',df, ' is less than additional number of columns in full model (', cols,
+            '). \nCoefficients will likely be uninterpretable.' )
+    if(robust){
+      message('Creating new lower dimensional basis with df=', df, '.')
+      X1 = X.svd$u[,1:df]
+      colnames(X1) = paste0('u', 1:df)
+      X = cbind(Xred, X1)
+    }
+  }
+  return(list(X=X, Xred=Xred, df=df))
 }
