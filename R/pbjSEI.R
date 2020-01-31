@@ -80,9 +80,14 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   ndim = length(dims)
   if(is.null(rdf)) rdf=n
 
-  ssqs = sqrt(rowSums(sqrtSigma^2))
-  if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
-
+  if(!robust | df==1){
+    ssqs = sqrt(rowSums(sqrtSigma^2))
+    if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
+  } else {
+    sqrtSigma = aperm(sqrtSigma, perm=c(2,1,3) )
+    ssqs = sqrt(colSums(sqrtSigma^2, dims = 1))
+    if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 2:3, ssqs, '/')
+  }
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   Fs = matrix(NA, nboot, length(cfts))
@@ -97,7 +102,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
       if(!robust | df==1){
         statimg = rowSums((sqrtSigma %*% S)^2)
       } else {
-        statimg = rowSums(colSums(aperm(sweep(sqrtSigma, 2:3, S, FUN="*"), perm=c(2,1,3) ), dims=1 )^2)
+        statimg = rowSums(colSums(sweep(sqrtSigma, c(1,3), S, FUN="*"), dims=1 )^2)
       }
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
