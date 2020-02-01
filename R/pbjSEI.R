@@ -7,6 +7,7 @@
 #' @param nboot Number of bootstrap samples to use.
 #' @param kernel Kernel to use for computing connected components. box is
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
+#' @param rboot Function for generating random variables. See examples.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
@@ -18,7 +19,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box'){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -98,7 +99,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
     for(i in 1:nboot)
     {
       tmp = mask
-      S = matrix(rnorm(n*df), n, df)
+      S = matrix(rboot(n*df), n, df)
       if(!robust | df==1){
         statimg = rowSums((sqrtSigma %*% S)^2)
       } else {
