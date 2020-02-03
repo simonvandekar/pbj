@@ -22,6 +22,7 @@
 #' @importFrom abind abind
 #' @importFrom RNifti writeNifti
 #' @importFrom parallel mclapply
+#' @importFrom stats model.matrix
 #' @export
 # @examples
 residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0, mc.cores=getOption("mc.cores", 2L)){
@@ -49,7 +50,7 @@ residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, 
       mask = RNifti::readNifti(mask)
     }
     y = t(apply(y, 4, function(x) x[mask==1]))
-    X = getDesign(form, data=dat)
+    X = model.matrix(form, data=dat)
     cat('regressing out covariates.\n')
     y = qr.resid(qr(X), y)
 
