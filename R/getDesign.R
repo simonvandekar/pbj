@@ -27,7 +27,7 @@ getDesign = function(form, formred, data, robust=TRUE, tol=1e-7){
     form <- formred <- NULL
   }
 
-  X.svd = svd(qr.resid(qr(Xred), X) )
+  X.svd = svd(qr.resid(qr(Xred), X), nv=0 )
   # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
   # For example, with ns using spline basis functions.
   df = sum(X.svd$d/sum(X.svd$d)>tol)
