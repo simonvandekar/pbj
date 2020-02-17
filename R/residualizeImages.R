@@ -19,7 +19,6 @@
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @return No returned value. This functions saves out nifti images files after residualizing to the model specified by form and dat. The residuals of files are saved as the corresponding element in outfiles.
 #' @keywords power simulation, parametric bootstrap, type 1 error simulations, null simulations
-#' @importFrom abind abind
 #' @importFrom RNifti writeNifti
 #' @importFrom parallel mclapply
 #' @importFrom stats model.matrix
@@ -38,11 +37,11 @@ residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, 
       # else returns 4d array
     } else {
       y = mclapply(1:length(files), function(ind) fslr::susan(files[ind], retimg=TRUE, sigma=smsigma), mc.cores=mc.cores )
-      y = do.call(abind::abind, list(y, along=4))
+      y = simplify2array(y)
     }
   } else {
     cat('loading images.\n')
-    y = do.call(abind::abind, list(readNifti(files), along=4))
+    y = simplify2array(mclapply(files, readNifti, mc.cores=mc.cores))
   }
 
     # run linear model to get residuals
