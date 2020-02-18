@@ -95,7 +95,6 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   # if(.Platform$OS.type=='windows')
   # {
-  browser()
     pb = txtProgressBar(style=3, title='Generating null distribution')
     for(i in 1:nboot)
     {
