@@ -43,11 +43,11 @@ Collate:
     'resave.R'
     'residualizeImages.R'
 Imports:
-  abind,
   fslr,
   mgcv,
   mmand,
   parallel,
+  pracma,
   RNifti,
   R.rsp,
   utils

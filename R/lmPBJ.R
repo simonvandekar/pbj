@@ -50,6 +50,7 @@
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
+#' @importFrom pracma sqrtm
 #' @export
 lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
@@ -208,7 +209,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       Q = do.call(cbind, lapply(1:ncol(res), function(ind){r=qr.resid(qrs[[ind]], res[,ind]);
           h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
           Q = r/(1-h); Q }) )
-      ind=1; r=qr.resid(qrs[[ind]], res[,ind]); h=rowSums(qr.Q(qrs[[ind]])^2)
+      #ind=1; r=qr.resid(qrs[[ind]], res[,ind]); h=rowSums(qr.Q(qrs[[ind]])^2)
       rm(qrs)
       # compute X_1^T W P^{X_0}. m1 X n X V array.
       # Depends on v here, but does not when weights are the same for all voxels
@@ -221,12 +222,14 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       res = sweep(res, c(1,3), Q, FUN = "*", check.margin=TRUE)
       rm(Q)
       # Compute Omega
-      Omega = apply(res, 3, crossprod)
-      # invert Omega
-      Omega = apply(Omega, 2, function(x) chol2inv(chol(matrix(x, nrow=df, ncol=df))) )
-      bA = do.call(cbind, lapply(1:ncol(A), function(ind) matrix(A[,ind], nrow=df, ncol=df) %*% coef[,ind] ))
-      stat = simplify2array(lapply(1:ncol(bA), function(ind) t(bA[,ind]) %*% matrix(Omega[,ind], nrow=df, ncol=df) %*% bA[,ind] ))
-      rm(bA)
+      sqrtOmegaInv = apply(res, 3, crossprod)
+      sqrtOmegaInv = apply(sqrtOmegaInv, 2, function(x) pracma::sqrtm(matrix(x, nrow=df, ncol=df))$Binv )
+      bA = do.call(cbind, lapply(1:ncol(sqrtOmegaInv), function(ind) matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df) %*% matrix(A[,ind], nrow=df, ncol=df) %*% coef[,ind] ))
+      stat = colSums(bA^2)
+      res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,,ind] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
+      # reorder to be a V x n x m_1
+      res = aperm(res, c(3,1,2))
+      rm(bA, sqrtOmegaInv)
     }
     }
 
@@ -249,22 +252,6 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
     if(robust){
       if(df==1){
-      # message('Performing voxel regression.')
-      # res = lm(res ~ -1 + I(X * W), model=FALSE)
-      #
-      # # get parameter estimates
-      # coef = stat = coefficients(res)[peind,,drop=FALSE]
-      #
-      # # compute hat values
-      # message('Computing hat values.')
-      # h = rowSums(qr.Q(res$qr)^2)
-      # h = ifelse(h>=1, 1-eps, h)
-      #
-      # # get residuals
-      # message('Getting residuals.')
-      # res = residuals(res)
-
-
       # qr approach
       message('Performing voxel regression.')
       # PEs
@@ -302,13 +289,14 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
         # need this to simulate joint distribution
         res = sweep(simplify2array(rep(list(res), df)), c(1,3), X1res, FUN="*" )
         # Compute Omega
-        AOmegaA = apply(res, 2, crossprod)
-        # invert Omega
-        AOmegaA = apply(AOmegaA, 2, function(x) A %*% chol2inv(chol(matrix(x, nrow=df, ncol=df))) %*% A )
-        stat = colSums(AOmegaA * apply(coef, 2, tcrossprod) )
-        rm(AOmegaA)
+        sqrtOmegaInv = apply(res, 2, crossprod)
+        sqrtOmegaInv = apply(sqrtOmegaInv, 2, function(x) pracma::sqrtm(matrix(x, nrow=df, ncol=df))$Binv )
+        bA = do.call(cbind, lapply(1:ncol(sqrtOmegaInv), function(ind) matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df) %*% matrix(A, nrow=df, ncol=df) %*% coef[,ind] ))
+        res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,ind,] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
+        stat = colSums(bA^2)
+        rm(bA, sqrtOmegaInv)
         # reorder to be a V x n x m_1
-        res = aperm(res, c(2,1,3))
+        res = aperm(res, c(3,1,2))
       }
     }
   } # end if-else voxwts

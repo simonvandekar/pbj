@@ -20,7 +20,6 @@
 #' @seealso \code{\link{npbj.sei}}
 #' @export
 #' @importFrom RNifti readNifti
-#' @importFrom abind abind
 npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=npbj.sei, ...){
 
 
@@ -33,7 +32,7 @@ npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, n
     images = as.character(images)
     if(nrow(X)!=n)
       stop('length(images) and nrow(X) must be the same.')
-    res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
+    res = simplify2array(RNifti::readNifti(images))
   } else {
     n = nrow(X)
     res = images

@@ -86,8 +86,6 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
     if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
   } else {
     sqrtSigma = aperm(sqrtSigma, perm=c(2,1,3) )
-    ssqs = sqrt(colSums(sqrtSigma^2, dims = 1))
-    if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 2:3, ssqs, '/')
   }
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
@@ -99,11 +97,11 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
     for(i in 1:nboot)
     {
       tmp = mask
-      S = matrix(rboot(n*df), n, df)
       if(!robust | df==1){
+        S = matrix(rboot(n*df), n, df)
         statimg = rowSums((sqrtSigma %*% S)^2)
       } else {
-        statimg = rowSums(colSums(sweep(sqrtSigma, c(1,3), S, FUN="*"), dims=1 )^2)
+        statimg = rowSums(colSums(sweep(sqrtSigma, 1, rboot(n), FUN="*"), dims=1 )^2)
       }
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
