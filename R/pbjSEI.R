@@ -19,6 +19,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
+#' @export
 pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
