@@ -64,13 +64,14 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   # ts are chi-squared statistic thresholds
 
   tmp = mask
+  ndims = length(dim(mask))
   tmp = lapply(ts, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
-  k = mmand::shapeKernel(3, 3, type=kernel)
+  k = mmand::shapeKernel(ndims, ndims, type=kernel)
   clustmaps = lapply(tmp, function(tm, mask) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)}, mask=mask)
   ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
   sqrtSigma <- if(is.character(statMap$sqrtSigma)) {
-    apply(readNifti(statMap$sqrtSigma), 4, function(x) x[mask!=0])
+    apply(readNifti(statMap$sqrtSigma), ndims+1, function(x) x[mask!=0])
   } else {
     statMap$sqrtSigma
   }
