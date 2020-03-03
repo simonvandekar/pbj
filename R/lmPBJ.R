@@ -116,7 +116,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
     # removes locations where there are any zeros
     mask = mask * c(apply(res!=0, 1:ndims, all))
   }
-  res = t(apply(res, 4, function(x) x[mask!=0]))
+  res = t(apply(res, (ndims+1), function(x) x[mask!=0]))
 
   # assumes column names in X which aren't in Xred are of interest.
   peind = which(!colnames(X) %in% colnames(Xred))
