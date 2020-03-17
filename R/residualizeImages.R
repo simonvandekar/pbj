@@ -52,10 +52,10 @@ residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, 
     X = model.matrix(form, data=dat)
     cat('regressing out covariates.\n')
     y = qr.resid(qr(X), y)
-    saveRDS(y, file.path(dirname(outfiles[1]), 'residuals.RDS'))
-
   # assumes your putting all files in the same directory or that all directories exist
   dir.create(dirname(outfiles[1]), showWarnings=FALSE)
+  saveRDS(y, file.path(dirname(outfiles[1]), 'residuals.RDS'))
+
 
   # save out images
   temp = mask
