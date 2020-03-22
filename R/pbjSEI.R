@@ -156,7 +156,6 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
     } )
   }
   names(pvals) <- names(pmaps) <- names(clustmaps) <- if(es) paste0('cft.s', cftsnominal) else paste0('cft.p', cftsnominal)
-browser()
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs, boots=apply(boots, 2, list))
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
