@@ -15,6 +15,7 @@
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
 #' \item{CDF}{A bootstrap CDF.}.
+#' #' \item{boots}{The bootstrap values.}.
 #' @export
 #' @importFrom stats ecdf qchisq rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
@@ -91,7 +92,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   }
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
-  Fs = matrix(NA, nboot, length(cfts))
+  boots = matrix(NA, nboot, length(cfts))
 
   # if(.Platform$OS.type=='windows')
   # {
@@ -106,7 +107,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
         statimg = rowSums(colSums(sweep(sqrtSigma, 1, rboot(n), FUN="*"), dims=1 )^2)
       }
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
-      Fs[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
+      boots[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
       setTxtProgressBar(pb, round(i/nboot,2))
     }
     close(pb)
@@ -136,7 +137,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   # add the stat max
   ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
-  Fs = rbind(Fs, sapply(ccomps, max)) + 0.01 # plus 0.01 to get bootstrap precision (nonzero) p-values
+  Fs = rbind(boots, sapply(ccomps, max)) + 0.01 # plus 0.01 to get bootstrap precision (nonzero) p-values
   # compute empirical CDFs
   Fs = apply(Fs, 2, ecdf)
   pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](ccomps[[ind]]) )
@@ -156,7 +157,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   }
   names(pvals) <- names(pmaps) <- names(clustmaps) <- if(es) paste0('cft.s', cftsnominal) else paste0('cft.p', cftsnominal)
 
-  out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs)
+  out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs, boots=boots)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
   if(zerodf) df=0
