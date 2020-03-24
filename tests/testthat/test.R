@@ -42,9 +42,9 @@ test_that("Output from PBJ with df=2 and scalar weights matches output from lmte
   statmap <- lmPBJ(pain$data$images, form = ~ group,
                    formred = ~ 1, mask = mask,
                    template=pain$template, data = pain$data,
-                   Winv = pain$data$Winv, zeros=TRUE)
+                   Winv = pain$data$Winv, zeros=TRUE, transform=FALSE)
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
-  expect_equal(qf(pchisq(statmap$stat, df=statmap$df), df1 = statmap$df, df2=statmap$rdf)[1], waldtestres$F[2], tolerance=tol)
+  expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
 })
 
 
@@ -56,9 +56,9 @@ test_that("Output from PBJ with df=2 and image weights matches output from lmtes
   statmap <- lmPBJ(pain$data$images, form = ~ group,
                    formred = ~ 1, mask = mask,
                    template=pain$template, data = pain$data,
-                   Winv = pain$data$varimages, zeros=TRUE)
+                   Winv = pain$data$varimages, zeros=TRUE, transform=FALSE)
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
-  expect_equal(qf(pchisq(statmap$stat, df=statmap$df), df1 = statmap$df, df2=statmap$rdf)[1], waldtestres$F[2], tolerance=tol)
+  expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
 })
 # scalar weights df=1
 test_that("Output from PBJ with df=1 and scalar weights matches output from lmtest and sandwich packages.", {
@@ -68,10 +68,10 @@ test_that("Output from PBJ with df=1 and scalar weights matches output from lmte
   statmap <- lmPBJ(pain$data$images, form = ~ x,
                    formred = ~ 1, mask = mask,
                    template=pain$template, data = pain$data,
-                   Winv = pain$data$Winv, zeros=TRUE)
+                   Winv = pain$data$Winv, zeros=TRUE, transform=FALSE)
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
-  expect_equal(qf(pchisq(statmap$stat^2, df=1), df1 = 1, df2=statmap$rdf)[1], waldtestres$F[2], tolerance=tol)
-})
+  expect_equal(statmap$stat[1]^2, waldtestres$F[2], tolerance=tol)
+  })
 
 # voxel-wise weights df=1
 test_that("Output from PBJ with df=1 and image weights matches output from lmtest and sandwich packages.", {
@@ -81,9 +81,9 @@ test_that("Output from PBJ with df=1 and image weights matches output from lmtes
   statmap <- lmPBJ(pain$data$images, form = ~ x,
                    formred = ~ 1, mask =mask,
                    template=pain$template, data = pain$data,
-                   Winv = pain$data$varimages, zeros=TRUE)
+                   Winv = pain$data$varimages, zeros=TRUE, transform=FALSE)
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
-  expect_equal(qf(pchisq(statmap$stat^2, df=1), df1 = 1, df2=statmap$rdf)[1], waldtestres$F[2], tolerance=tol)
+  expect_equal(statmap$stat[1]^2, waldtestres$F[2], tolerance=tol)
 } )
 
 
@@ -97,15 +97,28 @@ test_that("Output from PBJ with nonlinear test and scalar weights matches output
   statmap <- lmPBJ(pain$data$images, form = ~ ns(x, df = 4),
                    formred = ~ x, mask = mask,
                    template=pain$template, data = pain$data,
-                   Winv = pain$data$Winv, zeros=TRUE)
+                   Winv = pain$data$Winv, zeros=TRUE, transform=FALSE)
   expect_equal(statmap$coef[,1], coefficients(model)[-c(1,2)], tolerance=tol )
-  expect_equal(qf(pchisq(statmap$stat, df=statmap$df), df1 = statmap$df, df2=statmap$rdf)[1], waldtestres$F[2], tolerance=tol)
+  expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
+})
+
+test_that("Output from PBJ with nonlinear polynomial and scalar weights matches output from lmtest and sandwich packages.", {
+  model = lm(y ~ x + I(x^2) + I(x^3), data=pain$data, weights =  1/pain$data$Winv)
+  model.red = lm(y ~ x, data=pain$data, weights=1/pain$data$Winv)
+  waldtestres = lmtest::waldtest(model, model.red, test='F', vcov=sandwich::vcovHC)
+  # pbj methods
+  statmap <- lmPBJ(pain$data$images, form = ~ x + I(x^2) + I(x^3),
+                   formred = ~ x, mask = mask,
+                   template=pain$template, data = pain$data,
+                   Winv = pain$data$Winv, zeros=TRUE, transform=FALSE)
+  expect_equal(statmap$coef[,1], coefficients(model)[-c(1,2)], tolerance=tol )
+  expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
 })
 
 # check for errors
-statmap <- lmPBJ(pain$data$images, form = ~ ns(x, df = 4),
+statmap <- lmPBJ(pain$data$images, form = ~ x + I(x^2) + I(x^3),
                  formred = ~ x, mask = pain$mask,
                  template=pain$template, data = pain$data,
                  Winv = pain$data$Winv, zeros=TRUE)
-pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25))
+pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25), debug=TRUE)
 pbjtest = pbjSEI(statmap, nboot = 5, cfts.p = c(0.01, 0.05))
