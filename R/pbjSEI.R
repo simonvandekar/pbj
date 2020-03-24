@@ -8,6 +8,7 @@
 #' @param kernel Kernel to use for computing connected components. box is
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #' @param rboot Function for generating random variables. See examples.
+#' @param debug Returns extra output for statistical debugging.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
@@ -21,7 +22,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, debug=FALSE){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -93,6 +94,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = matrix(NA, nboot, length(cfts))
+  if(debug) statmaps = rep(list(NA), nboot)
 
   # if(.Platform$OS.type=='windows')
   # {
@@ -106,6 +108,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
       } else {
         statimg = rowSums(colSums(sweep(sqrtSigma, 1, rboot(n), FUN="*"), dims=1 )^2)
       }
+      if(debug) statmaps[[i]] = statimg
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       boots[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
       setTxtProgressBar(pb, round(i/nboot,2))
@@ -161,6 +164,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   out = apply(do.call(rbind, out), 2, as.list)
   if(zerodf) df=0
   out = c(stat=list(rawstat), template=list(template), mask=list(mask), df=list(df), out)
+  if(debug) out$boots = statmaps
   class(out) = c('pbj', 'list')
   return(out)
 }
