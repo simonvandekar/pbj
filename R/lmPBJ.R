@@ -225,6 +225,8 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       sqrtOmegaInv = apply(res, 3, crossprod)
       sqrtOmegaInv = apply(sqrtOmegaInv, 2, function(x) pracma::sqrtm(matrix(x, nrow=df, ncol=df))$Binv )
       bA = do.call(cbind, lapply(1:ncol(sqrtOmegaInv), function(ind) matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df) %*% matrix(A[,ind], nrow=df, ncol=df) %*% coef[,ind] ))
+      # transform to normal random variables
+      if(transform) bA = qnorm(pt(bA, df=rdf))
       stat = colSums(bA^2)
       res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,,ind] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
       # reorder to be a V x n x m_1
@@ -293,6 +295,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
         sqrtOmegaInv = apply(sqrtOmegaInv, 2, function(x) pracma::sqrtm(matrix(x, nrow=df, ncol=df))$Binv )
         bA = do.call(cbind, lapply(1:ncol(sqrtOmegaInv), function(ind) matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df) %*% matrix(A, nrow=df, ncol=df) %*% coef[,ind] ))
         res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,ind,] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
+        if(transform) bA = qnorm(pt(bA, df=rdf))
         stat = colSums(bA^2)
         rm(bA, sqrtOmegaInv)
         # reorder to be a V x n x m_1
@@ -321,18 +324,8 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       }
    }
   }
-
-  if(robust){
     # Use T-to-Z transform
-    if(transform){
-      if(df==1){
-        stat = qnorm(pt(stat, df=rdf))
-      } else {
-        stat = stat/df
-        stat = qchisq(pf(stat, df1 = df, df2 = rdf), df = df)
-      }
-    }
-  }
+    if(robust & transform & df==1) stat = qnorm(pt(stat, df=rdf))
 
   if(!sqrtSigma) res=NULL
 
