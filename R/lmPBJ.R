@@ -51,10 +51,13 @@
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
 #' @importFrom pracma sqrtm
+#' @importFrom PDQutils papx_edgeworth
 #' @export
 lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
+  # vectorized edgeworth expansion
+  vpapx_edgeworth = Vectorize(function (stat, skew) papx_edgeworth(stat, raw.cumulants=c(0,1,skew) ) )
 
   X = getDesign(form, formred, data=data, robust=robust)
   Xred = X[['Xred']]
@@ -225,13 +228,17 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       sqrtOmegaInv = apply(res, 3, crossprod)
       sqrtOmegaInv = apply(sqrtOmegaInv, 2, function(x) pracma::sqrtm(matrix(x, nrow=df, ncol=df))$Binv )
       bA = do.call(cbind, lapply(1:ncol(sqrtOmegaInv), function(ind) matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df) %*% matrix(A[,ind], nrow=df, ncol=df) %*% coef[,ind] ))
-      # transform to normal random variables
-      if(transform) bA = qnorm(pt(bA, df=rdf))
-      stat = colSums(bA^2)
+
+      # compute standardized residuals
       res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,,ind] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
+      if(transform){
+        message('Computing edgeworth transform.')
+        bA = matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^2, dims=1) ) ), nrow=2)
+      }
+      stat = colSums(bA^2)
+      rm(bA, sqrtOmegaInv)
       # reorder to be a V x n x m_1
       res = aperm(res, c(3,1,2))
-      rm(bA, sqrtOmegaInv)
     }
     }
 
@@ -295,7 +302,10 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
         sqrtOmegaInv = apply(sqrtOmegaInv, 2, function(x) pracma::sqrtm(matrix(x, nrow=df, ncol=df))$Binv )
         bA = do.call(cbind, lapply(1:ncol(sqrtOmegaInv), function(ind) matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df) %*% matrix(A, nrow=df, ncol=df) %*% coef[,ind] ))
         res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,ind,] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
-        if(transform) bA = qnorm(pt(bA, df=rdf))
+        if(transform){
+          message('Computing edgeworth transform.')
+          bA = matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^2, dims=1) ) ), nrow=2)
+        }
         stat = colSums(bA^2)
         rm(bA, sqrtOmegaInv)
         # reorder to be a V x n x m_1

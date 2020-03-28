@@ -43,6 +43,7 @@ Collate:
     'resave.R'
     'residualizeImages.R'
 Imports:
+  PDQutils,
   fslr,
   mgcv,
   mmand,
@@ -53,7 +54,7 @@ Imports:
   utils
 LinkingTo: Rcpp (>= 0.12.18),
   RcppArmadillo
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     lmtest,
