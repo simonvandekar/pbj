@@ -24,8 +24,7 @@
 #'   Uses HC3 SE estimates from Long and Ervin 2000.
 #' @param sqrtSigma Logical: return V X n matrix sqrtSigma? Defaults to TRUE (described below).
 #' Required to use pbj function.
-#' @param transform Logical: use transformation from equation (5) of Vandekar et al. 2019 (Biometrics)?
-#' Defaults to TRUE.
+#' @param transform character indicating type of transformation to use. "t" or "edgeworth." are currently accepted
 #' (instead of niftiImage objects; defaults to FALSE).
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
 #' saved as strings. This approach conserves memory, but has longer IO time.
@@ -53,7 +52,7 @@
 #' @importFrom pracma sqrtm
 #' @importFrom PDQutils papx_edgeworth
 #' @export
-lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=c('t', 'none', 'edgeworth'), outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -200,7 +199,12 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
       message('Computing robust stat image.')
       stat = stat*A/sqrt(rowSums(res^2))
-
+      stat = switch(tolower(transform[1]),
+                    none=stat,
+                  t={ qnorm(pt(stat, df=rdf ) )},
+                  edgeworth={message('Computing edgeworth transform.')
+                    matrix(qnorm(vpapx_edgeworth(stat=stat, skew=colSums(res^3, dims=1) ) ), nrow=df)
+                  })
     } else {
       # compute qr decompositions
       qrs = lapply(1:ncol(res), function(ind) qr(X * W[,ind]) )
@@ -229,10 +233,12 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
       # compute standardized residuals
       res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,,ind] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
-      if(transform){
-        message('Computing edgeworth transform.')
-        bA = matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^3, dims=1) ) ), nrow=2)
-      }
+      bA = switch(tolower(transform[1]),
+                  none=bA,
+             t={ qnorm(pt(bA, df=rdf ) )},
+             edgeworth={message('Computing edgeworth transform.')
+             matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^3, dims=1) ) ), nrow=df)
+             })
       stat = colSums(bA^2)
       rm(bA, sqrtOmegaInv)
       # reorder to be a V x n x m_1
@@ -281,6 +287,12 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
       message('Computing robust stat image.')
       stat = stat*A/sqrt(rowSums(res^2))
+      stat = switch(tolower(transform[1]),
+                    none=stat,
+                  t={ qnorm(pt(stat, df=rdf ) )},
+                  edgeworth={message('Computing edgeworth transform.')
+                    matrix(qnorm(vpapx_edgeworth(stat=stat, skew=colSums(res^3, dims=1) ) ), nrow=df)
+                  })
       } else {
         # compute Q(v)
         res=qr.resid(QR, res);
@@ -300,10 +312,12 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
         sqrtOmegaInv = apply(sqrtOmegaInv, 2, function(x) pracma::sqrtm(matrix(x, nrow=df, ncol=df))$Binv )
         bA = do.call(cbind, lapply(1:ncol(sqrtOmegaInv), function(ind) matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df) %*% matrix(A, nrow=df, ncol=df) %*% coef[,ind] ))
         res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,ind,] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
-        if(transform){
-          message('Computing edgeworth transform.')
-          bA = matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^2, dims=1) ) ), nrow=2)
-        }
+        bA = switch(tolower(transform[1]),
+                    none=bA,
+                    t={ qnorm(pt(bA, df=rdf ) )},
+                    edgeworth={message('Computing edgeworth transform.')
+                     matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^3, dims=1) ) ), nrow=df)
+                    })
         stat = colSums(bA^2)
         rm(bA, sqrtOmegaInv)
         # reorder to be a V x n x m_1
@@ -332,8 +346,6 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       }
    }
   }
-    # Use T-to-Z transform
-    if(robust & transform & df==1) stat = qnorm(pt(stat, df=rdf))
 
   if(!sqrtSigma) res=NULL
 

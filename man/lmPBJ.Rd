@@ -16,7 +16,7 @@ lmPBJ(
   formImages = NULL,
   robust = TRUE,
   sqrtSigma = TRUE,
-  transform = TRUE,
+  transform = c("t", "none", "edgeworth"),
   outdir = NULL,
   zeros = FALSE,
   mc.cores = getOption("mc.cores", 2L)
@@ -55,8 +55,7 @@ Uses HC3 SE estimates from Long and Ervin 2000.}
 \item{sqrtSigma}{Logical: return V X n matrix sqrtSigma? Defaults to TRUE (described below).
 Required to use pbj function.}
 
-\item{transform}{Logical: use transformation from equation (5) of Vandekar et al. 2019 (Biometrics)?
-Defaults to TRUE.
+\item{transform}{character indicating type of transformation to use. "t" or "edgeworth." are currently accepted
 (instead of niftiImage objects; defaults to FALSE).}
 
 \item{outdir}{If specified, output is saved as NIfTIs and statMap object is
