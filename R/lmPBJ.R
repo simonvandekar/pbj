@@ -231,7 +231,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       res = simplify2array(lapply(1:ncol(sqrtOmegaInv), function(ind) res[,,ind] %*% matrix(sqrtOmegaInv[,ind], nrow=df, ncol=df)) )
       if(transform){
         message('Computing edgeworth transform.')
-        bA = matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^2, dims=1) ) ), nrow=2)
+        bA = matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^3, dims=1) ) ), nrow=2)
       }
       stat = colSums(bA^2)
       rm(bA, sqrtOmegaInv)
