@@ -56,8 +56,6 @@
 lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=TRUE, outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
-  # vectorized edgeworth expansion
-  vpapx_edgeworth = Vectorize(function (stat, skew) papx_edgeworth(stat, raw.cumulants=c(0,1,skew) ) )
 
   X = getDesign(form, formred, data=data, robust=robust)
   Xred = X[['Xred']]

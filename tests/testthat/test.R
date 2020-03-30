@@ -115,9 +115,9 @@ test_that("Output from PBJ with nonlinear polynomial and scalar weights matches 
   expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
 })
 
-# check for errors
+# check for errors in pbjSEI
 statmap <- lmPBJ(pain$data$images, form = ~ x + I(x^2) + I(x^3),
-                 formred = ~ x, mask = pain$mask,
+                 formred = ~ x, mask = mask,
                  template=pain$template, data = pain$data,
                  Winv = pain$data$Winv, zeros=TRUE)
 pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25), debug=TRUE)
