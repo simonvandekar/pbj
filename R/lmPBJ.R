@@ -203,7 +203,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
                     none=stat,
                   t={ qnorm(pt(stat, df=rdf ) )},
                   edgeworth={message('Computing edgeworth transform.')
-                    matrix(qnorm(vpapx_edgeworth(stat=stat, skew=colSums(res^3, dims=1) ) ), nrow=df)
+                    matrix(qnorm(vpapx_edgeworth(stat=stat, mu3=colSums(res^3, dims=1), mu4=colSums(res^4, dims=1) ) ), nrow=df)
                   })
     } else {
       # compute qr decompositions
@@ -237,7 +237,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
                   none=bA,
              t={ qnorm(pt(bA, df=rdf ) )},
              edgeworth={message('Computing edgeworth transform.')
-             matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^3, dims=1) ) ), nrow=df)
+             matrix(qnorm(vpapx_edgeworth(stat=bA, mu3=colSums(res^3, dims=1), mu4=colSums(res^4, dims=1) ) ), nrow=df)
              })
       stat = colSums(bA^2)
       rm(bA, sqrtOmegaInv)
@@ -291,7 +291,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
                     none=stat,
                   t={ qnorm(pt(stat, df=rdf ) )},
                   edgeworth={message('Computing edgeworth transform.')
-                    matrix(qnorm(vpapx_edgeworth(stat=stat, skew=colSums(res^3, dims=1) ) ), nrow=df)
+                    matrix(qnorm(vpapx_edgeworth(stat=stat, mu3=colSums(res^3, dims=1), mu4=colSums(res^4, dims=1) ) ), nrow=df)
                   })
       } else {
         # compute Q(v)
@@ -316,7 +316,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
                     none=bA,
                     t={ qnorm(pt(bA, df=rdf ) )},
                     edgeworth={message('Computing edgeworth transform.')
-                     matrix(qnorm(vpapx_edgeworth(stat=bA, skew=colSums(res^3, dims=1) ) ), nrow=df)
+                     matrix(qnorm(vpapx_edgeworth(stat=bA, mu3=colSums(res^3, dims=1), mu4=colSums(res^4, dims=1) ) ), nrow=df)
                     })
         stat = colSums(bA^2)
         rm(bA, sqrtOmegaInv)
