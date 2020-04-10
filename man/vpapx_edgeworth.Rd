@@ -9,7 +9,9 @@ vpapx_edgeworth(stat, mu3, mu4)
 \arguments{
 \item{stat}{Vector of test statistics}
 
-\item{skew}{The third cumulant of the test statistics}
+\item{mu3}{The third moment of the test statistics}
+
+\item{mu4}{The fourth moment of the test statistics}
 }
 \description{
 See image.statMap for additional arguments
