@@ -143,6 +143,6 @@ image.CoPE <- function(x, alpha=0.05, ...)
 #'
 #' @param stat Vector of test statistics
 #' @param skew The third cumulant of the test statistics
-#' @importFrom PDQutils papx_edgeworth
+#' @importFrom PDQutils papx_edgeworth moment2cumulant
 vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(stat, raw.cumulants=moment2cumulant(c(0,1, mu3, mu4) ) ))
 
