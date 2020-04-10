@@ -4,7 +4,7 @@
 \alias{vpapx_edgeworth}
 \title{A vectorized version of papx_edgeworth}
 \usage{
-vpapx_edgeworth(stat, skew)
+vpapx_edgeworth(stat, mu3, mu4)
 }
 \arguments{
 \item{stat}{Vector of test statistics}
