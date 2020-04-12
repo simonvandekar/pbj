@@ -48,7 +48,7 @@ residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, 
     if(is.character(mask)){
       mask = RNifti::readNifti(mask)
     }
-    y = t(apply(y, 4, function(x) x[mask==1]))
+    y = t(apply(y, length(dim(y)), function(x) x[mask==1]))
     X = model.matrix(form, data=dat)
     cat('regressing out covariates.\n')
     y = qr.resid(qr(X), y)
@@ -62,5 +62,5 @@ residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, 
   trash = lapply(1:nrow(y), function(ind){ temp[ temp==1] = y[ind,]
                         RNifti::writeNifti(temp, outfiles[ind])
                         })
-  return(NULL)
+  outfiles
 }
