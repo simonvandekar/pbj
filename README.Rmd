@@ -44,3 +44,32 @@ You can install the released version of pbj from GitHub:
 ``` r
 devtools::install_github("simonvandekar/pbj")
 ```
+
+
+```{r, echo=FALSE, include=FALSE, eval=FALSE}
+library(RNifti)
+# crops all images to two voxels within mask for evaluation reasons.
+maskname = '~/Dropbox (VUMC)/pbj/data/abide/neuroimaging/cpac/n1035_mask.nii.gz'
+images = list.files('~/Dropbox (VUMC)/pbj/data/abide/neuroimaging/cpac/alff/', pattern="*.nii.gz", full.names = TRUE)
+
+crop = function(img, mask){
+  if(is.character(img)) img = readNifti(img)
+  inds = which(mask>0, arr.ind = TRUE)
+  lims = apply(inds, 2, range)
+  as.array(mask[lims[1,1]:lims[2,1], lims[1,2]:lims[2,2], lims[1,3]:lims[2,3]])
+  asNifti(as.array(img[lims[1,1]:lims[2,1], lims[1,2]:lims[2,2], lims[1,3]:lims[2,3]]))
+}
+
+mask = readNifti(maskname)
+testvox = which(mask==1, arr.ind = TRUE)[1:2,]
+mask[,,] = 0
+mask[testvox] = 1
+
+cropped = lapply(images, crop, mask=mask)
+outnames = paste0(dirname(images), '_cropped/', basename(images))
+dir.create(dirname(outnames[1]), showWarnings = FALSE)
+mask = crop(mask, mask)
+writeNifti(mask, file = paste0(dirname(maskname), '/cropped_', basename(maskname)))
+lapply(1:length(cropped), function(cr) writeNifti(cropped[[cr]], file = outnames[cr]) )
+```
+
