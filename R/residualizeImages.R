@@ -19,12 +19,12 @@
 #' @param mc.cores Argument passed to mclapply for parallel things.
 #' @return No returned value. This functions saves out nifti images files after residualizing to the model specified by form and dat. The residuals of files are saved as the corresponding element in outfiles.
 #' @keywords power simulation, parametric bootstrap, type 1 error simulations, null simulations
-#' @importFrom abind abind
 #' @importFrom RNifti writeNifti
 #' @importFrom parallel mclapply
+#' @importFrom stats model.matrix
 #' @export
 # @examples
-simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0, mc.cores=getOption("mc.cores", 2L)){
+residualizeImages = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm=0, mc.cores=getOption("mc.cores", 2L)){
 
   # smooth using susan
   if(sm>0){
@@ -37,11 +37,11 @@ simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm
       # else returns 4d array
     } else {
       y = mclapply(1:length(files), function(ind) fslr::susan(files[ind], retimg=TRUE, sigma=smsigma), mc.cores=mc.cores )
-      y = do.call(abind::abind, list(y, along=4))
+      y = simplify2array(y)
     }
   } else {
     cat('loading images.\n')
-    y = do.call(abind::abind, list(readNifti(files), along=4))
+    y = simplify2array(mclapply(files, readNifti, mc.cores=mc.cores))
   }
 
     # run linear model to get residuals
@@ -49,12 +49,13 @@ simulationSetup = function(files, form, dat, mask, outfiles, smoutfiles=NULL, sm
       mask = RNifti::readNifti(mask)
     }
     y = t(apply(y, 4, function(x) x[mask==1]))
-    X = getDesign(form, data=dat)
+    X = model.matrix(form, data=dat)
     cat('regressing out covariates.\n')
     y = qr.resid(qr(X), y)
-
   # assumes your putting all files in the same directory or that all directories exist
   dir.create(dirname(outfiles[1]), showWarnings=FALSE)
+  saveRDS(y, file.path(dirname(outfiles[1]), 'residuals.RDS'))
+
 
   # save out images
   temp = mask

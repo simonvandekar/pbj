@@ -14,14 +14,14 @@
 #' @param Xred the design matrix for all covariates except the column that is
 #'  being multiplied by betaimg. Xred must have only one less column than X.
 #' @param outfiles a vector of images to save the output.
+#' @param standardize Roughly standardize X and Y, so that the signal is homogenous across voxels and equal to effect size (roughly).
 #' @return Returns a 4d array of imaging data with synthetic signal added. The first three dimensions are equal to dim(betaimg) and the 4th dimension indexes subject.
 #' @keywords power simulation
-#' @importFrom abind abind
 #' @importFrom stats sd
 #' @importFrom RNifti writeNifti
 #' @export
 # @examples
-addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
+addSignal = function(files, betaimg, X, Xred, outfiles=NULL, standardize=FALSE){
 
   # get column of interest
   nullinds = which(!colnames(X) %in% colnames(Xred))
@@ -31,15 +31,22 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
 
   # load in imaging data. Get voxelwise SD
   cat('loading images.\n')
-  y = do.call(abind, list(RNifti::readNifti(files), along=4))
+  y = simplify2array(RNifti::readNifti(files))
   cat('computing standard deviation.\n')
-  sdy = apply(y, 1:3, sd)
+  sdy = if(standardize) apply(y, 1:3, function(ycol) sqrt(sum(qr.resid(qr(X), ycol)^2)/(length(ycol)-2) ) ) else apply(y, 1:3,sd)
 
   # load signal file
   if(is.character(betaimg)) betaimg = RNifti::readNifti(betaimg)
 
   # make images with signal
-  y = outer(betaimg * sdy/sdx, c(x)) + y
+  if(standardize){
+    y = outer(betaimg, c(x)) + sweep(y, 1:3, sdy/sdx, FUN='/')
+    y[ is.nan(y)] = 0
+    signalimg = betaimg
+  } else {
+    signalimg = betaimg * sdy/sdx
+    y = outer(betaimg * sdy/sdx, c(x)) + y
+  }
 
   # write out images
   cat('writing output images.\n')
@@ -47,4 +54,5 @@ addSignal = function(files, betaimg, X, Xred, outfiles=NULL){
     trash=lapply(1:length(outfiles), function(ind) RNifti::writeNifti(y[,,,ind], outfiles[ind]) )
   # return if requested
   y = y
+  list(sdy=sdy, sdx=sdx, signalimg = signalimg)
 }

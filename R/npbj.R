@@ -20,20 +20,19 @@
 #' @seealso \code{\link{npbj.sei}}
 #' @export
 #' @importFrom RNifti readNifti
-#' @importFrom abind abind
 npbj = function(images, form, formred, mask, data=NULL, W=NULL, template=NULL, nboot=1000, statistic=npbj.sei, ...){
 
 
   X = getDesign(form, data=data)
   Xred = getDesign(formred, data=data)
-  statmap = computeStats(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, transform=FALSE)
+  statmap = lmPBJ(images=images, form=X, formred=Xred, mask=mask, data=data, W=W, template=template, robust=FALSE, sqrtSigma=FALSE, transform=FALSE)
 
   if(class(images)[1] != 'niftiImage'){
     n=length(images)
     images = as.character(images)
     if(nrow(X)!=n)
       stop('length(images) and nrow(X) must be the same.')
-    res = do.call(abind::abind, list(RNifti::readNifti(images), along=4))
+    res = simplify2array(RNifti::readNifti(images))
   } else {
     n = nrow(X)
     res = images

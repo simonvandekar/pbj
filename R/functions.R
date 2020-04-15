@@ -1,7 +1,7 @@
 ### RANDOMISE WRAPPER ###
 #' @importFrom stats qt qf
 #' @importFrom utils write.table
-randomise = function(filelist=NULL, dat=NULL, maskfile=NULL, X=NULL, Xred=NULL, outdir=NULL, groupvar=NULL, nperm=500, thresh=0.01, run=TRUE){
+randomise = function(filelist=NULL, dat=NULL, maskfile=NULL, X=NULL, Xred=NULL, outdir=NULL, groupvar=NULL, nperm=500, thresh=0.01, TFCE=TRUE, run=TRUE){
 	outdirdir = dirname(outdir)
 	mergednifti=file.path(outdirdir, 'merged.nii.gz')
 	if(length(filelist)==1){
@@ -36,9 +36,12 @@ randomise = function(filelist=NULL, dat=NULL, maskfile=NULL, X=NULL, Xred=NULL, 
 		cat('/NumWaves\t', nrow(cons), '\n/NumContrasts\t', 1, '\n\n/Matrix\n', sep='', file=ftsfile)
 		write.table(fts, append=TRUE, file=ftsfile, row.names=FALSE, col.names=FALSE)
 
-		fcmd = paste('randomise -i', mergednifti, '-o', outdir, '-d', matfile, '-t', confile1, '-f', ftsfile, '--fonly -F', qf( (1-thresh),df1=p2, df2=(n-p) ), '-x -N -T -n', nperm, '--uncorrp' )
+		fcmd = paste('randomise -i', mergednifti, '-o', outdir, '-d', matfile, '-t', confile1, '-f', ftsfile, '--fonly -F', qf( (1-thresh),df1=p2, df2=(n-p) ), '-x -N -n', nperm, '--uncorrp' )
+		if(TFCE==TRUE){
+			fcmd = paste(fcmd, '-T')
+		}
 
-		# grp file UNTESTED
+		# grp file
 		if(!is.null(groupvar)){
 			grpfile = paste(outdir, "design.grp", sep='_')
 			cat('/NumWaves\t1\n/NumPoints\t', nrow(dat), '\n/Matrix\n', file=grpfile)

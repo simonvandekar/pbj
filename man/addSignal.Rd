@@ -4,7 +4,8 @@
 \alias{addSignal}
 \title{Loads NIfTI Images and Adds Synthetic Signal}
 \usage{
-addSignal(files, betaimg, X, Xred, outfiles = NULL)
+addSignal(files, betaimg, X, Xred, outfiles = NULL,
+  standardize = FALSE)
 }
 \arguments{
 \item{files}{a vector of .nii or .nii.gz images.}
@@ -20,6 +21,8 @@ model fit.}
 being multiplied by betaimg. Xred must have only one less column than X.}
 
 \item{outfiles}{a vector of images to save the output.}
+
+\item{standardize}{Roughly standardize X and Y, so that the signal is homogenous across voxels and equal to effect size (roughly).}
 }
 \value{
 Returns a 4d array of imaging data with synthetic signal added. The first three dimensions are equal to dim(betaimg) and the 4th dimension indexes subject.

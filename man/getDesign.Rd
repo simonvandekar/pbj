@@ -2,22 +2,34 @@
 % Please edit documentation in R/getDesign.R
 \name{getDesign}
 \alias{getDesign}
-\title{Gets a Design Matrix for a GAM or Linear Model}
+\title{Gets a Full and Reduced Design Matrices for a Linear Model}
 \usage{
-getDesign(form, data)
+getDesign(form, formred, data, robust = TRUE, tol = 1e-07)
 }
 \arguments{
-\item{form}{A formula or string beginning with ~ that can be interpreted as an mgcv or lm
-formula without the outcome variable.}
+\item{form}{A formula or string beginning with ~ that can be interpreted as an lm
+formula without the outcome variable. Alternatively, a design matrix.}
+
+\item{formred}{Similar to above. except this should be a simplified model relative to form.
+Put another way, the design matrix for this model should span a subset of the column space of the other model}
 
 \item{data}{A data frame containing the variables specified in form.}
+
+\item{robust}{Are you computing robust statistics?}
+
+\item{tol}{Tolerance for determining the number of linearly independent columns to determine the df of the test.}
 }
 \value{
-Returns a design matrix constructed from form and data.
+Returns design matrices for the full and reduced model and the df for the comparison between the two.
 }
 \description{
-This function gets a design matrix for a generalized additive model (GAM)
- from the mgcv package or a linear model.
+This function gets full and reduced design matrix for a linear model as well as the degrees of freedom for the comparison.
+}
+\details{
+If robust=TRUE, then the number of parameters being tested has to
+be equal to the df of the test, if not, then the covariance matrix of the parameters will be noninvertible.
+If robust=TRUE, then the design is rotated to a df lower dimensional space. This problem happens when
+testing splines, where the linear component of the full model is parameterized differently than the reduced model.
 }
 \keyword{design}
 \keyword{matrix}

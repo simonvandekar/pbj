@@ -22,7 +22,7 @@ summary.pbj <- function(object, ...)
     statInner("  Mask:   ", object$mask)
   )
 
-  for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask') ]){
+  for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask', 'df') ]){
     cat0('\n', cft, ':\n')
 
     cat0("  P-Values:\n")
@@ -46,7 +46,7 @@ summary.pbj <- function(object, ...)
 image.pbj <- function(x, alpha=0.05, ...)
 {
   x$mask = if(is.character(x$mask)) readNifti(x$mask) else x$mask
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask') ]){
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
     stat = x$stat
     # mask stat image with significant voxels
     stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
@@ -54,7 +54,11 @@ image.pbj <- function(x, alpha=0.05, ...)
     statmap = list(stat=stat, sqrtSigma=NULL, mask=x$mask, template=x$template, formulas=NULL, robust=NULL)
     class(statmap) = "statMap"
     # call image.statMap
-    image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft)) )  )
+    if(x$df==0){
+      image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft)) ), ...  )
+    } else {
+      image(statmap, thresh=qchisq(as.numeric(gsub("[^0-9\\.]", "", cft)) * 2, df=x$df, lower.tail=FALSE ), ...  )
+    }
   }
 }
 
@@ -65,9 +69,11 @@ image.pbj <- function(x, alpha=0.05, ...)
 #' @param x pbj object to write
 #' @param outdir output directory to write pbj pieces
 #' @param ... additional arguments; unused.
+#' @importFrom utils write.csv
 #' @export
 write.pbj <- function(x, outdir, ...)
 {
+  if(!file.exists(outdir)) dir.create(outdir)
   statimg = file.path(outdir, 'stat.nii.gz')
   if(!file.exists(statimg)){
     if(is.character(x$stat)){
@@ -76,11 +82,25 @@ write.pbj <- function(x, outdir, ...)
       writeNifti(x$stat, statimg)
     }
   }
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask') ]){
+  if(is.null(x$template)) x$template = x$mask
+  sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
+  voxvol = prod(RNifti::pixdim(x$template))
+  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
     pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz'))
     clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz'))
     writeNifti(x[[cft]]$pmap, pmapimg)
     writeNifti(x[[cft]]$clustermap, clustmapimg)
+
+    ### WRITE OUT CLUSTER STATISTICS TABLE ###
+    clustmapinds = unique(c(x[[cft]]$clustermap))
+    clustmapinds = sort(clustmapinds[ clustmapinds>0])
+    clusttab = data.frame('Index'=numeric(0), 'Adjusted p-value'=numeric(0), 'Signed log10(p-value)'=numeric(0), 'Volume (mm)'=numeric(0), 'Centroid'= character(0), stringsAsFactors = FALSE, check.names = FALSE)
+    tabname = file.path(outdir, paste0('sei_table_', cft, '.csv') )
+    for(ind in clustmapinds){
+      clusttab[ind,c('Index','Adjusted p-value', 'Signed log10(p-value)', 'Volume (mm)')] = c(ind, 10^(-abs(x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1])), x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1], sum(x[[cft]]$clustermap==ind)*voxvol)
+      clusttab[ind, 'Centroid'] = paste(round(sform %*% c(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 1 ), 0), collapse=', ')
+    }
+    write.csv(clusttab[order(clusttab[, 'Adjusted p-value']),], row.names=FALSE, file=tabname)
   }
 }
 
