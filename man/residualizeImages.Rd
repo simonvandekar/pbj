@@ -4,8 +4,16 @@
 \alias{residualizeImages}
 \title{Prepares Simulation Data for Bootstrapping}
 \usage{
-residualizeImages(files, form, dat, mask, outfiles, smoutfiles = NULL,
-  sm = 0, mc.cores = getOption("mc.cores", 2L))
+residualizeImages(
+  files,
+  form,
+  dat,
+  mask,
+  outfiles,
+  smoutfiles = NULL,
+  sm = 0,
+  mc.cores = getOption("mc.cores", 2L)
+)
 }
 \arguments{
 \item{files}{Character vector of subject images to be modeled as an outcome
