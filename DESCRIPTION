@@ -61,4 +61,5 @@ Suggests:
     rmarkdown,
     sandwich,
     testthat
+Remotes: simonvandekar/pain21
 VignetteBuilder: R.rsp
