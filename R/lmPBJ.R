@@ -351,7 +351,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
 
   # used later to indicated t-statistic
-  if(!exists(bA)) bA=NULL
+  if(!exists('bA')) bA=NULL
   if(df==1)
     df=0
   out = list(stat=stat, coef=coef, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf,
