@@ -240,7 +240,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
              matrix(qnorm(vpapx_edgeworth(stat=bA, mu3=colSums(res^3, dims=1), mu4=colSums(res^4, dims=1) ) ), nrow=df)
              })
       stat = colSums(bA^2)
-      rm(bA, sqrtOmegaInv)
+      #rm(bA, sqrtOmegaInv)
       # reorder to be a V x n x m_1
       res = aperm(res, c(3,1,2))
     }
@@ -319,7 +319,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
                      matrix(qnorm(vpapx_edgeworth(stat=bA, mu3=colSums(res^3, dims=1), mu4=colSums(res^4, dims=1) ) ), nrow=df)
                     })
         stat = colSums(bA^2)
-        rm(bA, sqrtOmegaInv)
+        #rm(bA, sqrtOmegaInv)
         # reorder to be a V x n x m_1
         res = aperm(res, c(3,1,2))
       }
@@ -351,9 +351,11 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 
 
   # used later to indicated t-statistic
+  if(!exists(bA)) bA=NULL
   if(df==1)
     df=0
-  out = list(stat=stat, coef=coef, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf)
+  out = list(stat=stat, coef=coef, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf,
+             normedcoef=bA)
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir
