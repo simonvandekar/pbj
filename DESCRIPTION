@@ -53,7 +53,7 @@ Imports:
   utils
 LinkingTo: Rcpp (>= 0.12.18),
   RcppArmadillo
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     lmtest,
@@ -61,4 +61,5 @@ Suggests:
     rmarkdown,
     sandwich,
     testthat
+Remotes: simonvandekar/pain21
 VignetteBuilder: R.rsp

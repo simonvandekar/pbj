@@ -5,10 +5,26 @@
 \title{this is an R wrapper function for PALM
 it has limited functionality for the features that PALM offers}
 \usage{
-palm(i, m, s = NULL, d, o, C = NULL, Cstat = "extent", tc = NULL,
-  f = NULL, fonly = TRUE, n = 10000, eb = NULL, within = NULL,
-  whole = NULL, ee = TRUE, T = FALSE, noniiclass = TRUE,
-  logp = TRUE)
+palm(
+  i,
+  m,
+  s = NULL,
+  d,
+  o,
+  C = NULL,
+  Cstat = "extent",
+  tc = NULL,
+  f = NULL,
+  fonly = TRUE,
+  n = 10000,
+  eb = NULL,
+  within = NULL,
+  whole = NULL,
+  ee = TRUE,
+  T = FALSE,
+  noniiclass = TRUE,
+  logp = TRUE
+)
 }
 \arguments{
 \item{i}{vector of strings pointing to input images or a single 4d nifti string.}

@@ -4,3 +4,7 @@ language: R
 sudo: false
 cache: packages
 warnings_are_errors: true
+
+env:
+  global:
+    - R_REMOTES_NO_ERRORS_FROM_WARNINGS=true
