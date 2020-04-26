@@ -26,20 +26,21 @@ getDesign = function(form, formred, data, robust=TRUE, tol=1e-7){
     Xred = formred
     form <- formred <- NULL
   }
-
-  X.svd = svd(qr.resid(qr(Xred), X), nv=0 )
-  # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
-  # For example, with ns using spline basis functions.
-  df = sum(X.svd$d/sum(X.svd$d)>tol)
-  cols = sum(!colnames(X) %in% colnames(Xred))
-  if(df< cols ){
-    message('df=',df, ' is less than additional number of columns in full model (', cols,
-            '). \nCoefficients will likely be uninterpretable.' )
-    if(robust){
-      message('Creating new lower dimensional basis with df=', df, '.')
-      X1 = X.svd$u[,1:df]
-      colnames(X1) = paste0('u', 1:df)
-      X = cbind(Xred, X1)
+  if(!is.null(Xred)){
+    X.svd = svd(qr.resid(qr(Xred), X), nv=0 )
+    # using svd to get full model df. Accounts for the possibility that some columns of Xred are linearly dependent on X.
+    # For example, with ns using spline basis functions.
+    df = sum(X.svd$d/sum(X.svd$d)>tol)
+    cols = sum(!colnames(X) %in% colnames(Xred))
+    if(df< cols ){
+      message('df=',df, ' is less than additional number of columns in full model (', cols,
+              '). \nCoefficients will likely be uninterpretable.' )
+      if(robust){
+        message('Creating new lower dimensional basis with df=', df, '.')
+        X1 = X.svd$u[,1:df]
+        colnames(X1) = paste0('u', 1:df)
+        X = cbind(Xred, X1)
+      }
     }
   }
   return(list(X=X, Xred=Xred, df=df))
