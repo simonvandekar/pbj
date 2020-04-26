@@ -61,7 +61,7 @@ crop = function(img, mask){
 }
 
 mask = readNifti(maskname)
-testvox = which(mask==1, arr.ind = TRUE)[1:2,]
+testvox = which(mask==1, arr.ind = TRUE)[c(1,100,1000),]
 mask[,,] = 0
 mask[testvox] = 1
 
