@@ -4,11 +4,23 @@
 \alias{image.niftiImage}
 \title{Create images of a NiFTI object}
 \usage{
-\method{image}{niftiImage}(x, bgimg = NULL, thresh = 0, index = NULL,
-  col = gray(0:64/64), colpos = redyellow(64), colneg = bluecyan(64),
-  plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "",
-  axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black",
-  ...)
+\method{image}{niftiImage}(
+  x,
+  bgimg = NULL,
+  thresh = 0,
+  index = NULL,
+  col = gray(0:64/64),
+  colpos = redyellow(64),
+  colneg = bluecyan(64),
+  plane = c("axial", "coronal", "sagittal"),
+  xlab = "",
+  ylab = "",
+  axes = FALSE,
+  oma = rep(0, 4),
+  mar = rep(0, 4),
+  bg = "black",
+  ...
+)
 }
 \arguments{
 \item{x}{the Nifti object to display images of}

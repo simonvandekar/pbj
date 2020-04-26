@@ -4,10 +4,23 @@
 \alias{lmPBJ}
 \title{Computes Statistical Map for Neuroimaging Data}
 \usage{
-lmPBJ(images, form, formred, mask, data = NULL, W = NULL,
-  Winv = NULL, template = NULL, formImages = NULL, robust = TRUE,
-  sqrtSigma = TRUE, transform = TRUE, outdir = NULL, zeros = FALSE,
-  mc.cores = getOption("mc.cores", 2L))
+lmPBJ(
+  images,
+  form,
+  formred,
+  mask,
+  data = NULL,
+  W = NULL,
+  Winv = NULL,
+  template = NULL,
+  formImages = NULL,
+  robust = TRUE,
+  sqrtSigma = TRUE,
+  transform = TRUE,
+  outdir = NULL,
+  zeros = FALSE,
+  mc.cores = getOption("mc.cores", 2L)
+)
 }
 \arguments{
 \item{images}{Character vector of subject images to be modeled as an outcome

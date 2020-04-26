@@ -4,8 +4,15 @@
 \alias{pbjSEI}
 \title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference}
 \usage{
-pbjSEI(statMap, cfts.s = c(0.1, 0.25), cfts.p = NULL, nboot = 5000,
-  kernel = "box", rboot = stats::rnorm)
+pbjSEI(
+  statMap,
+  cfts.s = c(0.1, 0.25),
+  cfts.p = NULL,
+  nboot = 5000,
+  kernel = "box",
+  rboot = stats::rnorm,
+  debug = FALSE
+)
 }
 \arguments{
 \item{statMap}{statMap object as obtained from computeStats.}
@@ -21,6 +28,8 @@ with other imaging software these thresholds are one tailed (e.g. p<0.01 imples 
 default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel}
 
 \item{rboot}{Function for generating random variables. See examples.}
+
+\item{debug}{Returns extra output for statistical debugging.}
 }
 \value{
 Returns a list of length length(cfts)+4. The first four elements contain
@@ -29,6 +38,7 @@ statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elem
 \item{clustermap}{A niftiImage object with the cluster labels.}
 \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
 \item{CDF}{A bootstrap CDF.}.
+#' \item{boots}{The bootstrap values.}.
 }
 \description{
 Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
