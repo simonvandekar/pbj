@@ -21,6 +21,7 @@ getDesign = function(form, formred, data, robust=TRUE, tol=1e-7){
   if(!is.matrix(form) & !is.matrix(formred)){
     X = model.matrix(as.formula(form), data)
     Xred = if(!is.null(formred)) model.matrix(as.formula(formred), data) else NULL
+    df = 1
   } else {
     X = form
     Xred = formred
