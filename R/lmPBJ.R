@@ -23,8 +23,8 @@
 #' @param robust Logical, compute robust standard error estimates? Defaults to TRUE.
 #'   Uses HC3 SE estimates from Long and Ervin 2000.
 #' @param sqrtSigma Logical: return V X n matrix sqrtSigma? Defaults to TRUE (described below).
-#' Required to use pbj function.
-#' @param transform Logical: use transformation from equation (5) of Vandekar et al. 2019 (Biometrics)?
+#' Required to use pbj sampling functions.
+#' @param transform Logical: use transformation from equation (5) of Vandekar et al. 2019 (Biometrics).
 #' Defaults to TRUE.
 #' (instead of niftiImage objects; defaults to FALSE).
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
