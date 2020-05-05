@@ -9,7 +9,6 @@
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #' @param rboot Function for generating random variables. See examples.
 #' @param tboot Logical if an (approximate) t-bootstrap should be used. Currently, defaults to FALSE.
-#' @param independent Logical indicating whether an independence approximation should be used. Defaults to FALSE.
 #' @param debug Returns extra output for statistical debugging.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
@@ -23,7 +22,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, tboot=FALSE, independent=FALSE, debug=FALSE){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, tboot=FALSE, debug=FALSE){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
