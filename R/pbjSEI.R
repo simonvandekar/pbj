@@ -8,6 +8,8 @@
 #' @param kernel Kernel to use for computing connected components. box is
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #' @param rboot Function for generating random variables. See examples.
+#' @param tboot Logical if an (approximate) t-bootstrap should be used. Currently, defaults to FALSE.
+#' @param independent Logical indicating whether an independence approximation should be used. Defaults to FALSE.
 #' @param debug Returns extra output for statistical debugging.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
@@ -16,13 +18,13 @@
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
 #' \item{CDF}{A bootstrap CDF.}.
-#' #' \item{boots}{The bootstrap values.}.
+#' \item{boots}{The bootstrap values.}.
 #' @export
 #' @importFrom stats ecdf qchisq rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, debug=FALSE){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, tboot=FALSE, independent=FALSE, debug=FALSE){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -81,16 +83,22 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   dims = dim(sqrtSigma)
   n = dims[2]
-  p=dims[1]
+  V=dims[1]
   ndim = length(dims)
   if(is.null(rdf)) rdf=n
 
-  if(!robust | df==1){
+  if( length(dims)==2 ){
+    # standardize these across n to be norm 1
     ssqs = sqrt(rowSums(sqrtSigma^2))
-    if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
+    # now Vxn
+    if( any(ssqs != 1) ) sqrtSigma = t(sweep(sqrtSigma, 1, ssqs, '/'))
   } else {
+    # This array should be standardized already
+    # now nxVxm_1
     sqrtSigma = aperm(sqrtSigma, perm=c(2,1,3) )
   }
+  # rearrange shape for ease below.
+  dims = dim(sqrtSigma)
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = matrix(NA, nboot, length(cfts))
@@ -98,16 +106,59 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   # if(.Platform$OS.type=='windows')
   # {
+
+  bootDims = dim(rboot(n))
+  bootLen = pmax(1,length(bootDims))
+  if(is.null(bootDims)){
+    # the bootstrap is generating an n vector
+    arrDims = c(1,3)
+  } else {
+    # assumes the bootstrap is generating an n X V array
+    arrDims = 1:bootLen
+  }
+
+  if(!is.null(bootDims) & all(bootDims != dims[1:length(bootDims)] ) )
+    stop('Dimension of bootstrap function does not match sqrtSigma')
+
     pb = txtProgressBar(style=3, title='Generating null distribution')
-    for(i in 1:nboot)
-    {
+    for(i in 1:nboot){
       tmp = mask
-      if(!robust | df==1){
-        S = matrix(rboot(n*df), n, df)
-        statimg = rowSums((sqrtSigma %*% S)^2)
+      # bootstrap is univariate and sqrtSigma is 2D
+      # assumes off-diagonal elements of spatial covariance are independent
+      if(length(dims)==2){
+        if(is.null(bootDims)){
+          boot = matrix(rboot(n*df), n, df)
+        } else {
+          boot = rboot(n)
+        }
+        # if df>1 this corresponds to an independence assumption among off-diagonal voxels
+        # need to expand array to compute T-statistic
+         if(tboot){
+           if(df==1){
+             statimg = sweep(sqrtSigma, 1, boot, FUN="*")
+             statimg = apply(statimg, 2, function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
+           } else {
+             # independence approximation
+             statimg = sweep(simplify2array(rep(list(sqrtSigma), df)), arrDims, boot, FUN="*")
+             # standardize each voxel and normalized statistic
+             statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
+           }
+         } else {
+           statimg = t(sqrtSigma) %*% boot
+         }
       } else {
-        statimg = rowSums(colSums(sweep(sqrtSigma, 1, rboot(n), FUN="*"), dims=1 )^2)
+        # assumes this is generating an n, nxV, or nxVxm_1 array
+        boot = rboot(n)
+        if(tboot){
+          # dimensions are nxVxm_1
+          statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
+          # standardize each voxel and normalized statistic
+          statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
+        } else {
+          statimg = colSums(sweep(sqrtSigma, arrDims, boot, FUN="*"), dims=1 )
+        }
       }
+      statimg = rowSums((statimg)^2)
       if(debug) statmaps[[i]] = statimg
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       boots[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
@@ -140,10 +191,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   # add the stat max
   ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
-  Fs = rbind(boots, sapply(ccomps, max)) + 0.01 # plus 0.01 to get bootstrap precision (nonzero) p-values
-  # compute empirical CDFs
-  Fs = apply(Fs, 2, ecdf)
-  pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](ccomps[[ind]]) )
+  pvals = lapply(1:length(cfts), function(ind) colMeans(outer(boots[,ind], ccomps[[ind]], FUN = '>') ) )
   names(pvals) = paste('cft', ts, sep='')
   if(!zerodf){
     pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
@@ -159,7 +207,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
     } )
   }
   names(pvals) <- names(pmaps) <- names(clustmaps) <- if(es) paste0('cft.s', cftsnominal) else paste0('cft.p', cftsnominal)
-  out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs, boots=apply(boots, 2, list))
+  out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, boots=apply(boots, 2, list))
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
   if(zerodf) df=0

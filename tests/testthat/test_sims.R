@@ -1,0 +1,97 @@
+# sim test
+# test that these commands work
+
+library(pain21)
+library(testthat)
+library(lmtest)
+library(sandwich)
+library(splines)
+#devtools::load_all('./')
+
+# setting up
+set.seed(1234)
+pain = pain21::pain21()
+pain$data$group = factor(sample(1:4, size = nrow(pain$data), replace=TRUE))
+pain$data$x = rnorm(nrow(pain$data))
+pain$data$Winv = runif(nrow(pain$data))
+#debug(lmPBJ)
+# test by comparing one voxel to results obtained by lmtest and sandwich packages
+imgs = simplify2array(RNifti::readNifti(pain$data$images))
+Winvs = simplify2array(RNifti::readNifti(pain$data$varimages))
+mask = RNifti::readNifti(pain$mask) * c(apply(imgs!=0, 1:3, all))
+
+# get one voxel
+testvox = which(mask==1, arr.ind = TRUE)[1:2,]
+mask[,,] = 0
+mask[testvox] = 1
+
+
+simFunc = function(lmfull, lmred, mask, data, nboot, cfts){
+  # generate fake covariates
+  data$fake_group = factor(ceiling(ppoints(nrow(data))*4 ) )
+  data$fake_covariate1 = rnorm(nrow(data))
+
+  # compute Statistical maps
+  # Residuals from null model to use for permutation procedures
+  nullResids = lmPBJ(data$images, form=lmred, formred=~ 1, mask=mask, data=data, transform = 'none', robust=FALSE )$sqrtSigma
+  nullResids = t(nullResids)
+
+  # t transform, robust, estimate covariance
+  tRobustStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 't' )
+  # t transform, classical, estimate covariance
+  tStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 't', robust=FALSE)
+  # no transform, robust, estimate covariance
+  robustStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform ='none')
+  # no transform, classical, estimate covariance
+  plainStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 'none', robust=FALSE)
+  resids = plainStatmap$sqrtSigma
+
+  statmaps = grep('Statmap', ls(), value=TRUE)
+  out = list()
+  # Apply each of the sampling methods
+  for(statmapname in statmaps){
+
+    ### BOOTSTRAP METHODS
+    statmap = get(statmapname)
+    # normal bootstrap
+    pbjNorm = pbjSEI(statmap, nboot = nboot, cfts.s = cfts)
+    # Rademacher bootstrap
+    pbjRad = pbjSEI(statmap, nboot = nboot, cfts.s = cfts, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1})
+    # t bootstrap
+    pbjNormT = pbjSEI(statmap, nboot = nboot, cfts.s = cfts, tboot=TRUE)
+    # Rademacher t
+    pbjRadT = pbjSEI(statmap, nboot = nboot, cfts.s = cfts, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1}, tboot=TRUE)
+
+    ### PERMUTATION METHODS
+    # Q needs to absolute value of Q for permutation procedure. This multiplies by the sign of the residuals to do that.
+    permMap = statmap
+    # check dimensions
+    permMap$sqrtSigma = sweep(permMap$sqrtSigma, MARGIN = c(1,2), STATS = sign(resids), FUN="*")
+    # permutation # need to get null residuals from lmPBJ for this one
+    perm = function(n){
+      nullResids[sample(1:n),]
+    }
+    pbjPerm = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = perm)
+    pbjPermT = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = perm, tboot=TRUE)
+
+    # exchangeable permutation
+    nullResids = sign(nullResids)
+    exchPerm = function(n){
+      nullResids[sample(1:n),]
+    }
+    pbjPermExch = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = exchPerm)
+    pbjPermExchT = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = exchPerm, tboot=TRUE)
+
+    PBJnames = grep('^pbj', ls(), value=TRUE)
+    allnames = paste(statmapname, PBJnames, sep='_')
+    out[allnames] = lapply(PBJnames, get, pos = environment())
+
+    ### REPEAT ALL WITH INDEPENDENCE SPATIAL COVARIANCE ASSUMPTION
+    # nonrobust methods won't be different, because covariance is same for all statistics.
+  }
+  return(out)
+}
+
+test = simFunc(lmfull = ~ fake_group + fake_covariate1, lmred = ~ fake_covariate1,
+        mask=mask, data=pain$data, nboot=10, cfts=c(0.1, 0.2))
+

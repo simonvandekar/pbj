@@ -148,3 +148,20 @@ image.CoPE <- function(x, alpha=0.05, ...)
 #' @importFrom PDQutils moment2cumulant
 vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(stat, raw.cumulants=PDQutils::moment2cumulant(c(0,1, mu3, mu4) ) ))
 
+
+#' Computes contiguous clusters from a statistical image given a threshold
+#'
+#' @param stat A statistical Nifti image as an RNifti image object.
+#' @param mask A statistical Nifti image mask.
+#' @param th The threshold to threshold the stat image.
+#' @param kernel The kernel type to compute connected components.
+#' @return Returns a table of sizes of the connected components
+#' @export
+#' @importFrom mmand shapeKernel
+#'
+cluster = function(stat, mask, th, kernel){
+  out = mask
+  out[ mask!=0] = (stat[mask!=0]>th)
+  k = mmand::shapeKernel(ndims, ndims, type=kernel)
+  out = table(c(mmand::components(out, k)))
+}
