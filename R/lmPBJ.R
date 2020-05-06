@@ -52,7 +52,7 @@
 #' @importFrom pracma sqrtm
 #' @importFrom PDQutils papx_edgeworth
 #' @export
-lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=c('t', 'none', 'edgeworth'), outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=c('t', 'none', 'edgeworth', 'f'), outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -163,6 +163,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
         # cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
         coef = num = do.call(cbind, lapply(1:ncol(res), function(ind) qr.coef(qrs[[ind]], res[,ind])[peind]) )
         num = do.call(c, lapply(1:ncol(res), function(ind) sum(qr.resid(qr(Xred * W[,ind]), res[,ind])^2)) )
+        # This will be wrong for df>1 when X or W are voxel specific
         res = do.call(rbind, lapply(1:ncol(res), function(ind) qr.resid(qr(X * W[,ind]), res[,ind])) )
       }
     }
@@ -259,6 +260,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
 	      rm(QR)
       } else {
         num = colSums(qr.resid(qr(Xred * W), res)^2)
+        # This is correct because X and W are the same for all voxels.
         res = t(qr.resid(qr(X * W), res))
       }
     }
@@ -340,7 +342,7 @@ lmPBJ = function(images, form, formred, mask, data=NULL, W=NULL, Winv=NULL, temp
       num = num - stat
       stat = num/stat * rdf
       # convert to chisquared
-      if(transform){
+      if(tolower(transform) %in% c('t', 'f') ){
         stat = stat/df
         stat = qchisq(pf(stat, df1=df, df2=rdf), df=df)
       }

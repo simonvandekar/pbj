@@ -16,7 +16,7 @@ lmPBJ(
   formImages = NULL,
   robust = TRUE,
   sqrtSigma = TRUE,
-  transform = c("t", "none", "edgeworth"),
+  transform = c("t", "none", "edgeworth", "f"),
   outdir = NULL,
   zeros = FALSE,
   mc.cores = getOption("mc.cores", 2L)
