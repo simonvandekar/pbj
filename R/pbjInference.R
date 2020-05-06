@@ -1,4 +1,4 @@
-#' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
+#' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Inference
 #'
 #' @param statMap statMap object as obtained from computeStats.
 #' @param statistic A user specified function that takes a RNift image object and computes a particular statistic of interest.
@@ -11,12 +11,13 @@
 #' @importFrom stats rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
-pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, tboot=FALSE, debug=FALSE, ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, tboot=FALSE, ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
+  ndims = length(dim(mask))
   rawstat = stat.statMap(statMap)
   template = statMap$template
   df = statMap$df
@@ -33,7 +34,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
     stat = rawstat
   }
 
-  obsstat = statistic(stat)
+  obsstat = statistic(stat, ...)
 
   sqrtSigma <- if(is.character(statMap$sqrtSigma)) {
     apply(readNifti(statMap$sqrtSigma), ndims+1, function(x) x[mask!=0])
@@ -63,7 +64,6 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = list()
-  if(debug) statmaps = rep(list(NA), nboot)
 
   # if(.Platform$OS.type=='windows')
   # {
@@ -121,7 +121,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
       }
       statimg = rowSums((statimg)^2)
       tmp[ mask!=0] = statimg
-      boots[[i]] = statistic(tmp)
+      boots[[i]] = statistic(tmp, ...)
       setTxtProgressBar(pb, round(i/nboot,2))
     }
   close(pb)
