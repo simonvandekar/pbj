@@ -166,4 +166,5 @@ cluster = function(stat, mask, thr, kernel='box'){
   k = mmand::shapeKernel(ndims, ndims, type=kernel)
   ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
   names(ccomps) = paste0('cft', thr)
+  return(ccomps)
 }
