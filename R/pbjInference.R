@@ -7,10 +7,11 @@
 #' @param tboot Logical if an (approximate) t-bootstrap should be used. Currently, defaults to FALSE.
 #' @param ... arguments passed to statistic function.
 #'
-#' @return Returns a list of length 3. The first element is the observed statistic value and the second is a list of the boostrap values.
+#' @return Returns a list of length 2. The first element is the observed statistic value and the second is a list of the boostrap values.
 #' @importFrom stats rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
+#' @export
 pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, tboot=FALSE, ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
