@@ -25,7 +25,6 @@ testvox = which(mask==1, arr.ind = TRUE)[1:2,]
 mask[,,] = 0
 mask[testvox] = 1
 
-
 simFunc = function(lmfull, lmred, mask, data, nboot, cfts){
   # generate fake covariates
   data$fake_group = factor(ceiling(ppoints(nrow(data))*4 ) )
@@ -82,6 +81,18 @@ simFunc = function(lmfull, lmred, mask, data, nboot, cfts){
     pbjPermExch = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = exchPerm)
     pbjPermExchT = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = exchPerm, tboot=TRUE)
 
+
+    # distribution of max
+    pbjNormMax = pbjInference(statmap, nboot = nboot, tboot = FALSE)
+    pbjNormTmax = pbjInference(statmap, nboot = nboot, tboot = TRUE)
+    pbjRadMax = pbjInference(statmap, nboot = nboot, tboot = FALSE, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1})
+    pbjRadTmax = pbjInference(statmap, nboot = nboot, tboot = TRUE, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1})
+    pbjPermMax = pbjInference(permMap, nboot = nboot, rboot = perm)
+    pbjPermTmax = pbjInference(permMap, nboot = nboot, rboot = perm, tboot=TRUE)
+    pbjPermExchMax = pbjInference(permMap, nboot = nboot, rboot = exchPerm)
+    pbjPermExchTmax = pbjInference(permMap, nboot = nboot, rboot = exchPerm, tboot=TRUE)
+
+    # collect output
     PBJnames = grep('^pbj', ls(), value=TRUE)
     allnames = paste(statmapname, PBJnames, sep='_')
     out[allnames] = lapply(PBJnames, get, pos = environment())

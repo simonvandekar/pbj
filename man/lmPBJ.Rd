@@ -7,7 +7,7 @@
 lmPBJ(
   images,
   form,
-  formred,
+  formred = ~1,
   mask,
   data = NULL,
   W = NULL,
