@@ -117,6 +117,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
     mask = mask * c(apply(Y!=0, 1:ndims, all))
   }
   Y = t(apply(Y, (ndims+1), function(x) x[mask!=0]))
+  V = ncol(Y)
 
   # assumes column names in X which aren't in Xred are of interest.
   peind = which(!colnames(X) %in% colnames(Xred))
@@ -145,10 +146,10 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
     message('Running voxel-wise weighted linear models.')
     # cannot be parallelized due to memory use
     qrs = apply(W, 2, function(Wcol) qr(X * Wcol))# cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
-    coef = simplify2array(  lapply(1:ncol(Y), function(ind) qr.coef(qrs[[ind]], Y[,ind])[peind]) )
+    coef = simplify2array(  lapply(1:V, function(ind) qr.coef(qrs[[ind]], Y[,ind])[peind]) )
 
     if(!is.null(Xred)){
-      X1res = simplify2array(lapply(1:nrow(Y), function(ind) qr.resid(qr(Xred * W[,ind]), X1 * W[,ind])) )
+      X1res = simplify2array(lapply(1:V, function(ind) matrix(qr.resid(qr(Xred * W[,ind]), X1 * W[,ind]), nrow=n, ncol=df) ) )
     } else if(is.null(Xred) & df==1) {
       # X1 is the intercept, Xred doesn't exist nXm_1xV
       X1res = as.array(t(W) * X1, dim=c(nrow(W), 1, ncol(W) ))
@@ -158,34 +159,36 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
 
     if(!robust){
       res = Y
-      res = simplify2array( lapply(1:ncol(res), function(ind) qr.resid(qrs[[ind]], res[,ind])[peind]) )
+      res = simplify2array( lapply(1:V, function(ind) qr.resid(qrs[[ind]], res[,ind])) )
       rm(qrs) # free memory
       # standardize residuals and Y
       sigmas = sqrt(colSums(res^2)/rdf)
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
-      AsqrtInv = apply(X1res, 3, function(x) pracma::sqrtm(crossprod(x))$Binv)
-      sqrtSigma = simplify2array( lapply(1:ncol(AsqrtInv), function(ind) tcrossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), X1res[,ind]) ) )
+      AsqrtInv = matrix(apply(X1res, 3, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
+      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), X1res[,,ind]) ) )
       # used to compute chi-squared statistic
-      normedCoef = colSums(sweep(sqrtSigma, MARGIN=c(1,3), Y, '*'), dims = 1)
+      normedCoef = apply(sweep(sqrtSigma, MARGIN=c(2,3), Y, '*'), c(1,3), sum)
       # used for generating distribution of normedCoef
-      sqrtSigma = sweep(sqrtSigma, MARGIN = c(1,3), res, '*' )
+      sqrtSigma = sweep(sqrtSigma, MARGIN = c(2,3), res, '*' )
+      sqrtSigma = aperm(sqrtSigma, c(3,2,1))
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
       # Only difference here is BsqrtInv instead of AsqrtInv and Q instead of res
       # compute Q(v)
-      Q = simplify2array( lapply(1:ncol(res), function(ind){r=qr.resid(qrs[[ind]], res[,ind]);
+      Q = simplify2array( lapply(1:V, function(ind){r=qr.resid(qrs[[ind]], Y[,ind]);
       h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
       Q = r/(1-h)}) )
       rm(qrs) # free memory
       # first part of normedCoef
       normedCoef = colSums(sweep(X1res, MARGIN = c(1,3), Y, '*'), dims = 1)
       X1resQ = sweep(X1res, c(1,3), Q, '*')
-      BsqrtInv = apply(X1resQ, 3, function(x) pracma::sqrtm(crossprod(x))$Binv)
+      BsqrtInv = matrix(apply(X1resQ, 3, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
       # second part of normedCoef
-      normedCoef = simplify2array( lapply(1:ncol(BsqrtInv), function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[,ind])) )
-      sqrtSigma = simplify2array( lapply(1:ncol(BsqrtInv), function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), X1resQ[,,ind])) )
-      rm(BsqrtInv, Y, res, X1resQ, X1res)
+      normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[,ind])) ), nrow=df)
+      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(X1resQ[,,ind], nrow=n, ncol=df))) )
+      sqrtSigma = aperm(sqrtSigma, c(3,2,1))
+      rm(BsqrtInv, Y, Q, X1resQ, X1res)
     }
     # weights are not voxel specific
   } else {
@@ -211,24 +214,25 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
       AsqrtInv = pracma::sqrtm(crossprod(X1res))$Binv
-      sqrtSigma = tcrossprod(AsqrtInv, X1res)
+      sqrtSigma = tcrossprod(AsqrtInv, matrix(X1res, nrow=n, ncol=df))
       # used to compute chi-squared statistic
-      normedCoef = sqrtSigma %*% Y
+      normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = res
+      sqrtSigma = t(res)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
       h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
       res = res /(1-h)
       # first part of normedCoef
-      normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), X1res, STATS = '*'), dims=1)
+      normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), STATS = X1res, FUN = '*'), dims=1)
       # returns nXVXm_1 array
-      X1resQ = sweep(simplify2array(rep(list(Q), df)),  c(1,3), X1res, '*')
-      # apply across voxels. returns n X m_1^2 array
-      BsqrtInv = apply(X1resQ, 2, function(x) pracma::sqrtm(crossprod(x))$Binv)
+      X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
+      # apply across voxels. returns V X m_1^2 array
+      BsqrtInv = matrix(apply(X1resQ, 2, function(x) pracma::sqrtm(crossprod(x))$Binv[,,drop=FALSE]), nrow=df^2, ncol=V)
       # second part of normedCoef
-      normedCoef = simplify2array( lapply(1:ncol(BsqrtInv), function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) )
-      sqrtSigma = simplify2array( lapply(1:ncol(BsqrtInv), function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), X1resQ[,ind,])) )
+      normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
+      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(X1resQ[,ind,], nrow=n))) )
+      sqrtSigma = aperm(sqrtSigma, c(3,2,1))
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }
@@ -244,10 +248,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
 
 
   # used later to indicated t-statistic
-  if(!exists('bA')) bA=NULL
-  if(df==1)
-    df=0
-  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf)
+  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf)
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir
