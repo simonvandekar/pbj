@@ -9,7 +9,7 @@ pbjInference(
   statistic = function(image) max(c(image)),
   nboot = 5000,
   rboot = stats::rnorm,
-  tboot = FALSE,
+  method = c("robust", "t", "regular"),
   ...
 )
 }
@@ -22,7 +22,7 @@ pbjInference(
 
 \item{rboot}{Function for generating random variables. See examples.}
 
-\item{tboot}{Logical if an (approximate) t-bootstrap should be used. Currently, defaults to FALSE.}
+\item{method}{character method to use for bootstrap procedure.}
 
 \item{...}{arguments passed to statistic function.}
 }

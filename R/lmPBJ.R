@@ -20,10 +20,8 @@
 #' @param template Template image used for visualization.
 #' @param formImages n X p matrix of images where n is the number of subjects and
 #'  each column corresponds to an imaging covariate. Currently, not supported.
-#' @param robust Logical, compute robust standard error estimates? Defaults to TRUE.
-#'   Uses HC3 SE estimates from Long and Ervin 2000.
-#' @param sqrtSigma Logical: return V X n matrix sqrtSigma? Defaults to TRUE (described below).
-#' Required to use pbj function.
+#' @param robust Logical, compute robust standard error estimates?
+#' @param HC3 Logical, Uses HC3 SE estimates from Long and Ervin 2000? Defaults to TRUE.
 #' @param transform character indicating type of transformation to use. "t" or "edgeworth." are currently accepted
 #' (instead of niftiImage objects; defaults to FALSE).
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
@@ -37,7 +35,7 @@
 #' \describe{
 #'   \item{stat}{The statistical values where mask!=0. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
 #'   \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
-#'   \item{sqrtSigma}{The covariance object. This is a V by n matrix R, such that R \%*\% t(R) = hatSigma.}
+#'   \item{sqrtSigma}{The covariance object. This is a V by n by df matrix used for sampling from the statistical images joint distribution.}
 #'   \item{mask}{The input mask.}
 #'   \item{template}{The background template used for visualization.}
 #'   \item{formulas}{A list containing the full and reduced models.}
@@ -52,7 +50,7 @@
 #' @importFrom pracma sqrtm
 #' @importFrom PDQutils papx_edgeworth
 #' @export
-lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, sqrtSigma=TRUE, transform=c('t', 'none', 'edgeworth', 'f'), outdir=NULL, zeros=FALSE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none', 'edgeworth', 'f'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -166,19 +164,21 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
       AsqrtInv = matrix(apply(X1res, 3, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
-      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), X1res[,,ind]) ) )
+      browser()
+      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), matrix(X1res[,,ind], n, df)) ) )
       # used to compute chi-squared statistic
       normedCoef = apply(sweep(sqrtSigma, MARGIN=c(2,3), Y, '*'), c(1,3), sum)
       # used for generating distribution of normedCoef
       sqrtSigma = sweep(sqrtSigma, MARGIN = c(2,3), res, '*' )
-      sqrtSigma = aperm(sqrtSigma, c(3,2,1))
+      sqrtSigma = aperm(sqrtSigma, c(2,3,1))
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
       # Only difference here is BsqrtInv instead of AsqrtInv and Q instead of res
       # compute Q(v)
       Q = simplify2array( lapply(1:V, function(ind){r=qr.resid(qrs[[ind]], Y[,ind]);
+      if(HC3){
       h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
-      Q = r/(1-h)}) )
+      Q = r/(1-h)} else Q=r }) )
       rm(qrs) # free memory
       # first part of normedCoef
       normedCoef = colSums(sweep(X1res, MARGIN = c(1,3), Y, '*'), dims = 1)
@@ -186,8 +186,8 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       BsqrtInv = matrix(apply(X1resQ, 3, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[,ind])) ), nrow=df)
-      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(X1resQ[,,ind], nrow=n, ncol=df))) )
-      sqrtSigma = aperm(sqrtSigma, c(3,2,1))
+      sqrtSigma = X1resQ
+      sqrtSigma = aperm(sqrtSigma, c(1,3,2))
       rm(BsqrtInv, Y, Q, X1resQ, X1res)
     }
     # weights are not voxel specific
@@ -218,11 +218,13 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # used to compute chi-squared statistic
       normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = t(res)
+      sqrtSigma = res
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
-      h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
-      res = res /(1-h)
+      if(HC3){
+        h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
+        res = res /(1-h)
+      }
       # first part of normedCoef
       normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), STATS = X1res, FUN = '*'), dims=1)
       # returns nXVXm_1 array
@@ -231,8 +233,8 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       BsqrtInv = matrix(apply(X1resQ, 2, function(x) pracma::sqrtm(crossprod(x))$Binv[,,drop=FALSE]), nrow=df^2, ncol=V)
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
-      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(X1resQ[,ind,], nrow=n))) )
-      sqrtSigma = aperm(sqrtSigma, c(3,2,1))
+      # recomputes BsqrtInv each time pbjSEI is called, more memory efficient less computationally efficient
+      sqrtSigma = X1resQ
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }

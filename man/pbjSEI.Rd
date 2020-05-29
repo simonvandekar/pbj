@@ -11,7 +11,7 @@ pbjSEI(
   nboot = 5000,
   kernel = "box",
   rboot = stats::rnorm,
-  tboot = FALSE,
+  method = c("robust", "t", "regular"),
   debug = FALSE
 )
 }
@@ -30,7 +30,7 @@ default (26 neighbors), but diamond may also be reasonable. argument to mmand::s
 
 \item{rboot}{Function for generating random variables. See examples.}
 
-\item{tboot}{Logical if an (approximate) t-bootstrap should be used. Currently, defaults to FALSE.}
+\item{method}{character method to use for bootstrap procedure.}
 
 \item{debug}{Returns extra output for statistical debugging.}
 }

@@ -4,7 +4,7 @@
 #' @param statistic A user specified function that takes a RNift image object and computes a particular statistic of interest.
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. See examples.
-#' @param tboot Logical if an (approximate) t-bootstrap should be used. Currently, defaults to FALSE.
+#' @param method character method to use for bootstrap procedure.
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns a list of length 2. The first element is the observed statistic value and the second is a list of the boostrap values.
@@ -12,7 +12,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, tboot=FALSE, ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, method=c('robust', 't', 'regular'), ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -24,16 +24,8 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
   df = statMap$df
   rdf = statMap$rdf
   robust = statMap$robust
-
-
-  if(df==0){
-    sgnstat = sign(rawstat)
-    stat = rawstat^2
-    df=1; zerodf=TRUE
-  } else {
-    zerodf=FALSE
-    stat = rawstat
-  }
+  stat = rawstat
+  if(tolower(method[1]) == 'robust' & !robust) method = 't'
 
   obsstat = statistic(stat, ...)
 
@@ -45,23 +37,10 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
   rm(statMap)
 
   dims = dim(sqrtSigma)
-  n = dims[2]
-  V=dims[1]
+  n = dims[1]
+  V=dims[2]
   ndim = length(dims)
   if(is.null(rdf)) rdf=n
-
-  if( length(dims)==2 ){
-    # standardize these across n to be norm 1
-    ssqs = sqrt(rowSums(sqrtSigma^2))
-    # now Vxn
-    if( any(ssqs != 1) ) sqrtSigma = t(sweep(sqrtSigma, 1, ssqs, '/'))
-  } else {
-    # This array should be standardized already
-    # now nxVxm_1
-    sqrtSigma = aperm(sqrtSigma, perm=c(2,1,3) )
-  }
-  # rearrange shape for ease below.
-  dims = dim(sqrtSigma)
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = list()
@@ -71,7 +50,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
 
   bootDims = dim(rboot(n))
   bootLen = pmax(1,length(bootDims))
-  if(is.null(bootDims)){
+  if(is.null(bootDims) & ndim==2){
     # the bootstrap is generating an n vector
     arrDims = c(1,3)
   } else {
@@ -87,7 +66,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
     for(i in 1:nboot){
       # bootstrap is univariate and sqrtSigma is 2D
       # assumes off-diagonal elements of spatial covariance are independent
-      if(length(dims)==2){
+      if(ndim==2){
         if(is.null(bootDims)){
           boot = matrix(rboot(n*df), n, df)
         } else {
@@ -95,29 +74,33 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
         }
         # if df>1 this corresponds to an independence assumption among off-diagonal voxels
         # need to expand array to compute T-statistic
-         if(tboot){
-           if(df==1){
-             statimg = sweep(sqrtSigma, 1, boot, FUN="*")
-             statimg = apply(statimg, 2, function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
-           } else {
-             # independence approximation
-             statimg = sweep(simplify2array(rep(list(sqrtSigma), df)), arrDims, boot, FUN="*")
-             # standardize each voxel and normalized statistic
-             statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
-           }
-         } else {
-           statimg = t(sqrtSigma) %*% boot
-         }
+        if(tolower(method[1])=='t'){
+          if(df==1){
+            statimg = sweep(sqrtSigma, 1, boot, FUN="*")
+            statimg = apply(statimg, 2, function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
+          } else {
+            # off-diagonal spatially adjacent parameters are independent
+            statimg = sweep(simplify2array(rep(list(sqrtSigma), df)), arrDims, boot, FUN="*")
+            # standardize each voxel and normalized statistic
+            statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
+          }
+        } else {
+          statimg = crossprod(sqrtSigma, boot)
+        }
       } else {
-        # assumes this is generating an n, nxV, or nxVxm_1 array
+        # assumes this is generating an n or nxV array
         boot = rboot(n)
-        if(tboot){
-          # dimensions are nxVxm_1
-          statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
+        # dimensions are nxVxm_1
+        statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
+        # only runs robust method if robust SE were used
+        if(robust & tolower(method[1])=='robust'){
+          BsqrtInv = matrix(apply(statimg, 2, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
+          statimg = t(simplify2array( lapply(1:V, function(ind) rowSums(tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(statimg[,ind,], nrow=n, ncol=df))) ) ))
+        } else if(tolower(method[1])=='regular'){
+          statimg = colSums(statimg, dims=1 )
+        } else {
           # standardize each voxel and normalized statistic
           statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
-        } else {
-          statimg = colSums(sweep(sqrtSigma, arrDims, boot, FUN="*"), dims=1 )
         }
       }
       statimg = rowSums((statimg)^2)

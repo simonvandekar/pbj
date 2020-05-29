@@ -8,7 +8,7 @@
 #' @param kernel Kernel to use for computing connected components. box is
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #' @param rboot Function for generating random variables. See examples.
-#' @param tboot Logical if an (approximate) t-bootstrap should be used. Currently, defaults to FALSE.
+#' @param method character method to use for bootstrap procedure.
 #' @param debug Returns extra output for statistical debugging.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
@@ -23,9 +23,10 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, tboot=FALSE, debug=FALSE){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('robust', 't', 'regular'), debug=FALSE){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
+
 
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
@@ -34,6 +35,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   df = statMap$df
   rdf = statMap$rdf
   robust = statMap$robust
+  if(tolower(method[1]) == 'robust' & !robust) method = 't'
 
   if(!is.null(cfts.p)){
     es=FALSE
@@ -45,25 +47,12 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   }
   cftsnominal = cfts
 
-  if(df==0){
-    if(es){
-      ts = cfts^2 * rdf + df
-    } else {
-      cfts = cfts * 2
-      ts = qchisq(cfts, 1, lower.tail=FALSE)
-    }
-    sgnstat = sign(rawstat)
-    stat = rawstat^2
-    df=1; zerodf=TRUE
+  if(es){
+    ts = cfts^2 * rdf + df
   } else {
-    if(es){
-      ts = cfts^2 * rdf + df
-    } else {
-      ts = qchisq(cfts, df, lower.tail=FALSE)
-    }
-    zerodf=FALSE
-    stat = rawstat
+    ts = qchisq(cfts, df, lower.tail=FALSE)
   }
+  stat = rawstat
   # ts are chi-squared statistic thresholds
 
   tmp = mask
@@ -81,23 +70,16 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   rm(statMap)
 
   dims = dim(sqrtSigma)
-  n = dims[2]
-  V=dims[1]
+  n = dims[1]
+  V=dims[2]
   ndim = length(dims)
   if(is.null(rdf)) rdf=n
 
-  if( length(dims)==2 ){
-    # standardize these across n to be norm 1
-    ssqs = sqrt(rowSums(sqrtSigma^2))
-    # now Vxn
-    if( any(ssqs != 1) ) sqrtSigma = t(sweep(sqrtSigma, 1, ssqs, '/'))
-  } else {
-    # This array should be standardized already
-    # now nxVxm_1
-    sqrtSigma = aperm(sqrtSigma, perm=c(2,1,3) )
+  if(robust & method[1]!='robust'){
+    BsqrtInv = matrix(apply(sqrtSigma, 2, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
+    sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(sqrtSigma[,ind,], nrow=n, ncol=df))) )
+    sqrtSigma = aperm(sqrtSigma, c(2,3,1))
   }
-  # rearrange shape for ease below.
-  dims = dim(sqrtSigma)
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = matrix(NA, nboot, length(cfts))
@@ -108,7 +90,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   bootDims = dim(rboot(n))
   bootLen = pmax(1,length(bootDims))
-  if(is.null(bootDims)){
+  if(is.null(bootDims) & ndim==2){
     # the bootstrap is generating an n vector
     arrDims = c(1,3)
   } else {
@@ -124,7 +106,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
       tmp = mask
       # bootstrap is univariate and sqrtSigma is 2D
       # assumes off-diagonal elements of spatial covariance are independent
-      if(length(dims)==2){
+      if(ndim==2){
         if(is.null(bootDims)){
           boot = matrix(rboot(n*df), n, df)
         } else {
@@ -132,29 +114,33 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
         }
         # if df>1 this corresponds to an independence assumption among off-diagonal voxels
         # need to expand array to compute T-statistic
-         if(tboot){
+         if(tolower(method[1])=='t'){
            if(df==1){
              statimg = sweep(sqrtSigma, 1, boot, FUN="*")
              statimg = apply(statimg, 2, function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
            } else {
-             # independence approximation
+             # off-diagonal spatially adjacent parameters are independent
              statimg = sweep(simplify2array(rep(list(sqrtSigma), df)), arrDims, boot, FUN="*")
              # standardize each voxel and normalized statistic
              statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
            }
          } else {
-           statimg = t(sqrtSigma) %*% boot
+           statimg = crossprod(sqrtSigma, boot)
          }
       } else {
-        # assumes this is generating an n, nxV, or nxVxm_1 array
+        # assumes this is generating an n or nxV array
         boot = rboot(n)
-        if(tboot){
-          # dimensions are nxVxm_1
-          statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
+        # dimensions are nxVxm_1
+        statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
+        # only runs robust method if robust SE were used
+        if(robust & tolower(method[1])=='robust'){
+          BsqrtInv = matrix(apply(statimg, 2, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
+          statimg = t(simplify2array( lapply(1:V, function(ind) rowSums(tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(statimg[,ind,], nrow=n, ncol=df))) ) ))
+        } else if(tolower(method[1])=='regular'){
+          statimg = colSums(statimg, dims=1 )
+        } else {
           # standardize each voxel and normalized statistic
           statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
-        } else {
-          statimg = colSums(sweep(sqrtSigma, arrDims, boot, FUN="*"), dims=1 )
         }
       }
       statimg = rowSums((statimg)^2)
@@ -192,24 +178,15 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
   pvals = lapply(1:length(cfts), function(ind) colMeans(outer(boots[,ind], ccomps[[ind]], FUN = '>') ) )
   names(pvals) = paste('cft', ts, sep='')
-  if(!zerodf){
     pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
       clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2])
     }
       clustmaps[[ind]]
     } )
-  } else {
-    pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
-      clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2]) * sgnstat[ clustmaps[[ind]]==ind2 ]
-    }
-      clustmaps[[ind]]
-    } )
-  }
   names(pvals) <- names(pmaps) <- names(clustmaps) <- if(es) paste0('cft.s', cftsnominal) else paste0('cft.p', cftsnominal)
   out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, boots=apply(boots, 2, list), obs=ccomps)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
-  if(zerodf) df=0
   out = c(stat=list(rawstat), template=list(template), mask=list(mask), df=list(df), out)
   if(debug) out$boots = statmaps
   class(out) = c('pbj', 'list')

@@ -15,10 +15,10 @@ lmPBJ(
   template = NULL,
   formImages = NULL,
   robust = TRUE,
-  sqrtSigma = TRUE,
   transform = c("t", "none", "edgeworth", "f"),
   outdir = NULL,
   zeros = FALSE,
+  HC3 = TRUE,
   mc.cores = getOption("mc.cores", 2L)
 )
 }
@@ -49,11 +49,7 @@ passing variance images as the inverse weights.}
 \item{formImages}{n X p matrix of images where n is the number of subjects and
 each column corresponds to an imaging covariate. Currently, not supported.}
 
-\item{robust}{Logical, compute robust standard error estimates? Defaults to TRUE.
-Uses HC3 SE estimates from Long and Ervin 2000.}
-
-\item{sqrtSigma}{Logical: return V X n matrix sqrtSigma? Defaults to TRUE (described below).
-Required to use pbj function.}
+\item{robust}{Logical, compute robust standard error estimates?}
 
 \item{transform}{character indicating type of transformation to use. "t" or "edgeworth." are currently accepted
 (instead of niftiImage objects; defaults to FALSE).}
@@ -65,6 +61,8 @@ Currently, not supported.}
 \item{zeros}{Exclude voxels that have zeros? Zeros may exist due to differences in masking and
 coverage or they may represent locations where the data took the value zero.}
 
+\item{HC3}{Logical, Uses HC3 SE estimates from Long and Ervin 2000? Defaults to TRUE.}
+
 \item{mc.cores}{Argument passed to mclapply for parallel things.}
 }
 \value{
@@ -72,7 +70,7 @@ Returns a list with the following values:
 \describe{
   \item{stat}{The statistical values where mask!=0. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
   \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
-  \item{sqrtSigma}{The covariance object. This is a V by n matrix R, such that R \%*\% t(R) = hatSigma.}
+  \item{sqrtSigma}{The covariance object. This is a V by n by df matrix used for sampling from the statistical images joint distribution.}
   \item{mask}{The input mask.}
   \item{template}{The background template used for visualization.}
   \item{formulas}{A list containing the full and reduced models.}

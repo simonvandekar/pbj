@@ -20,11 +20,18 @@ imgs = simplify2array(RNifti::readNifti(pain$data$images))
 Winvs = simplify2array(RNifti::readNifti(pain$data$varimages))
 mask = RNifti::readNifti(pain$mask) * c(apply(imgs!=0, 1:3, all))
 
-# get one voxel
+# get two voxels
 testvox = which(mask==1, arr.ind = TRUE)[1:2,]
 mask[,,] = 0
 mask[testvox] = 1
 
+# Statistic function to get objects for pbjInference
+simStats = function(image, mask, thrs){
+  c(maximum = max(c(image)), pbj::cluster(image, mask, thrs))
+}
+
+# simfunc should contain a data argument, which is defined within runSim
+# Other arguments are identical across simulation runs.
 simFunc = function(lmfull, lmred, mask, data, nboot, cfts){
   # generate fake covariates
   data$fake_group = factor(ceiling(ppoints(nrow(data))*4 ) )
@@ -33,69 +40,65 @@ simFunc = function(lmfull, lmred, mask, data, nboot, cfts){
   # compute Statistical maps
   # Residuals from null model to use for permutation procedures
   nullResids = lmPBJ(data$images, form=lmred, formred=~ 1, mask=mask, data=data, transform = 'none', robust=FALSE )$sqrtSigma
-  nullResids = t(nullResids)
+  perm = function(n){
+    nullResids[sample(1:n),]
+  }
+  signedResids = sign(nullResids)
+  exchPerm = function(n){
+    signedResids[sample(1:n),]
+  }
 
   # t transform, robust, estimate covariance
   tRobustStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 't' )
   # t transform, classical, estimate covariance
   tStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 't', robust=FALSE)
+  # Doesn't scale residuals by hat matrix diagonal
+  tPermStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 't', HC3=FALSE )
   # no transform, robust, estimate covariance
-  robustStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform ='none')
+  #robustStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform ='none')
   # no transform, classical, estimate covariance
-  plainStatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 'none', robust=FALSE)
-  resids = plainStatmap$sqrtSigma
+  plainstatmap = lmPBJ(data$images, form=lmfull, formred=lmred, mask=mask, data=data, transform = 'none', robust=FALSE)
+  resids = plainstatmap$sqrtSigma
 
-  statmaps = grep('Statmap', ls(), value=TRUE)
+  statmaps = c('tRobustStatmap', 'tStatmap', 'tPermStatmap')
   out = list()
+  # doesn't matter which statmap we use here
+  thrs = (cfts^2*plainstatmap$rdf) + plainstatmap$df
   # Apply each of the sampling methods
   for(statmapname in statmaps){
 
     ### BOOTSTRAP METHODS
     statmap = get(statmapname)
     # normal bootstrap
-    pbjNorm = pbjSEI(statmap, nboot = nboot, cfts.s = cfts)
-    # Rademacher bootstrap
-    pbjRad = pbjSEI(statmap, nboot = nboot, cfts.s = cfts, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1})
-    # t bootstrap
-    pbjNormT = pbjSEI(statmap, nboot = nboot, cfts.s = cfts, tboot=TRUE)
-    # Rademacher t
-    pbjRadT = pbjSEI(statmap, nboot = nboot, cfts.s = cfts, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1}, tboot=TRUE)
-
-    ### PERMUTATION METHODS
-    # Q needs to absolute value of Q for permutation procedure. This multiplies by the sign of the residuals to do that.
-    permMap = statmap
-    # check dimensions
-    permMap$sqrtSigma = sweep(permMap$sqrtSigma, MARGIN = c(1,2), STATS = sign(resids), FUN="*")
-    # permutation # need to get null residuals from lmPBJ for this one
-    perm = function(n){
-      nullResids[sample(1:n),]
+    #pbjNorm = getBoots(pbjSEI(statmap, nboot = nboot, cfts.s = cfts))
+    if(statmapname %in% c('tRobustStatmap', 'tStatmap')){
+      pbjNormT = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, method='t')
+      # Rademacher bootstrap
+      pbjRadT = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1}, method='t')
     }
-    pbjPerm = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = perm)
-    pbjPermT = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = perm, tboot=TRUE)
-
-    # exchangeable permutation
-    nullResids = sign(nullResids)
-    exchPerm = function(n){
-      nullResids[sample(1:n),]
+    if(statmapname=='tRobustStatmap'){
+      pbjRadRobust = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1}, method='robust')
+      pbjNormRobust = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, method='robust')
+      # exchangeable permutation
+      # scale out sign of Q from sqrtSigma -- sign comes from "permExch" function
+      statmap$sqrtSigma = sweep(statmap$sqrtSigma, MARGIN = c(1,2), STATS = sign(resids), FUN="*")
+      pbjPermExch = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, rboot = exchPerm, method='robust')
     }
-    pbjPermExch = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = exchPerm)
-    pbjPermExchT = pbjSEI(permMap, nboot = nboot, cfts.s = cfts, rboot = exchPerm, tboot=TRUE)
+    if(statmapname == 'tStatmap'){
+      pbjNorm = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, method='regular')
+      pbjRad = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1}, method='regular')
+    }
 
-
-    # distribution of max
-    pbjNormMax = pbjInference(statmap, nboot = nboot, tboot = FALSE)
-    pbjNormTmax = pbjInference(statmap, nboot = nboot, tboot = TRUE)
-    pbjRadMax = pbjInference(statmap, nboot = nboot, tboot = FALSE, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1})
-    pbjRadTmax = pbjInference(statmap, nboot = nboot, tboot = TRUE, rboot = function(n){ 2*rbinom(n, size=1, prob=0.5)-1})
-    pbjPermMax = pbjInference(permMap, nboot = nboot, rboot = perm)
-    pbjPermTmax = pbjInference(permMap, nboot = nboot, rboot = perm, tboot=TRUE)
-    pbjPermExchMax = pbjInference(permMap, nboot = nboot, rboot = exchPerm)
-    pbjPermExchTmax = pbjInference(permMap, nboot = nboot, rboot = exchPerm, tboot=TRUE)
-
+    if(statmapname=='tPermStatmap'){
+      # now scale out residuals from sqrtSigma -- scale comes from "perm" function
+      statmap$sqrtSigma = sweep(statmap$sqrtSigma, MARGIN = c(1,2), STATS = resids, FUN="/")
+      pbjPerm = pbjInference(statmap, nboot = nboot, thr = thrs, mask=statmap$mask, statistic=simStats, rboot = perm, method='robust')
+    }
     # collect output
     PBJnames = grep('^pbj', ls(), value=TRUE)
     allnames = paste(statmapname, PBJnames, sep='_')
     out[allnames] = lapply(PBJnames, get, pos = environment())
+    rm(PBJnames)
 
     ### REPEAT ALL WITH INDEPENDENCE SPATIAL COVARIANCE ASSUMPTION
     # nonrobust methods won't be different, because covariance is same for all statistics.
