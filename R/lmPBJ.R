@@ -54,7 +54,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
-  X = getDesign(form, formred, data=data, robust=robust)
+  X = getDesign(form, formred, data=data)
   Xred = X[['Xred']]
   df = X[['df']]
   X = X[['X']]
