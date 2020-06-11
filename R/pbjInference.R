@@ -94,7 +94,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
         statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
         # only runs robust method if robust SE were used
         if(robust & tolower(method[1])=='robust'){
-          BsqrtInv = matrix(apply(statimg, 2, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
+          BsqrtInv = matrix(apply(statimg, 2, function(x){ v = svd(x, nu=0); crossprod(sweep(v$v, 1, 1/v$d, '*'), v$v) }), nrow=df^2, ncol=V)
           statimg = t(simplify2array( lapply(1:V, function(ind) rowSums(tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(statimg[,ind,], nrow=n, ncol=df))) ) ))
         } else if(tolower(method[1])=='regular'){
           statimg = colSums(statimg, dims=1 )

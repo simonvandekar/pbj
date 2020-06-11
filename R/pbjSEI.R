@@ -76,7 +76,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   if(is.null(rdf)) rdf=n
 
   if(robust & method[1]!='robust'){
-    BsqrtInv = matrix(apply(sqrtSigma, 2, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
+    BsqrtInv = matrix(apply(sqrtSigma, 2, function(x){ v = svd(x, nu=0); crossprod(sweep(v$v, 1, 1/v$d, '*'), v$v) }), nrow=df^2, ncol=V)
     sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(sqrtSigma[,ind,], nrow=n, ncol=df))) )
     sqrtSigma = aperm(sqrtSigma, c(2,3,1))
   }

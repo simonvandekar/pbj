@@ -230,7 +230,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # returns nXVXm_1 array
       X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
       # apply across voxels. returns V X m_1^2 array
-      BsqrtInv = matrix(apply(X1resQ, 2, function(x) pracma::sqrtm(crossprod(x))$Binv[,,drop=FALSE]), nrow=df^2, ncol=V)
+      BsqrtInv = matrix(apply(X1resQ, 2, function(x){ v = svd(x, nu=0); crossprod(sweep(v$v, 1, 1/v$d, '*'), v$v) }), nrow=df^2, ncol=V)
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
       # recomputes BsqrtInv each time pbjSEI is called, more memory efficient less computationally efficient
