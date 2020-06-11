@@ -42,6 +42,13 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
   ndim = length(dims)
   if(is.null(rdf)) rdf=n
 
+
+  if(robust & method[1]!='robust'){
+    BsqrtInv = matrix(apply(sqrtSigma, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+    sqrtSigma = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(sqrtSigma[,ind,], nrow=df, ncol=n, byrow=TRUE))) )
+    sqrtSigma = aperm(sqrtSigma, c(2,3,1))
+  }
+
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = list()
 
@@ -94,8 +101,8 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
         statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
         # only runs robust method if robust SE were used
         if(robust & tolower(method[1])=='robust'){
-          BsqrtInv = matrix(apply(statimg, 2, function(x){ v = svd(x, nu=0); crossprod(sweep(v$v, 1, 1/v$d, '*'), v$v) }), nrow=df^2, ncol=V)
-          statimg = t(simplify2array( lapply(1:V, function(ind) rowSums(tcrossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(statimg[,ind,], nrow=n, ncol=df))) ) ))
+          BsqrtInv = matrix(apply(statimg, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+          statimg = t(simplify2array( lapply(1:V, function(ind) colSums(crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(statimg[,ind,], nrow=df, ncol=n, byrow=TRUE))) ) ))
         } else if(tolower(method[1])=='regular'){
           statimg = colSums(statimg, dims=1 )
         } else {
