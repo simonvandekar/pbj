@@ -6,7 +6,6 @@
 #' @param formred Similar to above. except this should be a simplified model relative to form.
 #'  Put another way, the design matrix for this model should span a subset of the column space of the other model
 #' @param data A data frame containing the variables specified in form.
-#' @param robust Are you computing robust statistics?
 #' @param tol Tolerance for determining the number of linearly independent columns to determine the df of the test.
 #' @keywords design matrix
 #' @return Returns design matrices for the full and reduced model and the df for the comparison between the two.
@@ -16,7 +15,7 @@
 #' testing splines, where the linear component of the full model is parameterized differently than the reduced model.
 #' @importFrom stats as.formula model.matrix update.formula
 #' @export
-getDesign = function(form, formred, data, robust=TRUE, tol=1e-7){
+getDesign = function(form, formred, data, tol=1e-7){
 
   if(!is.matrix(form) & !is.matrix(formred)){
     X = model.matrix(as.formula(form), data)
@@ -35,12 +34,10 @@ getDesign = function(form, formred, data, robust=TRUE, tol=1e-7){
   if(df< cols ){
     message('df=',df, ' is less than additional number of columns in full model (', cols,
             '). \nCoefficients will likely be uninterpretable.' )
-    if(robust){
       message('Creating new lower dimensional basis with df=', df, '.')
       X1 = X.svd$u[,1:df]
       colnames(X1) = paste0('u', 1:df)
       X = cbind(Xred, X1)
-    }
   }
   return(list(X=X, Xred=Xred, df=df))
 }
