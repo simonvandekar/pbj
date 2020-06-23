@@ -47,7 +47,6 @@
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
-#' @importFrom pracma sqrtm
 #' @importFrom PDQutils papx_edgeworth
 #' @export
 lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none', 'edgeworth', 'f'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
@@ -163,9 +162,8 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       sigmas = sqrt(colSums(res^2)/rdf)
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
-      AsqrtInv = matrix(apply(X1res, 3, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
-      browser()
-      sqrtSigma = simplify2array( lapply(1:V, function(ind) tcrossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), matrix(X1res[,,ind], n, df)) ) )
+      AsqrtInv = matrix(apply(X1res, 3, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }),   nrow=df^2, ncol=V)
+      sqrtSigma = simplify2array( lapply(1:V, function(ind) crossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), matrix(X1res[,,ind], df, n, byrow=TRUE)) ) )
       # used to compute chi-squared statistic
       normedCoef = apply(sweep(sqrtSigma, MARGIN=c(2,3), Y, '*'), c(1,3), sum)
       # used for generating distribution of normedCoef
@@ -183,7 +181,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # first part of normedCoef
       normedCoef = colSums(sweep(X1res, MARGIN = c(1,3), Y, '*'), dims = 1)
       X1resQ = sweep(X1res, c(1,3), Q, '*')
-      BsqrtInv = matrix(apply(X1resQ, 3, function(x) pracma::sqrtm(crossprod(x))$Binv), nrow=df^2, ncol=V)
+      BsqrtInv = matrix(apply(X1resQ, 3, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }),   nrow=df^2, ncol=V)
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[,ind])) ), nrow=df)
       sqrtSigma = X1resQ
@@ -213,8 +211,8 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       sigmas = sqrt(colSums(res^2)/rdf)
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
-      AsqrtInv = pracma::sqrtm(crossprod(X1res))$Binv
-      sqrtSigma = tcrossprod(AsqrtInv, matrix(X1res, nrow=n, ncol=df))
+      AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
+      sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
       # used to compute chi-squared statistic
       normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
@@ -230,7 +228,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # returns nXVXm_1 array
       X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
       # apply across voxels. returns V X m_1^2 array
-      BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+      BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }), nrow=df^2, ncol=V)
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
       # recomputes BsqrtInv each time pbjSEI is called, more memory efficient less computationally efficient
