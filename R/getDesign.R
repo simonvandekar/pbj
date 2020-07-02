@@ -13,10 +13,10 @@
 #' be equal to the df of the test, if not, then the covariance matrix of the parameters will be noninvertible.
 #' If robust=TRUE, then the design is rotated to a df lower dimensional space. This problem happens when
 #' testing splines, where the linear component of the full model is parameterized differently than the reduced model.
-#' @importFrom stats as.formula model.matrix update.formula
+#' @importFrom stats as.formula model.matrix update.formula get_all_vars
 #' @export
 getDesign = function(form, formred, data, tol=1e-7){
-  data=model.frame(form, data=data)
+  data=na.omit(get_all_vars(form, data=data))
   if(!is.matrix(form) & !is.matrix(formred)){
     X = model.matrix(as.formula(form), data)
     Xred = if(!is.null(formred)) model.matrix(as.formula(formred), data) else NULL

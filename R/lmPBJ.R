@@ -192,7 +192,6 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
   } else {
 
     message('Running weighted linear models.')
-    # cannot be parallelized due to memory use
     QR = qr(X * W)# cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
     coef = qr.coef(QR, Y)[peind,,drop=FALSE]
     res=qr.resid(QR, Y);
@@ -216,7 +215,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # used to compute chi-squared statistic
       normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = res
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
       if(HC3){
@@ -231,8 +230,8 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }), nrow=df^2, ncol=V)
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
-      # recomputes BsqrtInv each time pbjSEI is called, more memory efficient less computationally efficient
-      sqrtSigma = X1resQ
+      # Things needed to resample the robust statistics
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR)
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }

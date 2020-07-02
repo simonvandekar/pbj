@@ -69,81 +69,19 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   }
   rm(statMap)
 
-  dims = dim(sqrtSigma)
+  dims = dim(sqrtSigma$res)
   n = dims[1]
   V=dims[2]
-  ndim = length(dims)
   if(is.null(rdf)) rdf=n
 
-  if(robust & method[1]!='robust'){
-    BsqrtInv = matrix(apply(sqrtSigma, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-    sqrtSigma = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(sqrtSigma[,ind,], nrow=df, ncol=n, byrow=TRUE))) )
-    sqrtSigma = aperm(sqrtSigma, c(2,3,1))
-  }
-
-  #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = matrix(NA, nboot, length(cfts))
   if(debug) statmaps = rep(list(NA), nboot)
 
-  # if(.Platform$OS.type=='windows')
-  # {
-
-  bootDims = dim(rboot(n))
-  bootLen = pmax(1,length(bootDims))
-  if(is.null(bootDims) & ndim==2){
-    # the bootstrap is generating an n vector
-    arrDims = c(1,3)
-  } else {
-    # assumes the bootstrap is generating an n X V array
-    arrDims = 1:bootLen
-  }
-
-  if(!is.null(bootDims) & all(bootDims != dims[1:length(bootDims)] ) )
-    stop('Dimension of bootstrap function does not match sqrtSigma')
-
-    pb = txtProgressBar(style=3, title='Generating null distribution')
-    for(i in 1:nboot){
-      tmp = mask
-      # bootstrap is univariate and sqrtSigma is 2D
-      # assumes off-diagonal elements of spatial covariance are independent
-      if(ndim==2){
-        if(is.null(bootDims)){
-          boot = matrix(rboot(n*df), n, df)
-        } else {
-          boot = rboot(n)
-        }
-        # if df>1 this corresponds to an independence assumption among off-diagonal voxels
-        # need to expand array to compute T-statistic
-         if(tolower(method[1])=='t'){
-           if(df==1){
-             statimg = sweep(sqrtSigma, 1, boot, FUN="*")
-             statimg = apply(statimg, 2, function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
-           } else {
-             # off-diagonal spatially adjacent parameters are independent
-             statimg = sweep(simplify2array(rep(list(sqrtSigma), df)), arrDims, boot, FUN="*")
-             # standardize each voxel and normalized statistic
-             statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
-           }
-         } else {
-           statimg = crossprod(sqrtSigma, boot)
-         }
-      } else {
-        # assumes this is generating an n or nxV array
-        boot = rboot(n)
-        # dimensions are nxVxm_1
-        statimg = sweep(sqrtSigma, arrDims, boot, FUN="*")
-        # only runs robust method if robust SE were used
-        if(robust & tolower(method[1])=='robust'){
-          BsqrtInv = matrix(apply(statimg, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-          statimg = t(simplify2array( lapply(1:V, function(ind) colSums(crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), matrix(statimg[,ind,], nrow=df, ncol=n, byrow=TRUE))) ) ))
-        } else if(tolower(method[1])=='regular'){
-          statimg = colSums(statimg, dims=1 )
-        } else {
-          # standardize each voxel and normalized statistic
-          statimg = apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
-        }
-      }
-      statimg = rowSums((statimg)^2)
+  pb = txtProgressBar(style=3, title='Generating null distribution')
+  for(i in 1:nboot){
+    tmp = mask
+    boot = rboot(n)
+    statimg = pbjBoot(sqrtSigma, boot, V, n, df, method = method)
       if(debug) statmaps[[i]] = statimg
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       boots[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))

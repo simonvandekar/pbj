@@ -9,7 +9,7 @@ pbjInference(
   statistic = function(image) max(c(image)),
   nboot = 5000,
   rboot = stats::rnorm,
-  method = c("robust", "t", "regular"),
+  method = c("t", "regular"),
   ...
 )
 }

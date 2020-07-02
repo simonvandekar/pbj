@@ -45,7 +45,7 @@ test_that("Output from PBJ with df=3 and scalar weights matches output from lmte
                    Winv = pain$data$Winv, zeros=TRUE, transform='none')
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2, statmap$df))
+  expect_equal(dim(statmap$sqrtSigma$res), c(21, 2))
 })
 
 
@@ -60,7 +60,6 @@ test_that("Output from PBJ with df=3 and image weights matches output from lmtes
                    Winv = pain$data$varimages, zeros=TRUE, transform='none')
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2, statmap$df))
 })
 # scalar weights df=1
 test_that("Output from PBJ with df=1 and scalar weights matches output from lmtest and sandwich packages.", {
@@ -73,7 +72,7 @@ test_that("Output from PBJ with df=1 and scalar weights matches output from lmte
                    Winv = pain$data$Winv, zeros=TRUE, transform='none')
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1], waldtestres$F[2], tolerance=tol)
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2, statmap$df))
+  expect_equal(dim(statmap$sqrtSigma$res), c(21, 2))
   })
 
 # voxel-wise weights df=1
@@ -87,7 +86,6 @@ test_that("Output from PBJ with df=1 and image weights matches output from lmtes
                    Winv = pain$data$varimages, zeros=TRUE, transform='none')
   expect_equal(statmap$coef[1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1], waldtestres$F[2], tolerance=tol)
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2, statmap$df))
 } )
 
 
@@ -104,7 +102,7 @@ test_that("Output from PBJ with nonlinear test and scalar weights matches output
                    Winv = pain$data$Winv, zeros=TRUE, transform='none')
   expect_equal(statmap$coef[,1], coefficients(model)[-c(1,2)], tolerance=tol )
   expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2, statmap$df))
+  expect_equal(dim(statmap$sqrtSigma$res), c(21, 2))
 })
 
 test_that("Output from PBJ with nonlinear polynomial and scalar weights matches output from lmtest and sandwich packages.", {
@@ -137,8 +135,8 @@ test_that("Output from PBJ with df=2 and scalar weights matches output from lm."
                    Winv = pain$data$Winv, zeros=TRUE, transform='none', robust=FALSE)
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
-  # In this special case (scalar weights) dim(sqrtSigma)==2
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2))
+  # In this special case (scalar weights) dim(sqrtSigma$res)==2
+  expect_equal(dim(statmap$sqrtSigma$res), c(21, 2))
 })
 
 #### voxel-wise weights df=2
@@ -152,7 +150,6 @@ test_that("Output from PBJ with df=2 and image weights matches output from lm.",
                    Winv = pain$data$varimages, zeros=TRUE, transform='none', robust=FALSE)
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1]/statmap$df, waldtestres$F[2], tolerance=tol)
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2, statmap$df))
 })
 # scalar weights df=1
 test_that("Output from PBJ with df=1 and scalar weights matches output from lm.", {
@@ -166,7 +163,7 @@ test_that("Output from PBJ with df=1 and scalar weights matches output from lm."
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1], waldtestres$F[2], tolerance=tol)
   # In this special case 3rd array dimension is NULL
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2))
+  expect_equal(dim(statmap$sqrtSigma$res), c(21, 2))
 })
 
 # voxel-wise weights df=1
@@ -180,7 +177,6 @@ test_that("Output from PBJ with df=1 and image weights matches output from lm.",
                    Winv = pain$data$varimages, zeros=TRUE, transform='none', robust=FALSE)
   expect_equal(statmap$coef[1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1], waldtestres$F[2], tolerance=tol)
-  expect_equal(dim(statmap$sqrtSigma), c(21, 2, statmap$df))
 } )
 
 
@@ -190,5 +186,5 @@ statmap <- lmPBJ(pain$data$images, form = ~ x + I(x^2) + I(x^3),
                  formred = ~ x, mask = mask,
                  template=pain$template, data = pain$data,
                  Winv = pain$data$Winv, zeros=TRUE, transform='t')
-pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25), debug=TRUE)
-pbjtest = pbjSEI(statmap, nboot = 5, cfts.p = c(0.01, 0.05), method='t')
+#pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25), debug=TRUE)
+pbjtest = pbjSEI(statmap, nboot = 5, cfts.p = c(0.01, 0.05), method='robust')
