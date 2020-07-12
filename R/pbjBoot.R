@@ -46,5 +46,5 @@ pbjBoot = function(sqrtSigma, boot, V, n, df, method=c('robust', 't', 'condition
       stop('Voxelwise robust bootstrap not supported yet.')
     }
   }
-  statimg = rowSums(statimg^2)
+  statimg = colSums(statimg^2)
 }
