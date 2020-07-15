@@ -19,7 +19,7 @@ pbjBoot = function(sqrtSigma, boot, V, n, df, method=c('robust', 't', 'condition
         sqrtSigma$res = sweep(sqrtSigma$res, 1, boot, '*')
         BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
                                 function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-        statimg = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=FALSE )
+        statimg = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE )
       } else {
         stop('Dimension of bootstrap sample is not correct for the method.')
       }
@@ -46,5 +46,5 @@ pbjBoot = function(sqrtSigma, boot, V, n, df, method=c('robust', 't', 'condition
       stop('Voxelwise robust bootstrap not supported yet.')
     }
   }
-  statimg = rowSums(statimg^2)
+  statimg = colSums(statimg^2)
 }
