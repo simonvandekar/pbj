@@ -12,7 +12,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, method=c('t', 'regular'), ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, method=c('t', 'condtional', 'permutation'), ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -26,7 +26,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
   robust = statMap$robust
   stat = rawstat
   method = tolower(method[1])
-  if(robust) method='robust'
+  if(robust)
 
   obsstat = statistic(stat, ...)
 
@@ -51,6 +51,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
 
   #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = list()
+  bootdim = dim(rboot(n))
 
   # if(.Platform$OS.type=='windows')
   # {
@@ -58,8 +59,8 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
   pb = txtProgressBar(style=3, title='Generating null distribution')
   tmp = mask
   for(i in 1:nboot){
-    boot = rboot(n)
-    statimg = pbjBoot(sqrtSigma, boot, V, n, df, method = method)
+    browser()
+    statimg = pbjBoot(sqrtSigma, rboot, bootdim, V, n, df,robust=TRUE, method = method)
     tmp[ mask!=0] = statimg
     boots[[i]] = statistic(tmp, ...)
     setTxtProgressBar(pb, round(i/nboot,2))
