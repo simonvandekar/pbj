@@ -7,9 +7,10 @@
 pbjInference(
   statMap,
   statistic = function(image) max(c(image)),
+  randomX = FALSE,
   nboot = 5000,
   rboot = stats::rnorm,
-  method = c("t", "regular"),
+  method = c("t", "condtional", "permutation"),
   ...
 )
 }
@@ -17,6 +18,8 @@ pbjInference(
 \item{statMap}{statMap object as obtained from computeStats.}
 
 \item{statistic}{A user specified function that takes a RNift image object and computes a particular statistic of interest.}
+
+\item{randomX}{logical, bootstrap samples of X as well?}
 
 \item{nboot}{Number of bootstrap samples to use.}
 
