@@ -215,7 +215,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # used to compute chi-squared statistic
       normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = list(res=res, X1res=X1res, QR=QR)
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
       if(HC3){
@@ -231,7 +231,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
       # Things needed to resample the robust statistics
-      sqrtSigma = list(res=res, X1res=X1res, QR=QR)
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X)
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }
