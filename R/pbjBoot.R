@@ -14,7 +14,7 @@
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE){
+pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), voxelwise=FALSE){
   method = tolower(method[1])
   # !voxelwise
   if(!voxelwise){
@@ -48,6 +48,9 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TR
         sqrtSigma$X1res = sqrtSigma$X1res[samp,]
         sqrtSigma$X = sqrtSigma$X1res[samp,]
         sqrtSigma$QR = qr(sqrtSigma$X)
+      } else if(method=='robustPermutation'){
+        #sqrtSigma$res = sqrt(abs(sqrtSigma$res[sample(n),])) * sign(sqrtSigma$res) * sqrt(abs(sqrtSigma$res))
+        sqrtSigma$res = sqrtSigma$res[sample(n),] * abs(sqrtSigma$res)
       }
       # compute test statistic the regular way given the bootstrap/permuted sample
       BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
