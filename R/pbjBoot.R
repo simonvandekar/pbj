@@ -48,7 +48,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TR
         sqrtSigma$X1res = sqrtSigma$X1res[samp,]
         sqrtSigma$X = sqrtSigma$X1res[samp,]
         sqrtSigma$QR = qr(sqrtSigma$X)
-      } else if(method=='robustPermutation'){
+      } else if(method=='robustpermutation'){
         #sqrtSigma$res = sqrt(abs(sqrtSigma$res[sample(n),])) * sign(sqrtSigma$res) * sqrt(abs(sqrtSigma$res))
         sqrtSigma$res = sqrtSigma$res[sample(n),] * abs(sqrtSigma$res)
       }
