@@ -13,8 +13,9 @@ pbjBoot(
   df,
   randomX = FALSE,
   robust = TRUE,
-  method = c("t", "conditional", "permutation"),
-  voxelwise = FALSE
+  method = c("nonparametric", "t", "conditional", "permutation", "robustPermutation"),
+  voxelwise = FALSE,
+  HC3 = TRUE
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ pbjBoot(
 \item{method}{Method to use for resampling.}
 
 \item{voxelwise}{logical indicating whether the data are voxelwise.}
+
+\item{HC3}{logical, use HC3 residual estimator?}
 }
 \value{
 Returns vector of test statistics computed from the bootstrapped sample.

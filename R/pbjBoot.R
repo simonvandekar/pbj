@@ -10,14 +10,19 @@
 #' @param robust Generate robust statistics?
 #' @param method Method to use for resampling.
 #' @param voxelwise logical indicating whether the data are voxelwise.
+#' @param HC3 logical, use HC3 residual estimator?
 #'
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), voxelwise=FALSE){
+pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), voxelwise=FALSE, HC3=TRUE){
   method = tolower(method[1])
   # !voxelwise
   if(!voxelwise){
+    if(HC3){
+      h=rowSums(qr.Q(sqrtSigma$QR)^2); h = ifelse(h>=1, 1-eps, h)
+      sqrtSigma$res = sweep(sqrtSigma$res, 1, (1-h), FUN = '/')
+    }
     if(robust){
       if(method == 'conditional'){
         if( length(bootdim)==0 ){ # dimension of bootstrap must be a vector of length n

@@ -6,6 +6,7 @@
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. See examples.
 #' @param method character method to use for bootstrap procedure.
+#' @param HC3 logicl use small sample correction for residuals.
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns a list of length 2. The first element is the observed statistic value and the second is a list of the boostrap values.
@@ -13,7 +14,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), randomX=FALSE, nboot=5000, rboot=stats::rnorm, method=c('t', 'condtional', 'permutation'), ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), randomX=FALSE, nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), HC3=TRUE, ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
