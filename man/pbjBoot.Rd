@@ -39,7 +39,7 @@ pbjBoot(
 
 \item{voxelwise}{logical indicating whether the data are voxelwise.}
 
-\item{HC3}{logical, use HC3 residual estimator?}
+\item{HC3}{logical, was HC3 estimator used? This is temporary and should be removed by editing lmPBJ.}
 }
 \value{
 Returns vector of test statistics computed from the bootstrapped sample.
