@@ -17,6 +17,7 @@
 #
 pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), voxelwise=FALSE, HC3=TRUE){
   method = tolower(method[1])
+  eps=0.001
   # !voxelwise
   if(!voxelwise){
     if(HC3){
