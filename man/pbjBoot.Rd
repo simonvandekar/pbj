@@ -13,9 +13,9 @@ pbjBoot(
   df,
   randomX = FALSE,
   robust = TRUE,
-  method = c("nonparametric", "t", "conditional", "permutation", "robustPermutation"),
+  method = c("nonparametric", "t", "conditional", "permutation"),
   voxelwise = FALSE,
-  HC3 = TRUE
+  HC3 = FALSE
 )
 }
 \arguments{

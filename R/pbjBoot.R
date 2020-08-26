@@ -15,14 +15,14 @@
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), voxelwise=FALSE, HC3=TRUE){
+pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=FALSE){
   method = tolower(method[1])
   eps=0.001
   # !voxelwise
   if(!voxelwise){
     if(HC3){
       h=rowSums(qr.Q(sqrtSigma$QR)^2); h = ifelse(h>=1, 1-eps, h)
-      sqrtSigma$res = sweep(sqrtSigma$res, 1, (1-h), FUN = '*')
+      sqrtSigma$res = sweep(sqrtSigma$res, 1, (1-h), FUN = '/')
     }
     if(robust){
       if(method == 'conditional'){

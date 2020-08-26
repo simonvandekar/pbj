@@ -218,14 +218,15 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
-      if(HC3){
-        h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
-        res = res /(1-h)
-      }
       # first part of normedCoef
       normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), STATS = X1res, FUN = '*'), dims=1)
-      # returns nXVXm_1 array
-      X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
+      if(HC3){
+        h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
+        X1resQ = sweep(simplify2array(rep(list(res/(1-h)), df)),  c(1,3), X1res, '*')
+      } else {
+        # returns nXVXm_1 array
+        X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
+      }
       # apply across voxels. returns V X m_1^2 array
       BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }), nrow=df^2, ncol=V)
       # second part of normedCoef
