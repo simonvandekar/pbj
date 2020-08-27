@@ -14,7 +14,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), randomX=FALSE, nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), HC3=TRUE, ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), randomX=FALSE, nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), HC3=FALSE, ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -28,8 +28,6 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), rand
   robust = statMap$robust
   stat = rawstat
   method = tolower(method[1])
-  if(robust)
-
   obsstat = statistic(stat, ...)
 
   sqrtSigma <- if(is.character(statMap$sqrtSigma)) {
