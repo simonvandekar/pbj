@@ -58,7 +58,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), rand
 
   pb = txtProgressBar(style=3, title='Generating null distribution')
   tmp = mask
-  if(i>0){
+  if(nboot>0){
   for(i in 1:nboot){
     statimg = pbjBoot(sqrtSigma, rboot, bootdim, V, n, df, randomX=randomX, robust=TRUE, method = method)
     tmp[ mask!=0] = statimg
