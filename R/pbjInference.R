@@ -6,7 +6,6 @@
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. See examples.
 #' @param method character method to use for bootstrap procedure.
-#' @param HC3 logicl use small sample correction for residuals.
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns a list of length 2. The first element is the observed statistic value and the second is a list of the boostrap values.
@@ -14,7 +13,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), randomX=FALSE, nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation', 'robustPermutation'), HC3=FALSE, ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), randomX=FALSE, nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation'), ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -26,6 +25,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), rand
   df = statMap$df
   rdf = statMap$rdf
   robust = statMap$robust
+  HC3 = statMap$HC3
   stat = rawstat
   method = tolower(method[1])
   obsstat = statistic(stat, ...)
@@ -60,7 +60,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), rand
   tmp = mask
   if(nboot>0){
   for(i in 1:nboot){
-    statimg = pbjBoot(sqrtSigma, rboot, bootdim, V, n, df, randomX=randomX, robust=TRUE, method = method)
+    statimg = pbjBoot(sqrtSigma, rboot, bootdim, V, n, df, randomX=randomX, robust=robust, method = method, HC3=HC3)
     tmp[ mask!=0] = statimg
     boots[[i]] = statistic(tmp, ...)
     setTxtProgressBar(pb, round(i/nboot,2))

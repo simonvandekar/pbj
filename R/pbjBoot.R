@@ -10,12 +10,12 @@
 #' @param robust Generate robust statistics?
 #' @param method Method to use for resampling.
 #' @param voxelwise logical indicating whether the data are voxelwise.
-#' @param HC3 logical, was HC3 estimator used? This is temporary and should be removed by editing lmPBJ.
+#' @param HC3 logical, was HC3 estimator used?
 #'
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TRUE, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=FALSE){
+pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=TRUE, randomX=FALSE, robust=TRUE){
   method = tolower(method[1])
   eps=0.001
   # !voxelwise
@@ -54,10 +54,11 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TR
         sqrtSigma$X1res = sqrtSigma$X1res[samp,]
         sqrtSigma$X = sqrtSigma$X1res[samp,]
         sqrtSigma$QR = qr(sqrtSigma$X)
-      } else if(method=='robustpermutation'){
-        #sqrtSigma$res = sqrt(abs(sqrtSigma$res[sample(n),])) * sign(sqrtSigma$res) * sqrt(abs(sqrtSigma$res))
-        sqrtSigma$res = sqrtSigma$res[sample(n),] * abs(sqrtSigma$res)
       }
+        #else if(method=='robustpermutation'){
+        #sqrtSigma$res = sqrt(abs(sqrtSigma$res[sample(n),])) * sign(sqrtSigma$res) * sqrt(abs(sqrtSigma$res))
+        #sqrtSigma$res = sqrtSigma$res[sample(n),] * abs(sqrtSigma$res)
+        #}
       # compute test statistic the regular way given the bootstrap/permuted sample
       BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
                               function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
@@ -68,15 +69,17 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, randomX=FALSE, robust=TR
         # dimension of bootstrap must be a matrix n X df of independent samples
         # in this case, off-diagonal spatially adjacent parameters are assumed to be independent
         boot = replicate(rboot(n), df)
-      } else if(all(bootdim = c(n,df)) ){ # I don't think this will ever happen
-        boot = rboot(n)
-      } else {
+        } else if(all(bootdim = c(n,df)) ){ # I don't think this will ever happen
+          boot = rboot(n)
+        } else {
         stop('Dimension of bootstrap sample is not correct for the method.')
       }
       statimg = sweep(simplify2array(rep(list(sqrtSigma$res), df)), c(1,3), boot, FUN="*")
       # standardize each voxel and normalized statistic
       statimg = apply(statimg, c(1,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) })
     } else if(method=='conditional'){
+      sss = sqrt(colSums(sqrtSigma$res))
+      sqrtSigma$res = sweep(sqrtSigma$res, 2, sss, '/')
       boot = replicate(rboot(n), df)
       statimg = crossprod(boot, sqrtSigma$res)
     } else if(method=='permutation'){

@@ -11,11 +11,11 @@ pbjBoot(
   V,
   n,
   df,
-  randomX = FALSE,
-  robust = TRUE,
   method = c("nonparametric", "t", "conditional", "permutation"),
   voxelwise = FALSE,
-  HC3 = FALSE
+  HC3 = TRUE,
+  randomX = FALSE,
+  robust = TRUE
 )
 }
 \arguments{
@@ -31,15 +31,15 @@ pbjBoot(
 
 \item{df}{Numerator degrees of freedom.}
 
-\item{randomX}{Generate X in each bootstrap as though it is random as well.}
-
-\item{robust}{Generate robust statistics?}
-
 \item{method}{Method to use for resampling.}
 
 \item{voxelwise}{logical indicating whether the data are voxelwise.}
 
-\item{HC3}{logical, was HC3 estimator used? This is temporary and should be removed by editing lmPBJ.}
+\item{HC3}{logical, was HC3 estimator used?}
+
+\item{randomX}{Generate X in each bootstrap as though it is random as well.}
+
+\item{robust}{Generate robust statistics?}
 }
 \value{
 Returns vector of test statistics computed from the bootstrapped sample.

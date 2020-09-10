@@ -10,8 +10,7 @@ pbjInference(
   randomX = FALSE,
   nboot = 5000,
   rboot = stats::rnorm,
-  method = c("nonparametric", "t", "conditional", "permutation", "robustPermutation"),
-  HC3 = TRUE,
+  method = c("nonparametric", "t", "conditional", "permutation"),
   ...
 )
 }
@@ -27,8 +26,6 @@ pbjInference(
 \item{rboot}{Function for generating random variables. See examples.}
 
 \item{method}{character method to use for bootstrap procedure.}
-
-\item{HC3}{logicl use small sample correction for residuals.}
 
 \item{...}{arguments passed to statistic function.}
 }
