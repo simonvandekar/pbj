@@ -68,7 +68,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric'
       if( length(bootdim)==0 ){
         # dimension of bootstrap must be a matrix n X df of independent samples
         # in this case, off-diagonal spatially adjacent parameters are assumed to be independent
-        boot = replicate(rboot(n), df)
+        boot = replicate(df, rboot(n))
         } else if(all(bootdim = c(n,df)) ){ # I don't think this will ever happen
           boot = rboot(n)
         } else {
@@ -80,7 +80,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric'
     } else if(method=='conditional'){
       sss = sqrt(colSums(sqrtSigma$res))
       sqrtSigma$res = sweep(sqrtSigma$res, 2, sss, '/')
-      boot = replicate(rboot(n), df)
+      boot = replicate(df, rboot(n))
       statimg = crossprod(boot, sqrtSigma$res)
     } else if(method=='permutation'){
       sqrtSigma$res = rboot(n)
