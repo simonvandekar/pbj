@@ -83,18 +83,12 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric'
       boot = replicate(df, rboot(n))
       statimg = crossprod(boot, sqrtSigma$res)
     } else if(method=='permutation'){
-      sss = sqrt(colSums(sqrtSigma$res^2))
-      sqrtSigma$res = sweep(sqrtSigma$res, 2, sss, '/')
       sqrtSigma$res = sqrtSigma$res[sample(n), ]
-      #
-      AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
-      sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
+      sss = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/(n-1))
+      AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
+      statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
       # used to compute chi-squared statistic
-      normedCoef = sqrtSigma %*% Y
-      # compute test statistic the regular way given the bootstrap/permuted sample
-      BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
-                              function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-      statimg = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE )
+      statimg = statimg %*% sqrtSigma$res
     }
 
   } else { # voxelwise
