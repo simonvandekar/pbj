@@ -84,7 +84,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric'
       statimg = crossprod(boot, sqrtSigma$res)
     } else if(method=='permutation'){
       sqrtSigma$res = sqrtSigma$res[sample(n), ]
-      sss = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/(n-1))
+      sss = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/(n-df))
       AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
       statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
       # used to compute chi-squared statistic
