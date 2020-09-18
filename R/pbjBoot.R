@@ -3,9 +3,6 @@
 #' @param sqrtSigma list from statmap object
 #' @param rboot a function that draws a bootstrapped sample. Can be an n vector, V by n matrix.
 #' @param bootdim Dimension of rboot output
-#' @param V Number of voxels in analysis.
-#' @param n Number of subjects.
-#' @param df Numerator degrees of freedom.
 #' @param randomX Generate X in each bootstrap as though it is random as well.
 #' @param robust Generate robust statistics?
 #' @param method Method to use for resampling.
@@ -15,22 +12,29 @@
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=TRUE, randomX=FALSE, robust=TRUE){
+pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=TRUE, randomX=FALSE, robust=TRUE){
   method = tolower(method[1])
   eps=0.001
+  V = ncol(sqrtSigma$res)
+  n = sqrtSigma$n
+  df = sqrtSigma$df
+  rdf = sqrtSigma$rdf
   # !voxelwise
   if(!voxelwise){
     if(HC3){
       h=rowSums(qr.Q(sqrtSigma$QR)^2); h = ifelse(h>=1, 1-eps, h)
-      sqrtSigma$res = sweep(sqrtSigma$res, 1, (1-h), FUN = '/')
+      #h=rowSums(qr.Q(qr(sqrtSigma$X))^2); h = ifelse(h>=1, 1-eps, h)
+      #sqrtSigma$res = sweep(sqrtSigma$res, 1, (1-h), FUN = '/')
+    } else {
+      h = rep(0, n)
     }
     if(robust){
       if(method == 'conditional'){
         if( length(bootdim)==0 ){ # dimension of bootstrap must be a vector of length n
           boot = rboot(n)
         # could be made faster b/c BsqrtInv does not need to be computed in each bootstrap (though it is here)
-        BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
-                                function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+          BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(sweep(qr.resid(sqrtSigma$QR, sqrtSigma$res), 1, 1-h, '/')), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
+                                  function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
         sqrtSigma$res = sweep(sqrtSigma$res, 1, boot, '*')
         statimg = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE )
         } else {
@@ -48,6 +52,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric'
         }
       } else if (method=='permutation'){
           sqrtSigma$res = sqrtSigma$res[sample(n),]
+          #sqrtSigma$res = sqrtSigma$res[1:n,]
       } else if (method=='nonparametric'){
         samp = sample(n, replace=TRUE)
         sqrtSigma$res = sqrtSigma$res[samp,]
@@ -60,35 +65,47 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, V, n, df, method=c('nonparametric'
         #sqrtSigma$res = sqrtSigma$res[sample(n),] * abs(sqrtSigma$res)
         #}
       # compute test statistic the regular way given the bootstrap/permuted sample
-      BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
+      #BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
+      #                        function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+      BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(sweep(qr.resid(sqrtSigma$QR, sqrtSigma$res), 1, 1-h, '/')), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
                               function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-      statimg = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE )
+      statimg = simplify2array(lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE )
       }
-    } else if(method=='t'){
-      if( length(bootdim)==0 ){
-        # dimension of bootstrap must be a matrix n X df of independent samples
-        # in this case, off-diagonal spatially adjacent parameters are assumed to be independent
-        boot = replicate(df, rboot(n))
-        } else if(all(bootdim = c(n,df)) ){ # I don't think this will ever happen
-          boot = rboot(n)
-        } else {
-        stop('Dimension of bootstrap sample is not correct for the method.')
-      }
-      statimg = sweep(simplify2array(rep(list(sqrtSigma$res), df)), c(1,3), boot, FUN="*")
+    } else {
+      if(method=='t'){
+      # if( length(bootdim)==0 ){
+      #   # dimension of bootstrap must be a matrix n X df of independent samples
+      #   # in this case, off-diagonal spatially adjacent parameters are assumed to be independent
+      #   boot = replicate(df, rboot(n))
+      #   } else if(all(bootdim = c(n,df)) ){ # I don't think this will ever happen
+      #     boot = rboot(n)
+      #   } else {
+      #   stop('Dimension of bootstrap sample is not correct for the method.')
+      # }
+      #statimg = sweep(simplify2array(rep(list(sqrtSigma$res), df)), c(1,3), boot, FUN="*")
       # standardize each voxel and normalized statistic
-      statimg = t(apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) }))
-    } else if(method=='conditional'){
-      sss = sqrt(colSums(sqrtSigma$res^2))
-      sqrtSigma$res = sweep(sqrtSigma$res, 2, sss, '/')
-      boot = replicate(df, rboot(n))
-      statimg = crossprod(boot, sqrtSigma$res)
-    } else if(method=='permutation'){
-      sqrtSigma$res = sqrtSigma$res[sample(n), ]
-      sss = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/(n-df))
+      #statimg = t(apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) }))
+      sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n), '*')
+      sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/rdf)
+      sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
       AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
       statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
       # used to compute chi-squared statistic
       statimg = statimg %*% sqrtSigma$res
+    } else if(method=='conditional'){
+      # use this method if transform = 't'
+      sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n), '*')
+      AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
+      statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
+      statimg = statimg %*% sqrtSigma$res
+    } else if(method=='permutation'){
+      sqrtSigma$res = sqrtSigma$res[sample(n), ]
+      #sqrtSigma$res = sqrtSigma$res[1:n, ]
+      AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
+      statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
+      # used to compute chi-squared statistic
+      statimg = statimg %*% sqrtSigma$res
+    }
     }
 
   } else { # voxelwise

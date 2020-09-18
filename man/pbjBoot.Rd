@@ -8,9 +8,6 @@ pbjBoot(
   sqrtSigma,
   rboot,
   bootdim,
-  V,
-  n,
-  df,
   method = c("nonparametric", "t", "conditional", "permutation"),
   voxelwise = FALSE,
   HC3 = TRUE,
@@ -24,12 +21,6 @@ pbjBoot(
 \item{rboot}{a function that draws a bootstrapped sample. Can be an n vector, V by n matrix.}
 
 \item{bootdim}{Dimension of rboot output}
-
-\item{V}{Number of voxels in analysis.}
-
-\item{n}{Number of subjects.}
-
-\item{df}{Numerator degrees of freedom.}
 
 \item{method}{Method to use for resampling.}
 

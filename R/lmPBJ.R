@@ -162,6 +162,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       sigmas = sqrt(colSums(res^2)/rdf)
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
+      assign('YlmPBJ', Y, envir = .GlobalEnv)
       AsqrtInv = matrix(apply(X1res, 3, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }),   nrow=df^2, ncol=V)
       sqrtSigma = simplify2array( lapply(1:V, function(ind) crossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), matrix(X1res[,,ind], df, n, byrow=TRUE)) ) )
       # used to compute chi-squared statistic
@@ -192,7 +193,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
   } else {
 
     message('Running weighted linear models.')
-    QR = qr(X * W)# cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
+    QR = qr(X * W)
     coef = qr.coef(QR, Y)[peind,,drop=FALSE]
     res=qr.resid(QR, Y);
 
@@ -210,14 +211,20 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       sigmas = sqrt(colSums(res^2)/rdf)
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
+      assign('YlmPBJ', Y, envir = .GlobalEnv)
       AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
       sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
       # used to compute chi-squared statistic
       normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X)
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X, n=n, df=df, rdf=rdf)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
+      # standardize residuals and Y
+      sigmas = sqrt(colSums(res^2)/rdf)
+      res = sweep(res, 2, sigmas, FUN = '/')
+      Y = sweep(Y, 2, sigmas, FUN = '/')
+      assign('YlmPBJ', Y, envir = .GlobalEnv)
       # first part of normedCoef
       normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), STATS = X1res, FUN = '*'), dims=1)
       if(HC3){
@@ -229,10 +236,12 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       }
       # apply across voxels. returns V X m_1^2 array
       BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }), nrow=df^2, ncol=V)
+      assign('BsqrtInvlmPBJ', BsqrtInv, envir = .GlobalEnv)
       # second part of normedCoef
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
+      assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
       # Things needed to resample the robust statistics
-      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X)
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X, n=n, df=df, rdf=rdf)
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }
