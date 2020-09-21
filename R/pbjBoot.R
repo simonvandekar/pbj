@@ -100,7 +100,9 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
       statimg = statimg %*% sqrtSigma$res
     } else if(method=='permutation'){
       sqrtSigma$res = sqrtSigma$res[sample(n), ]
-      #sqrtSigma$res = sqrtSigma$res[1:n, ]
+      # added in. Don't think I need these two lines
+      sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/rdf)
+      sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
       AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
       statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
       # used to compute chi-squared statistic
