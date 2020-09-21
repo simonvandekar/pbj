@@ -12,7 +12,7 @@
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=TRUE, randomX=FALSE, robust=TRUE){
+pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=TRUE, randomX=FALSE, robust=TRUE, transform=c('none', 't')){
   method = tolower(method[1])
   eps=0.001
   V = ncol(sqrtSigma$res)
@@ -123,5 +123,9 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
       stop('Voxelwise robust bootstrap not supported yet.')
     }
   }
+  statimg = switch(tolower(transform[1]),
+                      none=statimg,
+                      t={ qnorm(pt(statimg, df=rdf ) )}
+                   )
   statimg = colSums(statimg^2)
 }

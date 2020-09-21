@@ -26,6 +26,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), rand
   rdf = statMap$sqrtSigma$rdf
   robust = statMap$robust
   HC3 = statMap$HC3
+  transform = statMap$transform
   stat = rawstat
   method = tolower(method[1])
   obsstat = statistic(stat, ...)
@@ -60,7 +61,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), rand
   tmp = mask
   if(nboot>0){
   for(i in 1:nboot){
-    statimg = pbjBoot(sqrtSigma, rboot, bootdim, randomX=randomX, robust=robust, method = method, HC3=HC3)
+    statimg = pbjBoot(sqrtSigma, rboot, bootdim, randomX=randomX, robust=robust, method = method, HC3=HC3, transform=transform)
     tmp[ mask!=0] = statimg
     boots[[i]] = statistic(tmp, ...)
     setTxtProgressBar(pb, round(i/nboot,2))
