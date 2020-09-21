@@ -44,6 +44,8 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
         if(method=='t'){#is.list(sqrtSigma)){ sqrtSigma should be a list here
         if( length(bootdim)==0 ){ # dimension of bootstrap must be a vector of length n
           sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n), '*')
+          sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/(n-1))
+          sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
           if(randomX){
             sqrtSigma$X1res = sweep(sqrtSigma$X1res, 1, rboot(n), '*')
           }
@@ -57,7 +59,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
         samp = sample(n, replace=TRUE)
         sqrtSigma$res = sqrtSigma$res[samp,]
         sqrtSigma$X1res = sqrtSigma$X1res[samp,]
-        sqrtSigma$X = sqrtSigma$X1res[samp,]
+        sqrtSigma$X = sqrtSigma$X[samp,]
         sqrtSigma$QR = qr(sqrtSigma$X)
       }
         #else if(method=='robustpermutation'){
