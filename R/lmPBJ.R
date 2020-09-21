@@ -49,7 +49,7 @@
 #' @importFrom parallel mclapply
 #' @importFrom PDQutils papx_edgeworth
 #' @export
-lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none', 'edgeworth', 'f'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('none', 't', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -217,7 +217,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # used to compute chi-squared statistic
       normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X, n=n, df=df, rdf=rdf)
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR, XW=X*W, n=n, df=df, rdf=rdf, W=W)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
       # standardize residuals and Y
@@ -241,7 +241,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
       assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
       # Things needed to resample the robust statistics
-      sqrtSigma = list(res=res, X1res=X1res, QR=QR, X=X, n=n, df=df, rdf=rdf)
+      sqrtSigma = list(res=res, X1res=X1res, QR=QR, XW=X*W, n=n, df=df, rdf=rdf)
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }

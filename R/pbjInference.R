@@ -1,7 +1,7 @@
 #' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Inference
 #'
 #' @param statMap statMap object as obtained from computeStats.
-#' @param statistic A user specified function that takes a RNift image object and computes a particular statistic of interest.
+#' @param statistic A user specified function that takes a RNifti image object and computes a particular statistic of interest.
 #' @param randomX logical, bootstrap samples of X as well?
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. See examples.
