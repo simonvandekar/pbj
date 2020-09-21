@@ -89,7 +89,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
       # standardize each voxel and normalized statistic
       #statimg = t(apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) }))
       sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n), '*')
-      sigmas = apply(sqrtSigma$res, 2, sd)#sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/rdf)
+      sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/rdf)
       sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
       AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
       statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
