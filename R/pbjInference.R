@@ -2,7 +2,6 @@
 #'
 #' @param statMap statMap object as obtained from computeStats.
 #' @param statistic A user specified function that takes a RNifti image object and computes a particular statistic of interest.
-#' @param randomX logical, bootstrap samples of X as well?
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. See examples.
 #' @param method character method to use for bootstrap procedure.
@@ -13,7 +12,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), randomX=FALSE, nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation'), ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation'), ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 
@@ -61,7 +60,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), rand
   tmp = mask
   if(nboot>0){
   for(i in 1:nboot){
-    statimg = pbjBoot(sqrtSigma, rboot, bootdim, randomX=randomX, robust=robust, method = method, HC3=HC3, transform=transform)
+    statimg = pbjBoot(sqrtSigma, rboot, bootdim, robust=robust, method = method, HC3=HC3, transform=transform)
     tmp[ mask!=0] = statimg
     boots[[i]] = statistic(tmp, ...)
     setTxtProgressBar(pb, round(i/nboot,2))

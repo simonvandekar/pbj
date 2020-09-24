@@ -13,7 +13,7 @@
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=TRUE, randomX=FALSE, robust=TRUE, transform=c('none', 't')){
+pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'conditional', 'permutation'), voxelwise=FALSE, HC3=TRUE, robust=TRUE, transform=c('none', 't')){
   method = tolower(method[1])
   eps=0.001
   V = ncol(sqrtSigma$res)
@@ -25,7 +25,6 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
     if(HC3){
       h=rowSums(qr.Q(sqrtSigma$QR)^2); h = ifelse(h>=1, 1-eps, h)
       #h=rowSums(qr.Q(qr(sqrtSigma$X))^2); h = ifelse(h>=1, 1-eps, h)
-      sqrtSigma$res = sweep(sqrtSigma$res, 1, sqrt(1-h), FUN = '/')
     } else {
       h = rep(0, n)
     }
@@ -36,7 +35,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
         # could be made faster b/c BsqrtInv does not need to be computed in each bootstrap (though it is here)
           BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(sweep(qr.resid(sqrtSigma$QR, sqrtSigma$res), 1, 1-h, '/')), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
                                   function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-        sqrtSigma$res = sweep(sqrtSigma$res, 1, boot, '*')
+        sqrtSigma$res = sweep(sqrtSigma$res, 1, boot/sqrt(1-h), '*')
         statimg = simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE )
         } else {
           stop('Dimension of bootstrap sample is not correct for the method.')
@@ -44,12 +43,9 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
       } else{
         if(method=='t'){#is.list(sqrtSigma)){ sqrtSigma should be a list here
         if( length(bootdim)==0 ){ # dimension of bootstrap must be a vector of length n
-          sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n), '*')
+          sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
           #sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/rdf)
           #sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
-          if(randomX){
-            sqrtSigma$X1res = sweep(sqrtSigma$X1res, 1, rboot(n), '*')
-          }
         } else {
           stop('Dimension of bootstrap sample is not correct for the method.')
         }
@@ -88,7 +84,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
       #statimg = sweep(simplify2array(rep(list(sqrtSigma$res), df)), c(1,3), boot, FUN="*")
       # standardize each voxel and normalized statistic
       #statimg = t(apply(statimg, c(2,3), function(x){ res = sum(x); res/sqrt(sum(x^2) -res^2/(length(x)-1) ) }))
-      sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n), '*')
+      sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
       sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/n)
       sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
       AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
@@ -97,7 +93,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
       statimg = statimg %*% sqrtSigma$res
     } else if(method=='conditional'){
       # use this method if transform = 't'
-      sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n), '*')
+      sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
       AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
       statimg = crossprod(AsqrtInv, matrix(sqrtSigma$X1res, nrow=df, ncol=n, byrow=TRUE))
       statimg = statimg %*% sqrtSigma$res
