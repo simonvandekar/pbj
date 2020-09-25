@@ -79,6 +79,12 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
           sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
         } else if(method=='permutation'){
           sqrtSigma$res = sqrtSigma$res[sample(n), ]
+        } else if (method=='nonparametric'){
+          samp = sample(n, replace=TRUE)
+          sqrtSigma$res = sweep(sqrtSigma$res[samp,], 1, sqrt(1-h[samp]), '/')
+          sqrtSigma$X1res = sqrtSigma$X1res[samp,]
+          sqrtSigma$XW = sqrtSigma$XW[samp,]
+          sqrtSigma$QR = qr(sqrtSigma$XW)
         }
         sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/n)
         sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
