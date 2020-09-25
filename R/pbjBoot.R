@@ -54,7 +54,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
           #sqrtSigma$res = sqrtSigma$res[1:n,]
         } else if (method=='nonparametric'){
           samp = sample(n, replace=TRUE)
-          sqrtSigma$res = sqrtSigma$res[samp,]
+          sqrtSigma$res = sweep(sqrtSigma$res[samp,], 1, sqrt(1-h[samp]), '/')
           sqrtSigma$X1res = sqrtSigma$X1res[samp,]
           sqrtSigma$XW = sqrtSigma$XW[samp,]
           sqrtSigma$QR = qr(sqrtSigma$XW)
