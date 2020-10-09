@@ -11,8 +11,8 @@ pbjBoot(
   method = c("nonparametric", "t", "conditional", "permutation"),
   voxelwise = FALSE,
   HC3 = TRUE,
-  randomX = FALSE,
-  robust = TRUE
+  robust = TRUE,
+  transform = c("none", "t")
 )
 }
 \arguments{
@@ -28,9 +28,11 @@ pbjBoot(
 
 \item{HC3}{logical, was HC3 estimator used?}
 
-\item{randomX}{Generate X in each bootstrap as though it is random as well.}
-
 \item{robust}{Generate robust statistics?}
+
+\item{transform}{Apply a quantile transformation to the test statistics to improve normal approximation.}
+
+\item{randomX}{Generate X in each bootstrap as though it is random as well.}
 }
 \value{
 Returns vector of test statistics computed from the bootstrapped sample.

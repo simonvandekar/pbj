@@ -15,7 +15,7 @@ lmPBJ(
   template = NULL,
   formImages = NULL,
   robust = TRUE,
-  transform = c("t", "none", "edgeworth", "f"),
+  transform = c("none", "t", "edgeworth"),
   outdir = NULL,
   zeros = FALSE,
   HC3 = TRUE,

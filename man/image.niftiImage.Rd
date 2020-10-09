@@ -10,8 +10,8 @@
   thresh = 0,
   index = NULL,
   col = gray(0:64/64),
-  colpos = redyellow(64),
-  colneg = bluecyan(64),
+  colpos = pbj:::redyellow(64),
+  colneg = pbj:::bluecyan(64),
   plane = c("axial", "coronal", "sagittal"),
   xlab = "",
   ylab = "",
@@ -27,7 +27,7 @@
 
 \item{bgimg}{background image to use.}
 
-\item{thresh}{A threshold to apply to the image, defaults to 0}
+\item{thresh}{A lower (an optionally upper length 2 vector) threshold to apply to the image, defaults to 0}
 
 \item{index}{Any selected image planes. defaults to NULL}
 
