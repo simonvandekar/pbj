@@ -56,7 +56,7 @@ Imports:
   utils
 LinkingTo: Rcpp (>= 0.12.18),
   RcppArmadillo
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     lmtest,

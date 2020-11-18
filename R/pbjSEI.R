@@ -16,7 +16,7 @@
 #' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
-#' \item{boots}{The bootstrap values.}.
+#' \item{boots}{The bootstrap values.}
 #' \item{obs}{The size of the observed contiguous clusters.}
 #' @export
 #' @importFrom stats ecdf qchisq rnorm
@@ -77,6 +77,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   for(i in 1:nboot){
     tmp = mask
     boot = rboot(n)
+    bootdim = dim(boot)
     statimg = pbjBoot(sqrtSigma, rboot, bootdim, robust=robust, method = method, HC3=HC3, transform=transform)
       if(debug) statmaps[[i]] = statimg
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
