@@ -23,19 +23,24 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('robust', 't', 'regular'), debug=FALSE){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('robust', 't', 'regular')){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
-
-
+  debug = getOption('pbj.debug', default=FALSE)
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
+  ndims = length(dim(mask))
   rawstat = stat.statMap(statMap)
   template = statMap$template
-  df = statMap$df
-  rdf = statMap$rdf
+  sqrtSigma = statMap$sqrtSigma
+  df = statMap$sqrtSigma$df
+  rdf = statMap$sqrtSigma$rdf
+  n = statMap$sqrtSigma$n
   robust = statMap$robust
-  if(tolower(method[1]) == 'robust' & !robust) method = 't'
+  HC3 = statMap$HC3
+  transform = statMap$transform
+  stat = rawstat
+  method = tolower(method[1])
 
   if(!is.null(cfts.p)){
     es=FALSE
@@ -48,7 +53,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   cftsnominal = cfts
 
   if(es){
-    ts = cfts^2 * rdf + df
+    ts = cfts^2 * n + df
   } else {
     ts = qchisq(cfts, df, lower.tail=FALSE)
   }
@@ -62,17 +67,8 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   clustmaps = lapply(tmp, function(tm, mask) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)}, mask=mask)
   ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
-  sqrtSigma <- if(is.character(statMap$sqrtSigma)) {
-    apply(readNifti(statMap$sqrtSigma), ndims+1, function(x) x[mask!=0])
-  } else {
-    statMap$sqrtSigma
-  }
   rm(statMap)
 
-  dims = dim(sqrtSigma$res)
-  n = dims[1]
-  V=dims[2]
-  if(is.null(rdf)) rdf=n
 
   boots = matrix(NA, nboot, length(cfts))
   if(debug) statmaps = rep(list(NA), nboot)
@@ -81,7 +77,7 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   for(i in 1:nboot){
     tmp = mask
     boot = rboot(n)
-    statimg = pbjBoot(sqrtSigma, boot, V, n, df, method = method)
+    statimg = pbjBoot(sqrtSigma, rboot, bootdim, robust=robust, method = method, HC3=HC3, transform=transform)
       if(debug) statmaps[[i]] = statimg
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       boots[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
