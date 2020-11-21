@@ -30,8 +30,6 @@ default (26 neighbors), but diamond may also be reasonable. argument to mmand::s
 \item{rboot}{Function for generating random variables. See examples.}
 
 \item{method}{character method to use for bootstrap procedure.}
-
-\item{debug}{Returns extra output for statistical debugging.}
 }
 \value{
 Returns a list of length length(cfts)+4. The first four elements contain

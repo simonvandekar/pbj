@@ -43,7 +43,6 @@ Collate:
     'pbjInference.R'
     'pbjSEI.R'
     'resave.R'
-    'residualizeImages.R'
 Imports:
   PDQutils,
   fslr,

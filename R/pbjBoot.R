@@ -3,7 +3,6 @@
 #' @param sqrtSigma list from statmap object
 #' @param rboot a function that draws a bootstrapped sample. Can be an n vector, V by n matrix.
 #' @param bootdim Dimension of rboot output
-#' @param randomX Generate X in each bootstrap as though it is random as well.
 #' @param robust Generate robust statistics?
 #' @param transform Apply a quantile transformation to the test statistics to improve normal approximation.
 #' @param method Method to use for resampling.

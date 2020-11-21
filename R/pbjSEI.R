@@ -9,7 +9,6 @@
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #' @param rboot Function for generating random variables. See examples.
 #' @param method character method to use for bootstrap procedure.
-#' @param debug Returns extra output for statistical debugging.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
