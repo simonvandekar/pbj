@@ -38,11 +38,13 @@ Collate:
     'palm.R'
     'statmap.R'
     'pbj.R'
+    'pbjBoot.R'
     'pbjExSet.R'
+    'pbjInference.R'
     'pbjSEI.R'
     'resave.R'
-    'residualizeImages.R'
 Imports:
+  PDQutils,
   fslr,
   mgcv,
   mmand,
@@ -53,7 +55,7 @@ Imports:
   utils
 LinkingTo: Rcpp (>= 0.12.18),
   RcppArmadillo
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     lmtest,

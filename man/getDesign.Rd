@@ -4,7 +4,7 @@
 \alias{getDesign}
 \title{Gets a Full and Reduced Design Matrices for a Linear Model}
 \usage{
-getDesign(form, formred, data, robust = TRUE, tol = 1e-07)
+getDesign(form, formred, data, tol = 1e-07)
 }
 \arguments{
 \item{form}{A formula or string beginning with ~ that can be interpreted as an lm
@@ -14,8 +14,6 @@ formula without the outcome variable. Alternatively, a design matrix.}
 Put another way, the design matrix for this model should span a subset of the column space of the other model}
 
 \item{data}{A data frame containing the variables specified in form.}
-
-\item{robust}{Are you computing robust statistics?}
 
 \item{tol}{Tolerance for determining the number of linearly independent columns to determine the df of the test.}
 }

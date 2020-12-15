@@ -8,31 +8,38 @@
 #' @param kernel Kernel to use for computing connected components. box is
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #' @param rboot Function for generating random variables. See examples.
-#' @param debug Returns extra output for statistical debugging.
+#' @param method character method to use for bootstrap procedure.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
 #' \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 #' \item{clustermap}{A niftiImage object with the cluster labels.}
 #' \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
-#' \item{CDF}{A bootstrap CDF.}.
-#' #' \item{boots}{The bootstrap values.}.
+#' \item{boots}{The bootstrap values.}
+#' \item{obs}{The size of the observed contiguous clusters.}
 #' @export
 #' @importFrom stats ecdf qchisq rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, debug=FALSE){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('robust', 't', 'regular')){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
-
+  debug = getOption('pbj.debug', default=FALSE)
 
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
+  ndims = length(dim(mask))
   rawstat = stat.statMap(statMap)
   template = statMap$template
-  df = statMap$df
-  rdf = statMap$rdf
+  sqrtSigma = statMap$sqrtSigma
+  df = statMap$sqrtSigma$df
+  rdf = statMap$sqrtSigma$rdf
+  n = statMap$sqrtSigma$n
   robust = statMap$robust
+  HC3 = statMap$HC3
+  transform = statMap$transform
+  stat = rawstat
+  method = tolower(method[1])
 
   if(!is.null(cfts.p)){
     es=FALSE
@@ -44,25 +51,12 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   }
   cftsnominal = cfts
 
-  if(df==0){
-    if(es){
-      ts = cfts^2 * rdf + df
-    } else {
-      cfts = cfts * 2
-      ts = qchisq(cfts, 1, lower.tail=FALSE)
-    }
-    sgnstat = sign(rawstat)
-    stat = rawstat^2
-    df=1; zerodf=TRUE
+  if(es){
+    ts = cfts^2 * n + df
   } else {
-    if(es){
-      ts = cfts^2 * rdf + df
-    } else {
-      ts = qchisq(cfts, df, lower.tail=FALSE)
-    }
-    zerodf=FALSE
-    stat = rawstat
+    ts = qchisq(cfts, df, lower.tail=FALSE)
   }
+  stat = rawstat
   # ts are chi-squared statistic thresholds
 
   tmp = mask
@@ -72,42 +66,18 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   clustmaps = lapply(tmp, function(tm, mask) {out = mmand::components(tm, k); out[is.na(out)] = 0; RNifti::updateNifti(out, mask)}, mask=mask)
   ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
 
-  sqrtSigma <- if(is.character(statMap$sqrtSigma)) {
-    apply(readNifti(statMap$sqrtSigma), ndims+1, function(x) x[mask!=0])
-  } else {
-    statMap$sqrtSigma
-  }
   rm(statMap)
 
-  dims = dim(sqrtSigma)
-  n = dims[2]
-  p=dims[1]
-  ndim = length(dims)
-  if(is.null(rdf)) rdf=n
 
-  if(!robust | df==1){
-    ssqs = sqrt(rowSums(sqrtSigma^2))
-    if( any(ssqs != 1) ) sqrtSigma = sweep(sqrtSigma, 1, ssqs, '/')
-  } else {
-    sqrtSigma = aperm(sqrtSigma, perm=c(2,1,3) )
-  }
-
-  #sqrtSigma <- as.big.matrix(sqrtSigma)
   boots = matrix(NA, nboot, length(cfts))
   if(debug) statmaps = rep(list(NA), nboot)
 
-  # if(.Platform$OS.type=='windows')
-  # {
-    pb = txtProgressBar(style=3, title='Generating null distribution')
-    for(i in 1:nboot)
-    {
-      tmp = mask
-      if(!robust | df==1){
-        S = matrix(rboot(n*df), n, df)
-        statimg = rowSums((sqrtSigma %*% S)^2)
-      } else {
-        statimg = rowSums(colSums(sweep(sqrtSigma, 1, rboot(n), FUN="*"), dims=1 )^2)
-      }
+  pb = txtProgressBar(style=3, title='Generating null distribution')
+  for(i in 1:nboot){
+    tmp = mask
+    boot = rboot(n)
+    bootdim = dim(boot)
+    statimg = pbjBoot(sqrtSigma, rboot, bootdim, robust=robust, method = method, HC3=HC3, transform=transform)
       if(debug) statmaps[[i]] = statimg
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       boots[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
@@ -140,29 +110,17 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
 
   # add the stat max
   ccomps = lapply(ccomps, function(x) if(length(x)==0) 0 else x)
-  Fs = rbind(boots, sapply(ccomps, max)) + 0.01 # plus 0.01 to get bootstrap precision (nonzero) p-values
-  # compute empirical CDFs
-  Fs = apply(Fs, 2, ecdf)
-  pvals = lapply(1:length(cfts), function(ind) 1-Fs[[ind]](ccomps[[ind]]) )
+  pvals = lapply(1:length(cfts), function(ind) colMeans(outer(boots[,ind], ccomps[[ind]], FUN = '>') ) )
   names(pvals) = paste('cft', ts, sep='')
-  if(!zerodf){
     pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
       clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2])
     }
       clustmaps[[ind]]
     } )
-  } else {
-    pmaps = lapply(1:length(ts), function(ind){ for(ind2 in 1:length(pvals[[ind]])){
-      clustmaps[[ind]][ clustmaps[[ind]]==ind2] = -log10(pvals[[ind]][ind2]) * sgnstat[ clustmaps[[ind]]==ind2 ]
-    }
-      clustmaps[[ind]]
-    } )
-  }
   names(pvals) <- names(pmaps) <- names(clustmaps) <- if(es) paste0('cft.s', cftsnominal) else paste0('cft.p', cftsnominal)
-  out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, CDF=Fs, boots=apply(boots, 2, list))
+  out = list(pvalues=pvals, clustermap=clustmaps, pmap=pmaps, boots=apply(boots, 2, list), obs=ccomps)
   # changes indexing order of out
   out = apply(do.call(rbind, out), 2, as.list)
-  if(zerodf) df=0
   out = c(stat=list(rawstat), template=list(template), mask=list(mask), df=list(df), out)
   if(debug) out$boots = statmaps
   class(out) = c('pbj', 'list')
