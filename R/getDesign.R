@@ -16,7 +16,7 @@
 #' @importFrom stats as.formula model.matrix update.formula get_all_vars
 #' @export
 getDesign = function(form, formred, data, tol=1e-7){
-  data=na.omit(get_all_vars(form, data=data))
+  data <- if(form==as.formula('~1')) data else na.omit(get_all_vars(form, data = data))
   if(!is.matrix(form) & !is.matrix(formred)){
     X = model.matrix(as.formula(form), data)
     Xred = if(!is.null(formred)) model.matrix(as.formula(formred), data) else NULL
