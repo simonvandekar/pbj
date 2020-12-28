@@ -85,7 +85,7 @@ pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('nonparametric', 't', 'co
           sqrtSigma$XW = sqrtSigma$XW[samp,]
           sqrtSigma$QR = qr(sqrtSigma$XW)
         }
-        sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/n)
+        sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/(rdf))
         sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
       }
       AsqrtInv = backsolve(r=qr.R(qr(sqrtSigma$X1res)), x=diag(df) )
