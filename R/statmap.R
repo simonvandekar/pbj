@@ -175,28 +175,21 @@ write.statMap <- function(x,outdir)
 {
   statimg  = file.path(outdir, 'stat.nii.gz')
   coefimg   = file.path(outdir, 'coef.nii.gz')
-  resimg   = file.path(outdir, 'sqrtSigma.nii.gz')
+  res   = file.path(outdir, 'sqrtSigma.rds')
   if(is.character(x$stat)){
     file.copy(x$stat, statimg)
-    file.copy(x$sqrtSigma, resimg)
+    file.copy(x$sqrtSigma, res)
     file.copy(x$coef, coefimg)
   } else {
-    cat('Writing output images.\n')
+    message('Writing output images.\n')
     dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
     writeNifti(stat.statMap(x), statimg)
     writeNifti(coef.statMap(x), coefimg)
 
-    cat('Writing sqrtSigma 4d image.\n')
-    # reshape res matrix into 4d image
-    # memory intensive
-    # overwriting res
-    x$sqrtSigma = lapply(1:ncol(x$sqrtSigma), function(ind){ x$mask[ x$mask!=0] = x$sqrtSigma[,ind]; x$mask} )
-    # combine into 4d array
-    x$sqrtSigma = simplify2array(x$sqrtSigma)
-    writeNifti(updateNifti(x$sqrtSigma, x$mask), resimg)
-    res = resimg
+    message('Writing sqrtSigma object.\n')
+    saveRDS(x$sqrtSigma, file = res)
   }
-  return(list(stat=statimg, coef=coefimg, sqrtSigma=resimg))
+  return(list(stat=statimg, coef=coefimg, sqrtSigma=res))
 }
 
 #' Gets a 4D niftiImage of the coefficient image from a statMap object
@@ -241,6 +234,6 @@ var.statMap = function(x){
     stop('Only supported for df<1.')
   # get niftiImage from mask
   varimg = x$mask
-  varimg[ varimg!=0] = rowSums(x$sqrtSigma^2)/x$rdf
+  varimg[ varimg!=0] = rowSums(x$sqrtSigma$res^2)/x$sqrtSigma$rdf
   return(varimg)
 }

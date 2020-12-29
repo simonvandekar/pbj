@@ -33,15 +33,12 @@
 #' @keywords parametric bootstrap, statistical parametric map, semiparametric bootstrap
 #' @return Returns a list with the following values:
 #' \describe{
-#'   \item{stat}{The statistical values where mask!=0. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
+#'   \item{stat}{The statistical values where mask!=0. It is a chi^2-statistic map.}
 #'   \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
-#'   \item{sqrtSigma}{The covariance object. This is a V by n by df matrix used for sampling from the statistical images joint distribution.}
+#'   \item{sqrtSigma}{The covariance object used to sample from the joint distribution of the statistical image.}
 #'   \item{mask}{The input mask.}
 #'   \item{template}{The background template used for visualization.}
 #'   \item{formulas}{A list containing the full and reduced models.}
-#'   \item{robust}{A logical indicating the input setting.}
-#'   \item{df}{The numerator degrees of freedom of the test.}
-#'   \item{rdf}{The numerator degrees of freedom of the test.}
 #' }
 #' stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
@@ -146,14 +143,9 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
     qrs = apply(W, 2, function(Wcol) qr(X * Wcol))# cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
     coef = simplify2array(  lapply(1:V, function(ind) qr.coef(qrs[[ind]], Y[,ind])[peind]) )
 
-    if(!is.null(Xred)){
-      X1res = simplify2array(lapply(1:V, function(ind) matrix(qr.resid(qr(Xred * W[,ind]), X1 * W[,ind]), nrow=n, ncol=df) ) )
-    } else if(is.null(Xred) & df==1) {
-      # X1 is the intercept, Xred doesn't exist nXm_1xV
-      X1res = as.array(t(W) * X1, dim=c(nrow(W), 1, ncol(W) ))
-    } else {
-      stop('Degrees of freedom>1, but Xred is NULL.')
-    }
+    # Changed this, Xred will never be NULL now
+    X1res = simplify2array(lapply(1:V, function(ind) matrix(qr.resid(qr(Xred * W[,ind]), X1 * W[,ind]), nrow=n, ncol=df) ) )
+
 
     if(!robust){
       res = Y
@@ -198,14 +190,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
     coef = qr.coef(QR, Y)[peind,,drop=FALSE]
     res=qr.resid(QR, Y);
 
-    if(!is.null(Xred)){
-      X1res = qr.resid(qr(Xred * W), X1 * W)
-    } else if(is.null(Xred) & df==1) {
-      # X1 is the intercept, Xred doesn't exist nXm_1xV
-      X1res = as.matrix(X1 * W)
-    } else {
-      stop('Degrees of freedom>1, but Xred is NULL.')
-    }
+    X1res = qr.resid(qr(Xred * W), X1 * W)
 
     if(!robust){
       # standardize residuals and Y
@@ -218,7 +203,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # used to compute chi-squared statistic
       normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
       # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, Y=Y)
+      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
       # standardize residuals and Y
@@ -242,7 +227,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
       #assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
       # Things needed to resample the robust statistics
-      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf)
+      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }
@@ -258,7 +243,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
 
 
   # used later to indicated t-statistic
-  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf, HC3=HC3, transform=transform)
+  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, formulas=list(full=form, reduced=formred))
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir

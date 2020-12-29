@@ -53,7 +53,7 @@ simFunc = function(lmfull, lmred, mask, data, nboot, cfts){
   statmaps = c('tRobustStatmap')
   out = list()
   # doesn't matter which statmap we use here
-  thrs = (cfts^2*tRobustStatmap$rdf) + tRobustStatmap$df
+  thrs = (cfts^2*tRobustStatmap$sqrtSigma$rdf) + tRobustStatmap$sqrtSigma$df
   # Apply each of the sampling methods
   for(statmapname in statmaps){
 

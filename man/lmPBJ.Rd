@@ -68,15 +68,12 @@ coverage or they may represent locations where the data took the value zero.}
 \value{
 Returns a list with the following values:
 \describe{
-  \item{stat}{The statistical values where mask!=0. If ncol(X) = ncol(Xred)+1, then this is a Z-statistic map, otherwise it is a chi^2-statistic map.}
+  \item{stat}{The statistical values where mask!=0. It is a chi^2-statistic map.}
   \item{coef}{A 4d niftiImage giving the parameter estimates for covariates only in the full model.}
-  \item{sqrtSigma}{The covariance object. This is a V by n by df matrix used for sampling from the statistical images joint distribution.}
+  \item{sqrtSigma}{The covariance object used to sample from the joint distribution of the statistical image.}
   \item{mask}{The input mask.}
   \item{template}{The background template used for visualization.}
   \item{formulas}{A list containing the full and reduced models.}
-  \item{robust}{A logical indicating the input setting.}
-  \item{df}{The numerator degrees of freedom of the test.}
-  \item{rdf}{The numerator degrees of freedom of the test.}
 }
 stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf
 }

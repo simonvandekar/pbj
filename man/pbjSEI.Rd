@@ -29,11 +29,7 @@ default (26 neighbors), but diamond may also be reasonable. argument to mmand::s
 
 \item{rboot}{Function for generating random variables. See examples.}
 
-<<<<<<< HEAD
-\item{debug}{Returns extra output for statistical debugging.}
-=======
 \item{method}{character method to use for bootstrap procedure.}
->>>>>>> ftest
 }
 \value{
 Returns a list of length length(cfts)+4. The first four elements contain
@@ -41,13 +37,8 @@ statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elem
 \item{pvalues}{A vector of p-values corresponding to the cluster labels in clustermaps.}
 \item{clustermap}{A niftiImage object with the cluster labels.}
 \item{pmap}{A nifti object with each cluster assigned the negative log10 of its cluster extent FWE adjusted p-value.}
-<<<<<<< HEAD
-\item{CDF}{A bootstrap CDF.}.
-#' \item{boots}{The bootstrap values.}.
-=======
 \item{boots}{The bootstrap values.}
 \item{obs}{The size of the observed contiguous clusters.}
->>>>>>> ftest
 }
 \description{
 Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Spatial Extent Inference
