@@ -11,7 +11,7 @@ pbjSEI(
   nboot = 5000,
   kernel = "box",
   rboot = stats::rnorm,
-  method = c("robust", "t", "regular")
+  method = c("nonparametric", "t", "conditional", "permutation")
 )
 }
 \arguments{

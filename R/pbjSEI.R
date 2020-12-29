@@ -22,23 +22,22 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('robust', 't', 'regular')){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation')){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
   debug = getOption('pbj.debug', default=FALSE)
 
+  sqrtSigma <- statMap$sqrtSigma
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   ndims = length(dim(mask))
-  rawstat = stat.statMap(statMap)
+  stat = rawstat = stat.statMap(statMap)
   template = statMap$template
-  sqrtSigma = statMap$sqrtSigma
-  df = statMap$sqrtSigma$df
-  rdf = statMap$sqrtSigma$rdf
-  n = statMap$sqrtSigma$n
-  robust = statMap$robust
-  HC3 = statMap$HC3
-  transform = statMap$transform
-  stat = rawstat
+  df = sqrtSigma$df
+  rdf = sqrtSigma$rdf
+  n = sqrtSigma$n
+  robust = sqrtSigma$robust
+  HC3 = sqrtSigma$HC3
+  transform = sqrtSigma$transform
   method = tolower(method[1])
 
   if(!is.null(cfts.p)){
@@ -56,7 +55,6 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   } else {
     ts = qchisq(cfts, df, lower.tail=FALSE)
   }
-  stat = rawstat
   # ts are chi-squared statistic thresholds
 
   tmp = mask

@@ -191,3 +191,4 @@ statmap <- lmPBJ(pain$data$images, form = ~ x + I(x^2) + I(x^3),
 pbjtest = pbjInference(statmap, nboot = 5, method='t')
 pbjtest = pbjInference(statmap, nboot = 5, method='permutation')
 pbjtest = pbjInference(statmap, nboot = 5, method='conditional')
+pbjtest = pbjSEI(statmap, nboot = 5, method='t')
