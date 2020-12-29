@@ -183,10 +183,10 @@ test_that("Output from PBJ with df=1 and scalar weights matches output from lm."
 
 
 # check for errors in pbjSEI
-statmap <- lmPBJ(pain$data$images, form = ~ x + I(x^2) + I(x^3),
-                 formred = ~ x, mask = mask,
+statmap <- lmPBJ(pain$data$images, form = ~ 1,
+                 formred = NULL, mask = mask,
                  template=pain$template, data = pain$data,
-                 Winv = pain$data$Winv, zeros=TRUE, transform='t')
+                 Winv = pain$data$Winv, zeros=TRUE, transform='none', outdir = '~/Downloads/')
 #pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25), debug=TRUE)
 pbjtest = pbjInference(statmap, nboot = 5, method='t')
 pbjtest = pbjInference(statmap, nboot = 5, method='permutation')

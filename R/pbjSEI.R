@@ -27,7 +27,8 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
     warning('Class of first argument is not \'statMap\'.')
   debug = getOption('pbj.debug', default=FALSE)
 
-  sqrtSigma <- statMap$sqrtSigma
+  sqrtSigma = statMap$sqrtSigma
+  sqrtSigma <- if(is.character(sqrtSigma)) readRDS(sqrtSigma) else sqrtSigma
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   ndims = length(dim(mask))
   stat = rawstat = stat.statMap(statMap)
