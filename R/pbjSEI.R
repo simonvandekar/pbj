@@ -9,6 +9,8 @@
 #'  default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel
 #' @param rboot Function for generating random variables. See examples.
 #' @param method character method to use for bootstrap procedure.
+#' @param progress Control how progress is reported
+#' @param progress.file A character string naming a file or a connection for writing progress. ‘""’ indicates output to stderr.
 #'
 #' @return Returns a list of length length(cfts)+4. The first four elements contain
 #' statMap$stat, statMap$template, statMap$mask, and statMap$df. The remaining elements are lists containing the following:
@@ -22,7 +24,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti writeNifti updateNifti
 #' @importFrom mmand shapeKernel
-pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation')){
+pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel='box', rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation'), progress=c('bar', 'json', 'none'), progress.file=""){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
   debug = getOption('pbj.debug', default=FALSE)
@@ -40,6 +42,20 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   HC3 = sqrtSigma$HC3
   transform = sqrtSigma$transform
   method = tolower(method[1])
+  progress = match.arg(progress)
+
+  if (progress.file == "") {
+    progress.file <- stderr()
+  } else if (is.character(progress.file)) {
+    progress.file <- file(progress.file, "w+")
+    on.exit(close(progress.file), add=TRUE)
+  } else if (!isOpen(progress.file, "w")) {
+    open(progress.file, "w+")
+    on.exit(close(progress.file), add=TRUE)
+  }
+  if (!inherits(progress.file, "connection")) {
+    stop("'progress.file' must be a character string or connection")
+  }
 
   if(!is.null(cfts.p)){
     es=FALSE
@@ -71,7 +87,22 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
   boots = matrix(NA, nboot, length(cfts))
   if(debug) statmaps = rep(list(NA), nboot)
 
-  pb = txtProgressBar(style=3, title='Generating null distribution')
+  progress.cb = NULL
+  if (progress == 'bar') {
+    pb = txtProgressBar(style=3, title='Generating null distribution', file=progress.file)
+    on.exit(close(pb), add=TRUE, after=FALSE)
+    progress.cb = function(i) {
+      setTxtProgressBar(pb, round(i/nboot,2))
+    }
+  } else if (progress == 'json') {
+    progress.cb = function(i) {
+      if (inherits(progress.file, "file")) {
+        seek(progress.file, where = 0)
+      }
+      cat('{"n":', i, ',"total":', nboot, '}\n', sep = "", file = progress.file)
+    }
+    progress.cb(0)
+  }
   for(i in 1:nboot){
     tmp = mask
     boot = rboot(n)
@@ -80,9 +111,10 @@ pbjSEI = function(statMap, cfts.s=c(0.1, 0.25), cfts.p=NULL, nboot=5000, kernel=
       if(debug) statmaps[[i]] = statimg
       tmp = lapply(ts, function(th){ tmp[ mask!=0] = (statimg>th); tmp})
       boots[i, ] = sapply(tmp, function(tm) max(c(table(c(mmand::components(tm, k))),0), na.rm=TRUE))
-      setTxtProgressBar(pb, round(i/nboot,2))
+      if (!is.null(progress.cb)) {
+        progress.cb(i)
+      }
     }
-    close(pb)
   # } else { # Support for Shared memory
   #
   #   cat('Generating null distribution in parallel.\n')
