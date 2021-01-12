@@ -11,7 +11,9 @@ pbjSEI(
   nboot = 5000,
   kernel = "box",
   rboot = stats::rnorm,
-  method = c("nonparametric", "t", "conditional", "permutation")
+  method = c("nonparametric", "t", "conditional", "permutation"),
+  progress = c("bar", "json", "none"),
+  progress.file = ""
 )
 }
 \arguments{
@@ -30,6 +32,10 @@ default (26 neighbors), but diamond may also be reasonable. argument to mmand::s
 \item{rboot}{Function for generating random variables. See examples.}
 
 \item{method}{character method to use for bootstrap procedure.}
+
+\item{progress}{Control how progress is reported}
+
+\item{progress.file}{A character string naming a file or a connection for writing progress. ‘""’ indicates output to stderr.}
 }
 \value{
 Returns a list of length length(cfts)+4. The first four elements contain
