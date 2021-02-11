@@ -8,7 +8,7 @@ pbjBoot(
   sqrtSigma,
   rboot,
   bootdim,
-  method = c("nonparametric", "t", "conditional", "permutation"),
+  method = c("t", "independence", "permutation", "conditional", "nonparametric"),
   voxelwise = FALSE,
   HC3 = TRUE,
   robust = TRUE,
