@@ -3,7 +3,7 @@
 #' @param statMap statMap object as obtained from computeStats.
 #' @param statistic A user specified function that takes a RNifti image object and computes a particular statistic of interest.
 #' @param nboot Number of bootstrap samples to use.
-#' @param rboot Function for generating random variables. See examples.
+#' @param rboot Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.
 #' @param method character method to use for bootstrap procedure.
 #' @param ... arguments passed to statistic function.
 #'
@@ -12,7 +12,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=stats::rnorm, method=c('nonparametric', 't', 'conditional', 'permutation'), ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('nonparametric', 't', 'conditional', 'permutation'), ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
 

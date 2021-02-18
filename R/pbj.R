@@ -154,17 +154,25 @@ vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(s
 #' @param stat A statistical Nifti image as an RNifti image object.
 #' @param mask A statistical Nifti image mask.
 #' @param thr Vector of thresholds to threshold the test statistic image.
+#' @param method character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.
 #' @param kernel The kernel type to compute connected components.
 #' @return Returns list of tables of sizes of the connected components above thr.
 #' @export
 #' @importFrom mmand shapeKernel
 #'
-cluster = function(stat, mask, thr, kernel='box'){
+cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box'){
+  method = tolower(method[1])
   ndims = length(dim(mask))
   tmp = mask
-  tmp = lapply(thr, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
   k = mmand::shapeKernel(ndims, ndims, type=kernel)
-  ccomps = lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
+  tmp = lapply(thr, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
+  ccomps = switch(method,
+         'extent'={
+           lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
+         },
+         'mass'={
+           lapply(tmp, function(tm) c(by(c(stat), c(mmand::components(tm, k)), mean) ))
+         })
   names(ccomps) = paste0('cft', thr)
   return(ccomps)
 }

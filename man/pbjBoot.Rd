@@ -6,7 +6,7 @@
 \usage{
 pbjBoot(
   sqrtSigma,
-  rboot,
+  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   bootdim,
   method = c("t", "independence", "permutation", "conditional", "nonparametric"),
   voxelwise = FALSE,
@@ -18,7 +18,7 @@ pbjBoot(
 \arguments{
 \item{sqrtSigma}{list from statmap object}
 
-\item{rboot}{a function that draws a bootstrapped sample. Can be an n vector, V by n matrix.}
+\item{rboot}{a function that draws a bootstrapped sample. Should return an n vector. Defaults to Rademacher random variable.}
 
 \item{bootdim}{Dimension of rboot output}
 

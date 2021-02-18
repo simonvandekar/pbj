@@ -10,7 +10,7 @@ pbjSEI(
   cfts.p = NULL,
   nboot = 5000,
   kernel = "box",
-  rboot = stats::rnorm,
+  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = c("nonparametric", "t", "conditional", "permutation"),
   progress = c("bar", "json", "none"),
   progress.file = ""
@@ -29,7 +29,7 @@ with other imaging software these thresholds are one tailed (e.g. p<0.01 imples 
 \item{kernel}{Kernel to use for computing connected components. box is
 default (26 neighbors), but diamond may also be reasonable. argument to mmand::shapeKernel}
 
-\item{rboot}{Function for generating random variables. See examples.}
+\item{rboot}{Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.}
 
 \item{method}{character method to use for bootstrap procedure.}
 

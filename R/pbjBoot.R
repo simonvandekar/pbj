@@ -1,7 +1,7 @@
 #' Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Inference
 #'
 #' @param sqrtSigma list from statmap object
-#' @param rboot a function that draws a bootstrapped sample. Can be an n vector, V by n matrix.
+#' @param rboot a function that draws a bootstrapped sample. Should return an n vector. Defaults to Rademacher random variable.
 #' @param bootdim Dimension of rboot output
 #' @param robust Generate robust statistics?
 #' @param transform Apply a quantile transformation to the test statistics to improve normal approximation.
@@ -12,7 +12,7 @@
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
 #
-pbjBoot = function(sqrtSigma, rboot, bootdim, method=c('t', 'independence', 'permutation', 'conditional', 'nonparametric'), voxelwise=FALSE, HC3=TRUE, robust=TRUE, transform=c('none', 't')){
+pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, bootdim, method=c('t', 'independence', 'permutation', 'conditional', 'nonparametric'), voxelwise=FALSE, HC3=TRUE, robust=TRUE, transform=c('none', 't')){
   method = tolower(method[1])
   eps=0.001
   V = ncol(sqrtSigma$res)

@@ -4,7 +4,7 @@
 \alias{cluster}
 \title{Computes contiguous clusters from a statistical image given a threshold}
 \usage{
-cluster(stat, mask, thr, kernel = "box")
+cluster(stat, mask, thr, method = c("extent", "mass"), kernel = "box")
 }
 \arguments{
 \item{stat}{A statistical Nifti image as an RNifti image object.}
@@ -12,6 +12,8 @@ cluster(stat, mask, thr, kernel = "box")
 \item{mask}{A statistical Nifti image mask.}
 
 \item{thr}{Vector of thresholds to threshold the test statistic image.}
+
+\item{method}{character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.}
 
 \item{kernel}{The kernel type to compute connected components.}
 }

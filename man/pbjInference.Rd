@@ -8,7 +8,7 @@ pbjInference(
   statMap,
   statistic = function(image) max(c(image)),
   nboot = 5000,
-  rboot = stats::rnorm,
+  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = c("nonparametric", "t", "conditional", "permutation"),
   ...
 )
@@ -20,7 +20,7 @@ pbjInference(
 
 \item{nboot}{Number of bootstrap samples to use.}
 
-\item{rboot}{Function for generating random variables. See examples.}
+\item{rboot}{Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.}
 
 \item{method}{character method to use for bootstrap procedure.}
 
