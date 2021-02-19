@@ -173,6 +173,6 @@ cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box'){
          'mass'={
            lapply(tmp, function(tm) c(by(c(stat), c(mmand::components(tm, k)), mean) ))
          })
-  names(ccomps) = paste0('cft', thr)
+  names(ccomps) = paste0(method, '_cft', thr)
   return(ccomps)
 }
