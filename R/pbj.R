@@ -164,7 +164,7 @@ cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box'){
   method = tolower(method[1])
   ndims = length(dim(mask))
   tmp = mask
-  k = mmand::shapeKernel(ndims, ndims, type=kernel)
+  k = mmand::shapeKernel(3, ndims, type=kernel)
   tmp = lapply(thr, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
   ccomps = switch(method,
          'extent'={
@@ -175,4 +175,20 @@ cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box'){
          })
   names(ccomps) = paste0(method, '_cft', thr)
   return(ccomps)
+}
+
+#' Computes local maxima from an nifti image
+#'
+#' @param stat A statistical Nifti image as an RNifti image object.
+#' @param kernel Type of kernel to use for max/dilation filter
+#' @param width Width of kernel (assumes isotropic)
+#' @return Returns list of tables of sizes of the connected components above thr.
+#' @export
+#' @importFrom mmand shapeKernel
+#'
+maxima = function(stat, kernel='box', width=7){
+  ndims = length(dim(stat))
+  dil = dilate(stat, shapeKernel(width, ndims, type=kernel))
+  stat[which(stat<dil)] = 0
+  stat[ stat!=0]
 }
