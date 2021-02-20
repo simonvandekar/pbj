@@ -38,10 +38,10 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
       } else if(method=='independence'){
         # n x df array
         boot = replicate(df, rboot(n))
-        # Divide by 1-h for debiased residuals. result is n x V x df array
-        statimg = sweep(simplify2array(rep(list(sweep(sqrtSigma$res, 1, 1-h, '/')), df), higher = TRUE), c(1,3), sqrtSigma$X1res * boot, '*')
+        # Divide by sqrt(1-h) for debiased residuals. result is n x V x df array
+        statimg = sweep(simplify2array(rep(list(sweep(sqrtSigma$res, 1, sqrt(1-h), '/')), df), higher = TRUE), c(1,3), sqrtSigma$X1res * boot, '*')
         # scale to unit variance and compute standardized parameter estimates.
-        statimg = matrix(colMeans(sweep(statimg, 2:3,apply(statimg, c(2,3), sd)/sqrt(n-1), FUN ="/"), dims = 1), nrow=df, ncol=V)
+        statimg = matrix(colMeans(sweep(statimg, 2:3, apply(statimg, c(2,3), sd), FUN ="/"), dims = 1)*sqrt(n), nrow=df, ncol=V)
       } else{
         if(method=='t'){#is.list(sqrtSigma)){ sqrtSigma should be a list here
           sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
