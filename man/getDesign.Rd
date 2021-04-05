@@ -18,7 +18,7 @@ Put another way, the design matrix for this model should span a subset of the co
 \item{tol}{Tolerance for determining the number of linearly independent columns to determine the df of the test.}
 }
 \value{
-Returns design matrices for the full and reduced model and the df for the comparison between the two.
+Returns design matrices for the full and reduced model, the df for the comparison between the two, and a vector indicating rows with no missing data.
 }
 \description{
 This function gets full and reduced design matrix for a linear model as well as the degrees of freedom for the comparison.

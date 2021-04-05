@@ -54,7 +54,12 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
   X = getDesign(form, formred, data=data)
   Xred = X[['Xred']]
   df = X[['df']]
+  images = images[X[['nas']] ]
   X = X[['X']]
+  if(nrow(X) < nrow(data)){
+    message(nrow(data)-nrow(X), ' observations deleted due to missingness.')
+  }
+
 
   if(class(images)[1] != 'niftiImage'){
     n=length(images)

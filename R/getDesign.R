@@ -8,7 +8,7 @@
 #' @param data A data frame containing the variables specified in form.
 #' @param tol Tolerance for determining the number of linearly independent columns to determine the df of the test.
 #' @keywords design matrix
-#' @return Returns design matrices for the full and reduced model and the df for the comparison between the two.
+#' @return Returns design matrices for the full and reduced model, the df for the comparison between the two, and a vector indicating rows with no missing data.
 #' @details If robust=TRUE, then the number of parameters being tested has to
 #' be equal to the df of the test, if not, then the covariance matrix of the parameters will be noninvertible.
 #' If robust=TRUE, then the design is rotated to a df lower dimensional space. This problem happens when
@@ -16,7 +16,13 @@
 #' @importFrom stats as.formula model.matrix update.formula get_all_vars
 #' @export
 getDesign = function(form, formred, data, tol=1e-7){
-  data <- if(form==as.formula('~1')) data else na.omit(get_all_vars(form, data = data))
+  if(form!=as.formula('~1')){
+    data = get_all_vars(form, data = data)
+    nas = apply(!is.na(data), 1, all)
+    data = data[nas,,drop=FALSE]
+  } else {
+    nas = rep(TRUE, nrow(data))
+  }
   if(!is.matrix(form) & !is.matrix(formred)){
     X = model.matrix(as.formula(form), data)
     Xred = if(!is.null(formred)) model.matrix(as.formula(formred), data) else matrix(0, nrow=nrow(X))
@@ -39,5 +45,5 @@ getDesign = function(form, formred, data, tol=1e-7){
       colnames(X1) = paste0('u', 1:df)
       X = cbind(Xred, X1)
   }
-  return(list(X=X, Xred=Xred, df=df))
+  return(list(X=X, Xred=Xred, df=df, nas=nas))
 }
