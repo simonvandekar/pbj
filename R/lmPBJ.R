@@ -248,7 +248,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
 
 
   # used later to indicated t-statistic
-  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, formulas=list(full=form, reduced=formred))
+  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, images=images, formulas=list(full=form, reduced=formred))
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir
