@@ -60,10 +60,23 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
   rm(sqrtSigma) # Free large big memory matrix object
 
   out=switch(runMode,
-             cdf={Cs = sapply(boots, length)
-             margCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
-             globCDF = ecdf(sapply(boots, max))
-             list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)},
+             cdf={
+               if(is.list(boots[[1]])){
+                 # reorders list
+                 boots = apply(do.call(rbind, boots), 2, as.list)
+                 margCDF = lapply(boots, function(boot){
+                   Cs = sapply(boot, length)
+                   wecdf(unlist(boot), rep(1/Cs, Cs) )
+                 } )
+                 globCDF = lapply(boots, function(boot){
+                   ecdf(sapply(boot, max))
+                 } )
+               } else {
+                 Cs = sapply(boots, length)
+                 margCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
+                 globCDF = ecdf(sapply(boots, max))
+                 list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)}
+             },
              bootstrap=list(obsStat=obsstat, boots=boots) )
   return(out)
 }
