@@ -10,6 +10,7 @@ pbjInference(
   nboot = 5000,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = c("nonparametric", "t", "conditional", "permutation"),
+  runMode = c("bootstrap", "cdf"),
   ...
 )
 }
@@ -22,12 +23,14 @@ pbjInference(
 
 \item{rboot}{Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.}
 
-\item{method}{character method to use for bootstrap procedure.}
+\item{method}{character, method to use for bootstrap procedure.}
+
+\item{runMode}{character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.}
 
 \item{...}{arguments passed to statistic function.}
 }
 \value{
-Returns a list of length 2. The first element is the observed statistic value and the second is a list of the boostrap values.
+Returns a list. if runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting.
 }
 \description{
 Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Inference
