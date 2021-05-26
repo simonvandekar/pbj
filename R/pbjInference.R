@@ -74,9 +74,8 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
                } else {
                  Cs = sapply(boots, length)
                  margCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
-                 globCDF = ecdf(sapply(boots, max))
-                 list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)}
-             },
+                 globCDF = ecdf(sapply(boots, max))}
+               list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)},
              bootstrap=list(obsStat=obsstat, boots=boots) )
   return(out)
 }
