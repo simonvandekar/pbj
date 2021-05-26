@@ -152,7 +152,7 @@ vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(s
 #' Computes contiguous clusters from a statistical image given a threshold
 #'
 #' @param stat A statistical Nifti image as an RNifti image object.
-#' @param mask A statistical Nifti image mask.
+#' @param mask A statistical Nifti image mask used in the analysis or a character path to one.
 #' @param thr Vector of thresholds to threshold the test statistic image.
 #' @param method character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.
 #' @param kernel The kernel type to compute connected components.
@@ -163,6 +163,7 @@ vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(s
 #'
 cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box', rois=FALSE){
   method = tolower(method[1])
+  if(is.character(mask)) mask = readNifti(mask)
   ndims = length(dim(mask))
   tmp = mask
   k = mmand::shapeKernel(3, ndims, type=kernel)
