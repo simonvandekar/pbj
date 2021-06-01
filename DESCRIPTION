@@ -24,7 +24,6 @@ License: GPL-3
 LazyData: true
 Depends: R (>= 3.3)
 Collate:
-    'RcppExports.R'
     'addSignal.R'
     'cluster_functions.R'
     'functions.R'
@@ -50,8 +49,6 @@ Imports:
   RNifti,
   R.rsp,
   utils
-LinkingTo: Rcpp (>= 0.12.18),
-  RcppArmadillo
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,
