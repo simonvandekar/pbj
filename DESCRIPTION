@@ -33,7 +33,6 @@ Collate:
     'getPvalues.R'
     'lmPBJ.R'
     'niftiImage.R'
-    'npbj.R'
     'npbjInference.R'
     'palm.R'
     'statmap.R'
