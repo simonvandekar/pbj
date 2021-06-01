@@ -226,7 +226,7 @@ wecdf = function (x, w=rep(1, length(x)))
   vals <- unique(x)
   # by command sorts x values (again)
   rval <- approxfun(vals, cumsum(c(by(w, x, sum) ))/sw,
-                    method = "constant", yleft = 0, yright = 1, f = 0, ties = "ordered")
+                    method = "constant", yleft = 0, yright = 1-1/n, f = 0, ties = "ordered")
   class(rval) <- c("ecdf", "stepfun", class(rval))
   assign("nobs", n, envir = environment(rval))
   attr(rval, "call") <- sys.call()
