@@ -44,7 +44,9 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
         statimg = matrix(colMeans(sweep(statimg, 2:3, apply(statimg, c(2,3), sd), FUN ="/"), dims = 1)*sqrt(n), nrow=df, ncol=V)
       } else{
         if(method=='t'){#is.list(sqrtSigma)){ sqrtSigma should be a list here
-          sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
+          #sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
+          .Call("pbj_pbjBootRobustT", sqrtSigma$res, rboot(n)/sqrt(1-h))
+
           #sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/rdf)
           #sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
         } else if (method=='permutation'){
