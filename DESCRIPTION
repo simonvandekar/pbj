@@ -26,7 +26,6 @@ Depends: R (>= 3.3)
 Collate:
     'RcppExports.R'
     'addSignal.R'
-    'bootStats.R'
     'cluster_functions.R'
     'functions.R'
     'getDesign.R'
