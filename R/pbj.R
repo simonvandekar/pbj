@@ -169,7 +169,7 @@ cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box', ro
   k = mmand::shapeKernel(3, ndims, type=kernel)
   tmp = lapply(thr, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
   if(rois){
-    ccomps = lapply(tmp, function(tm){cc = mmand::components(tm, k); mask[mask!=0]=0; mask[!is.na(cc)] = cc[!is.na(cc)] } )
+    ccomps = lapply(tmp, function(tm){cc = mmand::components(tm, k); mask[mask!=0]=0; mask[!is.na(cc)] = cc[!is.na(cc)]; mask} )
   } else {
     ccomps = switch(method,
                     'extent'={
