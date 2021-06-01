@@ -64,6 +64,8 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
                if(is.list(boots[[1]])){
                  # reorders list
                  boots = apply(do.call(rbind, boots), 2, as.list)
+                 # add in observed values (plus a constant) to bootstraps. This avoids zero p-values from the empirical CDF
+                 boots = mapply(c, boots, lapply(obsstat, function(x) list(x+1)), SIMPLIFY=FALSE )
                  margCDF = lapply(boots, function(boot){
                    Cs = sapply(boot, length)
                    wecdf(unlist(boot), rep(1/Cs, Cs) )
