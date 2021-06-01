@@ -37,7 +37,6 @@ Collate:
     'statmap.R'
     'pbj.R'
     'pbjBoot.R'
-    'pbjExSet.R'
     'pbjInference.R'
     'pbjSEI.R'
     'resave.R'
