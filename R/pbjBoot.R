@@ -44,8 +44,8 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
         statimg = matrix(colMeans(sweep(statimg, 2:3, apply(statimg, c(2,3), sd), FUN ="/"), dims = 1)*sqrt(n), nrow=df, ncol=V)
       } else{
         if(method=='t'){#is.list(sqrtSigma)){ sqrtSigma should be a list here
-          #sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
-          .Call("pbj_pbjBootRobustT", sqrtSigma$res, rboot(n)/sqrt(1-h))
+          sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
+          #.Call("pbj_pbjBootRobustT", sqrtSigma$res, rboot(n)/sqrt(1-h))
 
           #sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/rdf)
           #sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
@@ -66,9 +66,35 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
         # compute test statistic the regular way given the bootstrap/permuted sample
         #BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(qr.resid(sqrtSigma$QR, sqrtSigma$res)), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
         #                        function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-        BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(sweep(qr.resid(sqrtSigma$QR, sqrtSigma$res), 1, 1-h, '/')), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
-                                function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
-        statimg = matrix(simplify2array(lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE ), nrow=df, ncol=V)
+
+        # ORIG
+        #BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(sweep(qr.resid(sqrtSigma$QR, sqrtSigma$res), 1, 1-h, '/')), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
+                                #function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+        #statimg = matrix(simplify2array(lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE ), nrow=df, ncol=V)
+
+        # NEW
+        #foo <- qr.resid(sqrtSigma$QR, sqrtSigma$res)
+        #bar <- sweep(foo, 1, 1-h, '/')
+        bar <- .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, NULL, h, NULL)
+        baz <- rep(list(bar), df)
+        qux <- simplify2array(baz)
+        corge <- sweep(qux, c(1,3), sqrtSigma$X1res, '*')
+        grault <- function(x){
+          a <- qr.R(qr(x))
+          b <- diag(ncol(x))
+          backsolve(r=a, x=b)
+        }
+        garply <- apply(corge, 2, grault)
+        BsqrtInv <- matrix(garply, nrow=df^2, ncol=V)
+
+        foo <- function(ind) {
+          bar <- crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind])
+          baz <- matrix(BsqrtInv[,ind], nrow=df, ncol=df)
+          crossprod(baz, bar)
+        }
+        qux <- lapply(1:V, foo)
+        corge <- simplify2array(qux, higher=TRUE)
+        statimg <- matrix(corge, nrow=df, ncol=V)
       }
     } else {
       if(method=='conditional'){
