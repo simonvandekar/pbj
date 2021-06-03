@@ -4,10 +4,10 @@
 SEXP pbjBootRobustT(SEXP res, SEXP stats) {
   SEXP resDim, statsDim;
   int *resDim_i, nrow, ncol, row, col, i;
-  double *res_d, *stats_d, stat;
+  double *res_d, *stats_d;
 
   /* Type checking */
-  if (isNumeric(res) == FALSE) {
+  if (isReal(res) == FALSE) {
     error("res must be numeric");
   }
 
@@ -21,7 +21,7 @@ SEXP pbjBootRobustT(SEXP res, SEXP stats) {
   nrow = resDim_i[0];
   ncol = resDim_i[1];
 
-  if (isNumeric(stats) == FALSE) {
+  if (isReal(stats) == FALSE) {
     error("stats must be numeric");
   }
 
@@ -36,19 +36,19 @@ SEXP pbjBootRobustT(SEXP res, SEXP stats) {
   /* Reproduce this:
    *   sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')
    */
+
+  /* NOTE: R stores matrices in column major order */
   res_d = REAL(res);
   stats_d = REAL(stats);
   i = 0;
-  for (row = 0; row < nrow; row++) {
-    stat = stats_d[row];
-
-    for (col = 0; col < ncol; col++) {
-      res_d[i] = res_d[i] * stat;
+  for (col = 0; col < ncol; col++ ) {
+    for (row = 0; row < nrow; row++) {
+      res_d[i] = res_d[i] * stats_d[row];
       i++;
     }
   }
 
-  return R_NilValue;
+  return res;
 }
 
 static const R_CallMethodDef callMethods[] = {
