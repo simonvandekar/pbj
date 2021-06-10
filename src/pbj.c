@@ -96,7 +96,7 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
   SEXP qr_qr, qr_qraux, elt, attr, dim, rsd, sweep;
   int *dim_ii, k_i, n_i, ny_i, res_nrow_i, res_ncol_i, row_i, col_i, rsd_idx_i,
       x1res_idx_i, sweep_idx_i, df_i, layer_i;
-  double *rsd_dd, *h_dd, *x1res_dd, *sweep_dd;
+  double *rsd_dd, *h_dd, *x1res_dd, *sweep_dd, *res_dd, *res2_dd;
 
   /* Type checking for qr */
   if (!isNewList(qr) || !inherits(qr, "qr")) {
@@ -204,9 +204,15 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
   setAttrib(rsd, R_DimSymbol, dim);
   UNPROTECT(1); /* dim */
 
+  /* Make a copy of res, since dqrrsd changes some values in place */
+  res_dd = REAL(res);
+  res2_dd = Calloc(length(res), double);
+  memcpy(res2_dd, res_dd, length(res) * sizeof(double));
+
   /* rsd <- qr.resid(sqrtSigma$QR, sqrtSigma$res) */
   rsd_dd = REAL(rsd);
-  F77_NAME(dqrrsd)(REAL(qr_qr), &n_i, &k_i, REAL(qr_qraux), REAL(res), &ny_i, rsd_dd);
+  F77_NAME(dqrrsd)(REAL(qr_qr), &n_i, &k_i, REAL(qr_qraux), res2_dd, &ny_i, rsd_dd);
+  Free(res2_dd);
 
   /* rsd <- sweep(rsd, 1, 1-h, '/') */
   h_dd = REAL(h);
