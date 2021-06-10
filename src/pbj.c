@@ -93,9 +93,10 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     statimg <- matrix(corge, nrow=df, ncol=V)
   */
 
-  SEXP qr_qr, qr_qraux, elt, attr, dim, rsd;
-  int *dim_i, k, n, ny, res_nrow, res_ncol, row, col, i;
-  double *rsd_d, *h_d;
+  SEXP qr_qr, qr_qraux, elt, attr, dim, rsd, sweep;
+  int *dim_ii, k_i, n_i, ny_i, res_nrow_i, res_ncol_i, row_i, col_i, rsd_idx_i,
+      x1res_idx_i, sweep_idx_i, df_i, layer_i;
+  double *rsd_dd, *h_dd, *x1res_dd, *sweep_dd;
 
   /* Type checking for qr */
   if (!isNewList(qr) || !inherits(qr, "qr")) {
@@ -117,7 +118,7 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
 
   elt = pbj_getListElement(qr, "rank");
   if (isInteger(elt) && length(elt) == 1) {
-    k = INTEGER(elt)[0];
+    k_i = INTEGER(elt)[0];
   } else {
     error("qr$rank must be an integer vector of length 1");
   }
@@ -127,7 +128,7 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     dim = getAttrib(qr_qr, R_DimSymbol);
     if (isInteger(dim) && length(dim) == 2) {
       /* nrow(qr$qr) */
-      n = INTEGER(dim)[0];
+      n_i = INTEGER(dim)[0];
     } else {
       error("qr$qr must be a real 2d matrix");
     }
@@ -144,49 +145,120 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
   if (isReal(res)) {
     dim = getAttrib(res, R_DimSymbol);
     if (isInteger(dim) && length(dim) == 2) {
-      dim_i = INTEGER(dim);
+      dim_ii = INTEGER(dim);
 
       /* check nrow(res) == nrow(qr$qr) */
-      res_nrow = dim_i[0];
-      if (res_nrow != n) {
+      res_nrow_i = dim_ii[0];
+      if (res_nrow_i != n_i) {
         error("qr and res must have the same number of rows");
       }
 
       /* ncol(res) */
-      res_ncol = ny = dim_i[1];
+      res_ncol_i = ny_i = dim_ii[1];
     } else {
       error("res must be a real 2d matrix");
     }
   } else {
-    error("res must be a real matrix");
+    error("res must be a real 2d matrix");
+  }
+
+  /* Type checking for df */
+  if (!isInteger(df) || length(df) != 1) {
+    error("df must be an integer vector of length 1");
+  }
+  df_i = INTEGER(df)[0];
+
+  /* Type checking for x1res */
+  if (isReal(x1res)) {
+    dim = getAttrib(x1res, R_DimSymbol);
+    if (isInteger(dim) && length(dim) == 2) {
+      dim_ii = INTEGER(dim);
+
+      /* check nrow(x1res) == nrow(res) */
+      if (dim_ii[0] != res_nrow_i) {
+        error("res and x1res must have the same number of rows");
+      }
+
+      /* check ncol(x1res) == df */
+      if (dim_ii[1] != df_i) {
+        error("nrow(x1res) must equal df");
+      }
+    } else {
+      error("x1res must be a real 2d matrix");
+    }
+  } else {
+    error("x1res must be a real 2d matrix");
   }
 
   /* Type checking for h */
-  if (!isReal(h) || length(h) != n) {
+  if (!isReal(h) || length(h) != n_i) {
     error("h must be a real vector with the same length as nrow(res)");
   }
 
   /* Allocate space for rsd vector */
   rsd = PROTECT(allocVector(REALSXP, length(res)));
-  setAttrib(rsd, R_DimSymbol, duplicate(dim));
+  dim = PROTECT(allocVector(INTSXP, 2));
+  dim_ii = INTEGER(dim);
+  dim_ii[0] = res_nrow_i;
+  dim_ii[1] = res_ncol_i;
+  setAttrib(rsd, R_DimSymbol, dim);
+  UNPROTECT(1); /* dim */
 
   /* rsd <- qr.resid(sqrtSigma$QR, sqrtSigma$res) */
-  rsd_d = REAL(rsd);
-  F77_NAME(dqrrsd)(REAL(qr_qr), &n, &k, REAL(qr_qraux), REAL(res), &ny, rsd_d);
+  rsd_dd = REAL(rsd);
+  F77_NAME(dqrrsd)(REAL(qr_qr), &n_i, &k_i, REAL(qr_qraux), REAL(res), &ny_i, rsd_dd);
 
   /* rsd <- sweep(rsd, 1, 1-h, '/') */
-  h_d = REAL(h);
-  i = 0;
-  for (col = 0; col < res_ncol; col++) {
-    for (row = 0; row < res_nrow; row++) {
-      rsd_d[i] = rsd_d[i] / (1 - h_d[row]);
-      i++;
+  h_dd = REAL(h);
+  rsd_idx_i = 0;
+  for (col_i = 0; col_i < res_ncol_i; col_i++) {
+    for (row_i = 0; row_i < res_nrow_i; row_i++) {
+      rsd_dd[rsd_idx_i] = rsd_dd[rsd_idx_i] / (1 - h_dd[row_i]);
+      rsd_idx_i++;
     }
   }
 
-  UNPROTECT(1); /* rsd */
+  /* Allocate space for sweep vector */
+  sweep = PROTECT(allocVector(REALSXP, length(res) * df_i));
+  dim = PROTECT(allocVector(INTSXP, 3));
+  dim_ii = INTEGER(dim);
+  dim_ii[0] = res_nrow_i;
+  dim_ii[1] = res_ncol_i;
+  dim_ii[2] = df_i;
+  setAttrib(sweep, R_DimSymbol, dim);
+  UNPROTECT(1); /* dim */
 
-  return rsd;
+  /* baz <- rep(list(rsd), df)
+     qux <- simplify2array(baz)
+     corge <- sweep(qux, c(1,3), sqrtSigma$X1res, '*') */
+  x1res_dd = REAL(x1res);
+  x1res_idx_i = 0;
+  sweep_dd = REAL(sweep);
+  sweep_idx_i = 0;
+  for (layer_i = 0; layer_i < df_i; layer_i++) {
+    rsd_idx_i = 0;
+
+    for (col_i = 0; col_i < res_ncol_i; ) {
+      for (row_i = 0; row_i < res_nrow_i; row_i++) {
+        sweep_dd[sweep_idx_i] = rsd_dd[rsd_idx_i] * x1res_dd[x1res_idx_i];
+        sweep_idx_i++;
+        rsd_idx_i++;
+        x1res_idx_i++;
+      }
+
+      col_i++;
+
+      /* Reset x1res index back to the first row in its current column, unless
+       * we're about to break out of this inner loop */
+      if (col_i < res_ncol_i) {
+        x1res_idx_i -= res_nrow_i;
+      }
+    }
+  }
+
+  UNPROTECT(2); /* rsd, sweep */
+
+  return sweep;
 }
 
 /* For debugging purposes in gdb */

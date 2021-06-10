@@ -75,10 +75,11 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
         # NEW
         #foo <- qr.resid(sqrtSigma$QR, sqrtSigma$res)
         #bar <- sweep(foo, 1, 1-h, '/')
-        bar <- .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, NULL, h, NULL)
-        baz <- rep(list(bar), df)
-        qux <- simplify2array(baz)
-        corge <- sweep(qux, c(1,3), sqrtSigma$X1res, '*')
+        #baz <- rep(list(bar), df)
+        #qux <- simplify2array(baz)
+        #corge <- sweep(qux, c(1,3), sqrtSigma$X1res, '*')
+        #browser()
+        corge <- .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, h, df)
         grault <- function(x){
           a <- qr.R(qr(x))
           b <- diag(ncol(x))
