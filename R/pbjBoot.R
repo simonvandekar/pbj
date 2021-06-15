@@ -68,8 +68,8 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
         #                        function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
 
         # ORIG
-        #BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(sweep(qr.resid(sqrtSigma$QR, sqrtSigma$res), 1, 1-h, '/')), df)), c(1,3), sqrtSigma$X1res, '*'), 2,
-                                #function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+        #BsqrtInv = matrix(apply(sweep(simplify2array(rep(list(sweep(qr.resid(sqrtSigma$QR, sqrtSigma$res), 1, 1-h, '/')), df)), c(1,3), sqrtSigma$X1res, '*'), 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(ncol(x))) }), nrow=df^2, ncol=V)
+
         #statimg = matrix(simplify2array(lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) ) ), higher=TRUE ), nrow=df, ncol=V)
 
         # NEW
@@ -78,15 +78,15 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
         #baz <- rep(list(bar), df)
         #qux <- simplify2array(baz)
         #corge <- sweep(qux, c(1,3), sqrtSigma$X1res, '*')
+        #grault <- function(x){
+          #a <- qr.R(qr(x))
+          #b <- diag(ncol(x))
+          #backsolve(r=a, x=b)
+        #}
+        #garply <- apply(corge, 2, grault)
+        #BsqrtInv <- matrix(garply, nrow=df^2, ncol=V)
         #browser()
-        corge <- .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, h, df)
-        grault <- function(x){
-          a <- qr.R(qr(x))
-          b <- diag(ncol(x))
-          backsolve(r=a, x=b)
-        }
-        garply <- apply(corge, 2, grault)
-        BsqrtInv <- matrix(garply, nrow=df^2, ncol=V)
+        BsqrtInv <- .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, h, df)
 
         foo <- function(ind) {
           bar <- crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind])
