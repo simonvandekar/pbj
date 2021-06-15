@@ -333,6 +333,12 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
 
     bsqrtinv_idx_i += df_sq_i;
   }
+  Free(corge_dd);
+  Free(x_dd);
+  Free(qraux_dd);
+  Free(pivot_ii);
+  Free(work_dd);
+  Free(a_dd);
 
   /* Copy result for checking */
   x = PROTECT(allocVector(REALSXP, df_sq_i * ncol_i));
@@ -345,11 +351,6 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
   memcpy(REAL(x), bsqrtinv_dd, df_sq_i * ncol_i * sizeof(double));
   UNPROTECT(1); /* x */
 
-  Free(x_dd);
-  Free(qraux_dd);
-  Free(pivot_ii);
-  Free(work_dd);
-  Free(a_dd);
   Free(bsqrtinv_dd);
 
   return x;
