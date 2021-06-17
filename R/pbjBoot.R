@@ -85,17 +85,18 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
         #}
         #garply <- apply(corge, 2, grault)
         #BsqrtInv <- matrix(garply, nrow=df^2, ncol=V)
-        #browser()
-        BsqrtInv <- .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, h, df)
 
-        foo <- function(ind) {
-          bar <- crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind])
-          baz <- matrix(BsqrtInv[,ind], nrow=df, ncol=df)
-          crossprod(baz, bar)
-        }
-        qux <- lapply(1:V, foo)
-        corge <- simplify2array(qux, higher=TRUE)
-        statimg <- matrix(corge, nrow=df, ncol=V)
+        #foo <- function(ind) {
+          #bar <- crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind])
+          #baz <- matrix(BsqrtInv[,ind], nrow=df, ncol=df)
+          #crossprod(baz, bar)
+        #}
+        #qux <- lapply(1:V, foo)
+        #corge <- simplify2array(qux, higher=TRUE)
+        #statimg <- matrix(corge, nrow=df, ncol=V)
+
+        #browser()
+        statimg <- .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, h, df)
       }
     } else {
       if(method=='conditional'){

@@ -93,12 +93,12 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     statimg <- matrix(corge, nrow=df, ncol=V)
   */
 
-  SEXP qr_qr, qr_qraux, elt, attr, dim, x;
+  SEXP qr_qr, qr_qraux, elt, attr, dim, statimg;
   int *dim_ii, k_i, n_i, ny_i, nrow_i, ncol_i, row_i, col_i, row2_i, col2_i,
       rsd_idx_i, x1res_idx_i, corge_idx_i, df_i, layer_i, dim_prod_i, x_idx_i,
-      ldx_i, p_i, *pivot_ii, bsqrtinv_idx_i, idx_i, df_sq_i;
+      ldx_i, p_i, *pivot_ii, bsqrtinv_idx_i, idx_i, df_sq_i, one_i;
   double *rsd_dd, *h_dd, *x1res_dd, *corge_dd, *res_dd, *res2_dd, *x_dd, tol_d,
-         *qraux_dd, *work_dd, *a_dd, *bsqrtinv_dd, one_d;
+         *qraux_dd, *work_dd, *a_dd, *bsqrtinv_dd, one_d, *statimg_dd, zero_d;
 
   /* Type checking for qr */
   if (!isNewList(qr) || !inherits(qr, "qr")) {
@@ -340,20 +340,43 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
   Free(work_dd);
   Free(a_dd);
 
-  /* Copy result for checking */
-  x = PROTECT(allocVector(REALSXP, df_sq_i * ncol_i));
-  dim = PROTECT(allocVector(INTSXP, 2));
-  dim_ii = INTEGER(dim);
-  dim_ii[0] = df_sq_i;
-  dim_ii[1] = ncol_i;
-  setAttrib(x, R_DimSymbol, dim);
-  UNPROTECT(1); /* dim */
-  memcpy(REAL(x), bsqrtinv_dd, df_sq_i * ncol_i * sizeof(double));
-  UNPROTECT(1); /* x */
+  /*
+    foo <- function(ind) {
+      bar <- crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind])
+      baz <- matrix(BsqrtInv[,ind], nrow=df, ncol=df)
+      crossprod(baz, bar)
+    }
+    qux <- lapply(1:V, foo)
+  */
+  statimg = PROTECT(allocMatrix(REALSXP, df_i, ncol_i));
+  statimg_dd = REAL(statimg);
 
+  x_dd = Calloc(df_i, double);
+  for (col_i = 0; col_i < ncol_i; col_i++) {
+    /* bar <- crossprod(sqrtSigma$X1res, sqrtSigma$res[,ind]) */
+    one_d = 1.0;
+    zero_d = 0.0;
+    one_i = 1;
+
+    F77_CALL(dgemv)("T", &nrow_i, &df_i, &one_d, x1res_dd, &nrow_i,
+        res_dd + (col_i * nrow_i), &one_i, &zero_d, x_dd, &one_i FCONE);
+
+    /*
+      baz <- matrix(BsqrtInv[,ind], nrow=df, ncol=df)
+      crossprod(baz, bar)
+    */
+    one_d = 1.0;
+    zero_d = 0.0;
+    one_i = 1;
+
+    F77_CALL(dgemv)("T", &df_i, &df_i, &one_d, bsqrtinv_dd + (col_i * df_sq_i),
+        &df_i, x_dd, &one_i, &zero_d, statimg_dd + (col_i * df_i), &one_i FCONE);
+  }
+  Free(x_dd);
   Free(bsqrtinv_dd);
+  UNPROTECT(1); /* statimg */
 
-  return x;
+  return statimg;
 }
 
 /* For debugging purposes in gdb */
