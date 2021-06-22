@@ -16,7 +16,7 @@ cluster(
 \arguments{
 \item{stat}{A statistical Nifti image as an RNifti image object.}
 
-\item{mask}{A statistical Nifti image mask.}
+\item{mask}{A statistical Nifti image mask used in the analysis or a character path to one.}
 
 \item{thr}{Vector of thresholds to threshold the test statistic image.}
 

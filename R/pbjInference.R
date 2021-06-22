@@ -4,7 +4,7 @@
 #' @param statistic A user specified function that takes a RNifti image object and computes a particular statistic of interest.
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.
-#' @param method character, method to use for bootstrap procedure.
+#' @param method Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
 #' @param runMode character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.
 #' @param ... arguments passed to statistic function.
 #'
@@ -13,7 +13,7 @@
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
 #' @export
-pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('nonparametric', 't', 'conditional', 'permutation'), runMode=c('bootstrap', 'cdf'), ...){
+pbjInference = function(statMap, statistic = function(image) max(c(image)), nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('bootstrap', 'cdf'), ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
   runMode = tolower(runMode[1])
@@ -77,6 +77,14 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
                  Cs = sapply(boots, length)
                  margCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
                  globCDF = wecdf(sapply(boots, max))}
+
+               # reindex ROIs and obsStat
+               for(ind in 1:length(obsstat)){
+                 newInds = order(obsstat[[ind]], decreasing=TRUE)
+                 obsstat[[ind]] = obsstat[[ind]][newInds]
+                 rois[[ind]][,,] = match(rois[[ind]][,,], newInds)
+                 rois[[ind]][is.na(rois[[ind]][,,])] = 0
+               }
                list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)},
              bootstrap=list(obsStat=obsstat, boots=boots) )
   return(out)
