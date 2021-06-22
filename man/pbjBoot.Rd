@@ -8,8 +8,7 @@ pbjBoot(
   sqrtSigma,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   bootdim,
-  method = c("t", "independence", "permutation", "conditional", "nonparametric"),
-  voxelwise = FALSE,
+  method = c("wild", "permutation", "nonparametric"),
   HC3 = TRUE,
   robust = TRUE,
   transform = c("none", "t")
@@ -22,9 +21,7 @@ pbjBoot(
 
 \item{bootdim}{Dimension of rboot output}
 
-\item{method}{Method to use for resampling.}
-
-\item{voxelwise}{logical indicating whether the data are voxelwise.}
+\item{method}{character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric}
 
 \item{HC3}{logical, was HC3 estimator used?}
 

@@ -9,7 +9,7 @@ pbjInference(
   statistic = function(image) max(c(image)),
   nboot = 5000,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
-  method = c("nonparametric", "t", "conditional", "permutation"),
+  method = c("wild", "permutation", "nonparametric"),
   runMode = c("bootstrap", "cdf"),
   ...
 )
@@ -23,7 +23,7 @@ pbjInference(
 
 \item{rboot}{Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.}
 
-\item{method}{character, method to use for bootstrap procedure.}
+\item{method}{Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric}
 
 \item{runMode}{character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.}
 
