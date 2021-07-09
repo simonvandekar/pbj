@@ -4,7 +4,7 @@
 \alias{maxima}
 \title{Computes local maxima from an nifti image}
 \usage{
-maxima(stat, kernel = "box", width = 7)
+maxima(stat, kernel = "box", width = 7, rois = FALSE)
 }
 \arguments{
 \item{stat}{A statistical Nifti image as an RNifti image object.}
@@ -12,6 +12,8 @@ maxima(stat, kernel = "box", width = 7)
 \item{kernel}{Type of kernel to use for max/dilation filter}
 
 \item{width}{Width of kernel (assumes isotropic)}
+
+\item{rois}{If TRUE, return image with voxel values having the indices of the local maxima returned if rois=FALSE.}
 }
 \value{
 Returns list of tables of sizes of the connected components above thr.
