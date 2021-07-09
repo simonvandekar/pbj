@@ -49,13 +49,13 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
   pb = txtProgressBar(style=3, title='Generating null distribution')
   tmp = mask
   if(nboot>0){
-  for(i in 1:nboot){
-    statimg = pbjBoot(sqrtSigma, rboot, bootdim, robust=robust, method = method, HC3=HC3, transform=transform)
-    tmp[ mask!=0] = statimg
-    boots[[i]] = statistic(tmp, ...)
-    setTxtProgressBar(pb, round(i/nboot,2))
-  }
-  close(pb)
+    for(i in 1:nboot){
+      statimg = pbjBoot(sqrtSigma, rboot, bootdim, robust=robust, method = method, HC3=HC3, transform=transform)
+      tmp[ mask!=0] = statimg
+      boots[[i]] = statistic(tmp, ...)
+      setTxtProgressBar(pb, round(i/nboot,2))
+    }
+    close(pb)
   }
   rm(sqrtSigma) # Free large big memory matrix object
 
@@ -68,15 +68,28 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
                  #boots = mapply(c, boots, lapply(obsstat, function(x) list(x+1)), SIMPLIFY=FALSE )
                  margCDF = lapply(boots, function(boot){
                    Cs = sapply(boot, length)
-                   wecdf(unlist(boot), rep(1/Cs, Cs) )
+                   if(sum(Cs)==0){
+                     NA
+                   } else {
+                     wecdf(unlist(boot), rep(1/Cs, Cs) )
+                   }
                  } )
                  globCDF = lapply(boots, function(boot){
-                   wecdf(sapply(boot, max))
+                   if(sum(Cs)==0){
+                     NA
+                   } else {
+                     wecdf(sapply(boot, max))
+                   }
                  } )
                } else {
                  Cs = sapply(boots, length)
-                 margCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
-                 globCDF = wecdf(sapply(boots, max))}
+                 if(sum(Cs)==0){
+                   margCDF <- globCDF <- 0
+                 } else {
+                   margCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
+                   globCDF = wecdf(sapply(boots, max))
+                 }
+               }
 
                # reindex ROIs and obsStat
                for(ind in 1:length(obsstat)){
