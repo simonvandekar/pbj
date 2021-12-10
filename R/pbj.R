@@ -232,3 +232,64 @@ wecdf = function (x, w=rep(1, length(x)))
   attr(rval, "call") <- sys.call()
   rval
 }
+
+
+#' Create cluster summary table
+#'
+#' @param x pbj object
+#' @param method What statistic to provide summary for?
+#' @return Returns table of unadjusted and FWER adjusted p-values and other summary statistics. Results depend on what statistic
+#' function was used for pbjInference.
+#' @export
+#'
+clusterTable = function(x, method=c('CEI', 'maxima', 'CMI')){
+  Table = data.frame('Cluster Extent' = c(x$obsStat[[2]]), 
+                     'Centroid (vox)' = sapply(1:length(x$obsStat[[2]]), function(ind) paste(round(colMeans(which(x$ROIs[[2]]==ind, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
+                     'Unadjusted p-value' = (1-x$margCDF[[2]](c(x$obsStat[[2]]))), 
+                     'FWER p-value' = (1-x$globCDF[[2]](c(x$obsStat[[2]]))),
+                     check.names=FALSE )
+  Table = Table[order(Param.Table$`Cluster Extent`, decreasing = TRUE),]
+  Table
+}
+
+#' Compute maxima and cluster extents
+#'
+#' @param stat statistical image
+#' @param rois passed to maxima and cluster functions. Return image with ROI
+#' indices?
+#' @param mask Mask image.
+#' @param thr Threshold for CEI or CMI.
+#' @return Returns a list with the maxima and CEI for the given image.
+#' function was used for pbjInference.
+#' @export
+#'
+maximaAndCEI = function(stat, rois=FALSE, mask, thr){
+  c(maxima=list(maxima(stat, rois=rois)), CEI=cluster(stat, mask=mask, thr=thr, rois=rois) )
+}
+
+#' Compute maxima CMI or CEI inference statistics
+#'
+#' @param stat statistical image
+#' @param rois passed to maxima and cluster functions. Return image with ROI
+#' indices?
+#' @param mask Mask image.
+#' @param thr Threshold for CEI or CMI.
+#' @return Returns a list with the maxima and CEI for the given image.
+#' function was used for pbjInference.
+#' @export
+#'
+mmeStat = function(stat, rois=FALSE, mask, thr, max=FALSE, CMI=FALSE,
+CEI=TRUE){
+  res = c()
+  if(max){
+   res = c(maxima=list(maxima(stat, rois=rois)) )
+  }
+  if(CMI) {
+    res = c(res, CMI=cluster(stat, mask=mask, thr=thr, rois=rois, method='mass'))
+  }
+  if(CEI){
+    res = c(res, CEI=cluster(stat, mask=mask, thr=thr, rois=rois,
+method='extent'))
+  }
+  res
+}

@@ -75,6 +75,7 @@ pbjInference = function(statMap, statistic = function(image) max(c(image)), nboo
                    }
                  } )
                  globCDF = lapply(boots, function(boot){
+                   Cs = sapply(boot, length)
                    if(sum(Cs)==0){
                      NA
                    } else {
