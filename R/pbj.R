@@ -234,45 +234,41 @@ wecdf = function (x, w=rep(1, length(x)))
 }
 
 
-#' Create cluster summary table
+#' Create cluster/maxima summary table
 #'
 #' @param x pbj object
-#' @param method What statistic to provide summary for?
+#' @param method What statistic to provide summary for? must have run that
+#' analysis using the pbjInference and mmeStat functions.
 #' @return Returns table of unadjusted and FWER adjusted p-values and other summary statistics. Results depend on what statistic
 #' function was used for pbjInference.
+#' @seealso [mmeStat], [pbjInference]
 #' @export
 #'
 clusterTable = function(x, method=c('CEI', 'maxima', 'CMI')){
-  Table = data.frame('Cluster Extent' = c(x$obsStat[[2]]), 
-                     'Centroid (vox)' = sapply(1:length(x$obsStat[[2]]), function(ind) paste(round(colMeans(which(x$ROIs[[2]]==ind, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
-                     'Unadjusted p-value' = (1-x$margCDF[[2]](c(x$obsStat[[2]]))), 
-                     'FWER p-value' = (1-x$globCDF[[2]](c(x$obsStat[[2]]))),
+  method = method[1]
+  ind = grep(method, names(x$obsStat))
+  Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
+                     'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind) paste(round(colMeans(which(x$ROIs[[2]]==ind, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
+                     'Unadjusted p-value' = (1-x$margCDF[[ind]](c(x$obsStat[[ind]]))),
+                     'FWER p-value' = (1-x$globCDF[[ind]](c(x$obsStat[[ind]]))),
                      check.names=FALSE )
-  Table = Table[order(Param.Table$`Cluster Extent`, decreasing = TRUE),]
+  names(Table) = if(method=='CEI') c('Cluster Extent', 'Centroid (vox)',
+'Unadjusted p-value', 'FWER p-value') else if(method=='maxima') c('Chi-square',
+'Coord (vox)', 'Unadjusted p-value', 'FWER p-value') else if(method=='CMI')
+c('Cluster Mass', 'Centroid (vox)', 'Unadjusted p-value', 'FWER p-value')
+  Table = Table[order(Table[,1], decreasing = TRUE),]
   Table
 }
 
-#' Compute maxima and cluster extents
+#' Compute maxima, CMI, or CEI inference statistics
 #'
 #' @param stat statistical image
 #' @param rois passed to maxima and cluster functions. Return image with ROI
 #' indices?
 #' @param mask Mask image.
-#' @param thr Threshold for CEI or CMI.
-#' @return Returns a list with the maxima and CEI for the given image.
-#' function was used for pbjInference.
-#' @export
-#'
-maximaAndCEI = function(stat, rois=FALSE, mask, thr){
-  c(maxima=list(maxima(stat, rois=rois)), CEI=cluster(stat, mask=mask, thr=thr, rois=rois) )
-}
-
-#' Compute maxima CMI or CEI inference statistics
-#'
-#' @param stat statistical image
-#' @param rois passed to maxima and cluster functions. Return image with ROI
-#' indices?
-#' @param mask Mask image.
+#' @param max Compute local maxima?
+#' @param CMI Compute cluster masses?
+#' @param CEI Compute cluster extents?
 #' @param thr Threshold for CEI or CMI.
 #' @return Returns a list with the maxima and CEI for the given image.
 #' function was used for pbjInference.

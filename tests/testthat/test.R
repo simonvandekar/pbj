@@ -184,15 +184,15 @@ test_that("Output from PBJ with df=1 and scalar weights matches output from lm."
 
 # check for errors in pbjSEI
 #mask = RNifti::readNifti(pain$mask) * c(apply(imgs!=0, 1:3, all))
-statmap <- lmPBJ(pain$data$images, form = ~ 1,
-                 formred = NULL, mask = mask,
-                 template=pain$template, data = pain$data,
-                 Winv = pain$data$Winv, zeros=TRUE, transform='none', outdir = '~/Downloads/')
-#pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25), debug=TRUE)
-pbjtest = pbjInference(statmap, nboot = 5, method='t')
-pbjtest = pbjInference(statmap, nboot = 5, method='permutation')
-pbjtest = pbjInference(statmap, nboot = 5, method='independence')
-pbjtest = pbjSEI(statmap, nboot = 5, method='t')
-pbjtest = pbjSEI(statmap, nboot = 5, method='independence')
+# statmap <- lmPBJ(pain$data$images, form = ~ 1,
+#                  formred = NULL, mask = mask,
+#                  template=pain$template, data = pain$data,
+#                  Winv = pain$data$Winv, zeros=TRUE, transform='none', outdir = '~/Downloads/')
+# #pbjtest = pbjSEI(statmap, nboot = 5, cfts.s = c(0.1, 0.25), debug=TRUE)
+# pbjtest = pbjInference(statmap, nboot = 5, method='t')
+# pbjtest = pbjInference(statmap, nboot = 5, method='permutation')
+# pbjtest = pbjInference(statmap, nboot = 5, method='independence')
+# pbjtest = pbjSEI(statmap, nboot = 5, method='t')
+# pbjtest = pbjSEI(statmap, nboot = 5, method='independence')
 
 
