@@ -244,7 +244,7 @@ wecdf = function (x, w=rep(1, length(x)))
 #' @seealso [mmeStat], [pbjInference]
 #' @export
 #'
-clusterTable = function(x, method=c('CEI', 'maxima', 'CMI')){
+table.pbj = function(x, method=c('CEI', 'maxima', 'CMI')){
   method = method[1]
   ind = grep(method, names(x$obsStat))
   Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
