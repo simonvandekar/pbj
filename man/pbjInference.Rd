@@ -6,7 +6,7 @@
 \usage{
 pbjInference(
   statMap,
-  statistic = function(image) max(c(image)),
+  statistic = mmeStat,
   nboot = 5000,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = c("wild", "permutation", "nonparametric"),
