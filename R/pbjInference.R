@@ -75,8 +75,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
                    }
                  } )
                  globCDF = lapply(boots, function(boot){
-                   Cs = sapply(boot, length)
-                   if(sum(Cs)==0){
+                   if(sum(sapply(boot, length))==0){
                      NA
                    } else {
                      wecdf(sapply(boot, max))
