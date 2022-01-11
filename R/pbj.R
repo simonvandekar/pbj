@@ -289,3 +289,58 @@ method='extent'))
   }
   res
 }
+
+
+# color bar function
+colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=nticks), title='') {
+  scale = (length(lut)-1)/(max-min)
+  plot(c(0,10), c(min,max), type='n', bty='n', xaxt='n', xlab='', yaxt='n', ylab='', main=title)
+  axis(2, round(ticks, 2), las=1, cex.axis=cex*0.7, font=2)
+  for (i in 1:(length(lut)-1)) {
+    y = (i-1)/scale + min
+    rect(0,y,10,y+1/scale, col=lut[i], border=NA)
+  }
+}
+
+
+image.pbj(obj, slices=NULL, roi=NULL, outputdir=NULL, orientation=c('axial', 'sagittal', 'coronal') ){
+  image(displayParamBoot, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+  if(!is.null(slices)){
+    for (slice in slices){
+      if(!is.null(outputdir)){
+        fname = file.path(outputdir, 'images', paste0('slice', slice, '.png') )
+        dir.create(dirname(fname), showWarnings = FALSE, recursive = TRUE)
+        png(filename = fname, height=4, width=4, units = 'in', res = 300)
+      }
+      cex=1.5
+      # graphical parameters
+      fgcol = 'white'
+      bgcol = 'black'
+      oldpar = par(mgp=c(0.9,.7,0), lwd=1.5, lend=2,
+          cex.lab=cex, cex.axis=0.8*cex, cex.main=1*cex,
+          mar=c(0,2.2,2.2,0), bty='l', oma=c(0,0,0,0), bg=bgcol, fg=fgcol, col.axis=fgcol, col.lab=fgcol, col.main = fgcol, col.sub=fgcol)
+      layout(cbind(matrix(1:4, nrow=2, byrow=TRUE) %x% matrix(1, nrow=3, ncol=3) , 5))
+      # display parametric bootstrap statistic
+
+      mtext('Parametric', side=2, cex = 0.8*cex, font = 2)
+      mtext('Bootstrap', side = 3, cex = 0.8*cex, font = 2)
+      # display parametric permutation statistic
+      image(displayParamPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+      mtext('Permutation', side = 3, cex = 0.8*cex, font=2)
+      # display Robust bootstrap statistic
+      image(displayRobustBoot, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+      mtext('Robust', side=2, cex = 0.8*cex, font = 2 )
+      # display robust permutation statistic
+      image(displayRobustPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+
+      # main title
+      #mtext('Probability', side=3, outer = TRUE, cex=1*cex, font=2)
+
+      par(mar=c(10,2,10,0.5))
+      color.bar(pbj:::redyellow(64), min=threshs[1], max=threshs[2], nticks=4)
+      if(!is.null(outputdir)) dev.off()
+    }
+  }
+}
+
+
