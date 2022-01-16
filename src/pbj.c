@@ -241,22 +241,19 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP idmat, SEXP h, SEXP 
     idmat_idx_i = 0;
     corge_idx_i = 0;
     arr_idx_i=0;
-    for (layer_i = 0; layer_i < df_i; ) {
-      for (col_i = 0; col_i < ncol_i; ) {
+    for (layer_i = 0; layer_i < df_i; layer_i++) {
+      for (col_i = 0; col_i < ncol_i; col_i++) {
         for (row_i = 0; row_i < nrow_i; row_i++) {
           idmat_idx_i = (idmat_ii[row_i]-1) + arr_idx_i;
           idres_dd[idmat_idx_i] = idres_dd[idmat_idx_i] + corge_dd[corge_idx_i];
           corge_idx_i++;
         }
         /* idncol_i is number of rows of result of idres_dd */
-        col_i++;
         /* jump to next column*/
         arr_idx_i = arr_idx_i + idncol_i;
       }
-      /* ncol_i is number of columns of result of idres_dd */
-      layer_i++;
-      /* reset arr_idx_i to be beginning of next layer*/
-      arr_idx_i = (ncol_i+df_i) * layer_i-1;
+      /* begins next layer of array*/
+      arr_idx_i++;
     }
 
     /* replace corge_dd with idres_dd; Jeremy, I'm not sure how to do that. */
