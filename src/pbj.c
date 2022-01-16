@@ -256,7 +256,7 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP idmat, SEXP h, SEXP 
       /* ncol_i is number of columns of result of idres_dd */
       layer_i++;
       /* reset arr_idx_i to be beginning of next layer*/
-      arr_idx_i = (ncol_i+df_i) * layer_i;
+      arr_idx_i = (ncol_i+df_i) * layer_i-1;
     }
 
     /* replace corge_dd with idres_dd; Jeremy, I'm not sure how to do that. */
