@@ -252,8 +252,6 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP idmat, SEXP h, SEXP 
         /* jump to next column*/
         arr_idx_i = arr_idx_i + idncol_i;
       }
-      /* begins next layer of array*/
-      arr_idx_i++;
     }
 
     /* replace corge_dd with idres_dd; Jeremy, I'm not sure how to do that. */
