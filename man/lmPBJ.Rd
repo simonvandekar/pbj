@@ -9,6 +9,7 @@ lmPBJ(
   form,
   formred = ~1,
   mask,
+  id = NULL,
   data = NULL,
   W = NULL,
   Winv = NULL,

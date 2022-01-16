@@ -17,7 +17,7 @@ static SEXP pbj_getListElement(SEXP list, const char *str) {
   return elmt;
 }
 
-SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
+SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP idmat, SEXP h, SEXP df) {
   /* Reproduce this:
 
     rsd <- qr.resid(sqrtSigma$QR, sqrtSigma$res)
@@ -43,11 +43,11 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     statimg <- matrix(corge, nrow=df, ncol=V)
   */
 
-  SEXP qr_qr, qr_qraux, elt, attr, dim, statimg;
-  int *dim_ii, k_i, n_i, ny_i, nrow_i, ncol_i, row_i, col_i, row2_i, col2_i,
-      rsd_idx_i, x1res_idx_i, corge_idx_i, df_i, layer_i, dim_prod_i, x_idx_i,
+  SEXP qr_qr, qr_qraux, elt, attr, dim, iddim, statimg;
+  int *dim_ii, iddim_i, k_i, n_i, ny_i, nrow_i, ncol_i, idncol_i,*idmat_ii, row_i, col_i, row2_i, col2_i,
+      rsd_idx_i, idmat_idx_i, x1res_idx_i, corge_idx_i, df_i, layer_i, dim_prod_i, x_idx_i,
       ldx_i, p_i, *pivot_ii, bsqrtinv_idx_i, idx_i, df_sq_i, one_i;
-  double *rsd_dd, *h_dd, *x1res_dd, *corge_dd, *res_dd, *res2_dd, *x_dd, tol_d,
+  double *rsd_dd, *h_dd, *x1res_dd, *corge_dd, *idres_dd, *res_dd, *res2_dd, *x_dd, tol_d,
          *qraux_dd, *work_dd, *a_dd, *bsqrtinv_dd, one_d, *statimg_dd, zero_d;
 
   /* Type checking for qr */
@@ -112,6 +112,19 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     }
   } else {
     error("res must be a real 2d matrix");
+  }
+
+  /* Type checking for idmat */
+  if (isInteger(idmat)) {
+    iddim = getAttrib(idmat, R_DimSymbol);
+    if (isInteger(iddim) && length(iddim) == 1) {
+      iddim_i = INTEGER(iddim);
+    } else {
+      error("idmat must be an integer vector");
+    }
+    /* check if idmat is null, if not error */
+  } else if(idmat != R_NilValue){
+    error("idmat must be an integer vector");
   }
 
   /* Type checking for df */
@@ -210,6 +223,34 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     }
   }
   Free(rsd_dd);
+
+
+
+  /* This creates a copy of idmat */
+  idmat_ii = INTEGER(idmat);
+  /* This will be nrows of res */
+  idncol_i = idmat_ii[iddim_i];
+
+  /* Allocate idres_dd. idncol_i X V X df array*/
+  idres_dd = Calloc(idncol_i * ncol_i * df_i, double);
+
+  /* Check if idmat is null if not multiply with corge_dd */
+  if(idmat != R_NilValue){
+
+    idmat_idx_i = 0;
+    corge_idx_i = 0;
+    for (layer_i = 0; layer_i < df_i; layer_i++) {
+      for (col_i = 0; col_i < ncol_i; ) {
+        for (row_i = 0; row_i < nrow_i; row_i++) {
+          idmat_idx_i = (idmat_ii[row_i]-1) + (nrow_i-1) * col_i + (nrow_i-1 + ncol_i-1) * df_i;
+          idres_dd[idmat_idx_i] = idres_dd[idmat_idx_i] + corge_dd[corge_idx_i];
+          corge_idx_i++;
+        }
+      }
+    }
+
+    /* replace corge_dd with idres_dd */
+  }
 
   /*
     grault <- function(x){

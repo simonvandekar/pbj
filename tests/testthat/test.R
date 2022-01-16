@@ -6,6 +6,7 @@ library(testthat)
 library(lmtest)
 library(sandwich)
 library(splines)
+#library(geepack)
 #devtools::load_all('./')
 
 # setting up
@@ -14,6 +15,8 @@ pain = pain21::pain21()
 pain$data$group = factor(sample(1:4, size = nrow(pain$data), replace=TRUE))
 pain$data$x = rnorm(nrow(pain$data))
 pain$data$Winv = runif(nrow(pain$data))
+# creates a fake ID variable
+pain$data$ID = c(rep(1:10, each=2), 11)
 #debug(lmPBJ)
 # test by comparing one voxel to results obtained by lmtest and sandwich packages
 imgs = simplify2array(RNifti::readNifti(pain$data$images))
@@ -21,7 +24,7 @@ Winvs = simplify2array(RNifti::readNifti(pain$data$varimages))
 mask = RNifti::readNifti(pain$mask) * c(apply(imgs!=0, 1:3, all))
 
 # get one voxel
-testvox = which(mask==1, arr.ind = TRUE)[1:2,]
+testvox = which(mask==1, arr.ind = TRUE)[1:4,]
 mask[,,] = 0
 mask[testvox] = 1
 
@@ -196,3 +199,16 @@ test_that("Output from PBJ with df=1 and scalar weights matches output from lm."
 # pbjtest = pbjSEI(statmap, nboot = 5, method='independence')
 
 
+### TEST FOR LONGITUDINAL MODELS ###
+# test_that("Output from PBJ with df=3 and scalar weights matches output from gee.", {
+#   model = geepack::geeglm(y ~ group, id = ID, data=pain$data)
+#   model.red = geepack::geeglm(y ~ 1, id = ID, data=pain$data)
+#   geepackanova = geepack:::anova.geeglm(model, model.red)
+#   # pbj methods
+#   statmap <- lmPBJ(pain$data$images, form = ~ group,
+#                    formred = ~ 1, mask = mask, id='id',
+#                    template=pain$template, data = pain$data, # Winv = pain$data$Winv,
+#                    zeros=TRUE, transform='none', HC3 = FALSE)
+#   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
+#   expect_equal(statmap$stat[1], geepackanova$X2, tolerance=tol)
+# })

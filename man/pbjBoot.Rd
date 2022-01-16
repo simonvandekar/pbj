@@ -8,10 +8,7 @@ pbjBoot(
   sqrtSigma,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   bootdim,
-  method = c("wild", "permutation", "nonparametric"),
-  HC3 = TRUE,
-  robust = TRUE,
-  transform = c("none", "t")
+  method = c("wild", "permutation", "nonparametric")
 )
 }
 \arguments{
@@ -23,11 +20,13 @@ pbjBoot(
 
 \item{method}{character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric}
 
-\item{HC3}{logical, was HC3 estimator used?}
-
 \item{robust}{Generate robust statistics?}
 
 \item{transform}{Apply a quantile transformation to the test statistics to improve normal approximation.}
+
+\item{HC3}{logical, was HC3 estimator used?}
+
+\item{id}{Identifier variable for correlated observations.}
 }
 \value{
 Returns vector of test statistics computed from the bootstrapped sample.

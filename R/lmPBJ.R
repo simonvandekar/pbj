@@ -46,10 +46,9 @@
 #' @importFrom parallel mclapply
 #' @importFrom PDQutils papx_edgeworth
 #' @export
-lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('none', 't', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('none', 't', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
-  debug = getOption('pbj.debug', default=FALSE)
 
   X = getDesign(form, formred, data=data)
   Xred = X[['Xred']]
@@ -76,7 +75,6 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
     dims = dim(Y)
 
   # check if inverse weights are given
-  # this way if you pass Winv=NULL it will error out still
   if(is.null(Winv)){
     Winv = FALSE
     if(is.null(W)) W = rep(1,n)
@@ -174,8 +172,8 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       # compute Q(v)
       Q = simplify2array( lapply(1:V, function(ind){r=qr.resid(qrs[[ind]], Y[,ind]);
       if(HC3){
-      h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
-      Q = r/(1-h)} else Q=r }) )
+        h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
+        Q = r/(1-h)} else Q=r }) )
       rm(qrs) # free memory
       # first part of normedCoef
       normedCoef = colSums(sweep(X1res, MARGIN = c(1,3), Y, '*'), dims = 1)
@@ -197,12 +195,12 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
 
     X1res = qr.resid(qr(Xred * W), X1 * W)
 
+    # standardize residuals and Y
+    sigmas = sqrt(colSums(res^2)/rdf)
+    res = sweep(res, 2, sigmas, FUN = '/')
+    Y = sweep(Y, 2, sigmas, FUN = '/')
+
     if(!robust){
-      # standardize residuals and Y
-      sigmas = sqrt(colSums(res^2)/rdf)
-      res = sweep(res, 2, sigmas, FUN = '/')
-      Y = sweep(Y, 2, sigmas, FUN = '/')
-      if(debug) assign('YlmPBJ', Y, envir = .GlobalEnv)
       AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
       sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
       # used to compute chi-squared statistic
@@ -211,11 +209,6 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
       rm(AsqrtInv, Y, res, sigmas, X1res)
     } else {
-      # standardize residuals and Y
-      sigmas = sqrt(colSums(res^2)/rdf)
-      res = sweep(res, 2, sigmas, FUN = '/')
-      Y = sweep(Y, 2, sigmas, FUN = '/')
-      if(debug) assign('YlmPBJ', Y, envir = .GlobalEnv)
       # first part of normedCoef
       normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), STATS = X1res, FUN = '*'), dims=1)
       if(HC3){
@@ -224,6 +217,10 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
       } else {
         # returns nXVXm_1 array
         X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
+      }
+      if(!is.null(id)){
+        IDmat = model.matrix(~-1+factor(id))
+        X1resQ = array(apply(X1resQ, 3, function(mat) crossprod(IDmat, mat)), dim=c(ncol(IDmat), V, df))
       }
       # apply across voxels. returns V X m_1^2 array
       BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }), nrow=df^2, ncol=V)
@@ -248,7 +245,7 @@ lmPBJ = function(images, form, formred=~1, mask, data=NULL, W=NULL, Winv=NULL, t
 
 
   # used later to indicated t-statistic
-  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, images=images, formulas=list(full=form, reduced=formred), data = get_all_vars(form, data = data))
+  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, images=images, formulas=list(full=form, reduced=formred), data = get_all_vars(form, data = data), id=id)
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir
