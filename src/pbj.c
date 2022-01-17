@@ -255,6 +255,9 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP idmat, SEXP h, SEXP 
     }
 
     /* replace corge_dd with idres_dd; Jeremy, I'm not sure how to do that. */
+    ncol_i = idncol_i;
+    Free(corge_dd);
+    corge_dd = idres_dd;
   }
 
   /*
