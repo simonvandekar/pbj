@@ -5,7 +5,6 @@
 #' @param null Is this a simulation under the null hypothesis?
 #' @param robust Generate robust statistics?
 #' @param method character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
-#' @param id Identifier variable for correlated observations.
 #'
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
 #' @export
@@ -28,10 +27,6 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
     h = rep(0, n)
   }
 
-  if(!is.null(id)){
-    IDmat = model.matrix(~-1+factor(id))
-    X1resQ = array(apply(X1resQ, 3, function(mat) crossprod(IDmat, mat)), dim=c(ncol(IDmat), V, df))
-  }
 
   if(robust){
     if(method=='wild'){#is.list(sqrtSigma)){ sqrtSigma should be a list here
@@ -48,7 +43,7 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
     # for bootstrapping under the alternative
     if(!null) sqrtSigma$res = sqrtSigma$XW %*% sqrtSigma$coef
 
-    statimg = .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, h, df)
+    statimg = .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, id, h, df)
   } else {
     if(method=='wild'){
       sqrtSigma$res = sweep(sqrtSigma$res, 1, rboot(n)/sqrt(1-h), '*')

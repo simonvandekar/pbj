@@ -50,7 +50,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
   tmp = mask
   if(nboot>0){
     for(i in 1:nboot){
-      statimg = pbjBoot(sqrtSigma, rboot, bootdim, robust=robust, method = method, HC3=HC3, transform=transform)
+      statimg = pbjBoot(sqrtSigma, rboot, bootdim, method = method)
       tmp[ mask!=0] = statimg
       boots[[i]] = statistic(tmp, ...)
       setTxtProgressBar(pb, round(i/nboot,2))

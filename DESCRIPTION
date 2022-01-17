@@ -51,6 +51,7 @@ Imports:
   utils
 RoxygenNote: 7.1.1
 Suggests: 
+    geepack,
     knitr,
     lmtest,
     pain21,

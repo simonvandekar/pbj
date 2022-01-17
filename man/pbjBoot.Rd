@@ -7,7 +7,7 @@
 pbjBoot(
   sqrtSigma,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
-  bootdim,
+  null = TRUE,
   method = c("wild", "permutation", "nonparametric")
 )
 }
@@ -16,17 +16,11 @@ pbjBoot(
 
 \item{rboot}{a function that draws a bootstrapped sample. Should return an n vector. Defaults to Rademacher random variable.}
 
-\item{bootdim}{Dimension of rboot output}
+\item{null}{Is this a simulation under the null hypothesis?}
 
 \item{method}{character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric}
 
 \item{robust}{Generate robust statistics?}
-
-\item{transform}{Apply a quantile transformation to the test statistics to improve normal approximation.}
-
-\item{HC3}{logical, was HC3 estimator used?}
-
-\item{id}{Identifier variable for correlated observations.}
 }
 \value{
 Returns vector of test statistics computed from the bootstrapped sample.

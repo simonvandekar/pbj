@@ -158,7 +158,6 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
       sigmas = sqrt(colSums(res^2)/rdf)
       res = sweep(res, 2, sigmas, FUN = '/')
       Y = sweep(Y, 2, sigmas, FUN = '/')
-      if(debug) assign('YlmPBJ', Y, envir = .GlobalEnv)
       AsqrtInv = matrix(apply(X1res, 3, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }),   nrow=df^2, ncol=V)
       sqrtSigma = simplify2array( lapply(1:V, function(ind) crossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), matrix(X1res[,,ind], df, n, byrow=TRUE)) ) )
       # used to compute chi-squared statistic
@@ -219,7 +218,9 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
         X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
       }
       if(!is.null(id)){
-        IDmat = model.matrix(~-1+factor(id))
+        id = factor(id)
+        IDmat = model.matrix(~-1+id)
+        id = as.integer(id)
         X1resQ = array(apply(X1resQ, 3, function(mat) crossprod(IDmat, mat)), dim=c(ncol(IDmat), V, df))
       }
       # apply across voxels. returns V X m_1^2 array
@@ -229,7 +230,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
       normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
       #assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
       # Things needed to resample the robust statistics
-      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
+      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform, id=id)
       rm(BsqrtInv, Y, res, X1resQ, X1res)
     }
   }
@@ -245,7 +246,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
 
 
   # used later to indicated t-statistic
-  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, images=images, formulas=list(full=form, reduced=formred), data = get_all_vars(form, data = data), id=id)
+  out = list(stat=stat, coef=coef, normedCoef=normedCoef, sqrtSigma=sqrtSigma, mask=mask, template=template, images=images, formulas=list(full=form, reduced=formred), data = get_all_vars(form, data = data))
   class(out) = c('statMap', 'list')
 
   # if outdir is specified the stat and sqrtSigma images are saved in outdir
