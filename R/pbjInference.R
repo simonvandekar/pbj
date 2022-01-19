@@ -42,7 +42,6 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
   V=dims[2]
 
   boots = list()
-  bootdim = dim(rboot(n))
 
 
   # If sqrtSigma can be stored and accessed efficiently on disk this can be efficiently run in parallel
@@ -50,7 +49,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
   tmp = mask
   if(nboot>0){
     for(i in 1:nboot){
-      statimg = pbjBoot(sqrtSigma, rboot, bootdim, method = method)
+      statimg = pbjBoot(sqrtSigma, rboot, method = method)
       tmp[ mask!=0] = statimg
       boots[[i]] = statistic(tmp, ...)
       setTxtProgressBar(pb, round(i/nboot,2))
@@ -100,5 +99,6 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
                }
                list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)},
              bootstrap=list(obsStat=obsstat, boots=boots) )
+  class(out) = c('pbj', 'list')
   return(out)
 }
