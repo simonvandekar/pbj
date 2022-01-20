@@ -179,7 +179,7 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
                       lapply(tmp, function(tm) c(by(c(stat), c(mmand::components(tm, k)), sum) ))
                     })
     # modifies ccomps attribute in cluster function
-    lapply(1:length(cft), function(ind){ attributes(ccomps[[ind]]) <<- list('cft'=cft[ind])})
+    ccomps = lapply(1:length(cft), function(ind){ attributes(ccomps[[ind]]) <- list('cft'=cft[ind]); ccomps[[ind]]})
   }
   return(ccomps)
 }
