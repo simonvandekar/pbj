@@ -92,7 +92,6 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 
                # reindex ROIs and obsStat
                for(ind in 1:length(obsstat)){
-                 browser()
                  newInds = order(obsstat[[ind]], decreasing=TRUE)
                  obsstat[[ind]][] = obsstat[[ind]][newInds]
                  rois[[ind]][,,] = match(rois[[ind]][,,], newInds)
