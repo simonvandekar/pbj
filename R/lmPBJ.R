@@ -11,6 +11,7 @@
 #' design matrix for reduced model. If robust=TRUE then this must have one less
 #' column than X.
 #' @param mask File name for a binary mask file or niftiImage object.
+#' @param id Vector to identify measurements from the same observation.
 #' @param data R data frame containing variables in form. If form and formred
 #' are matrices then this can be NULL.
 #' @param W Weights for regression model. Can be used to deweight noisy

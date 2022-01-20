@@ -36,6 +36,8 @@ column than X.}
 
 \item{mask}{File name for a binary mask file or niftiImage object.}
 
+\item{id}{Vector to identify measurements from the same observation.}
+
 \item{data}{R data frame containing variables in form. If form and formred
 are matrices then this can be NULL.}
 

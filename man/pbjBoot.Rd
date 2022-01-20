@@ -19,8 +19,6 @@ pbjBoot(
 \item{null}{Is this a simulation under the null hypothesis?}
 
 \item{method}{character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric}
-
-\item{robust}{Generate robust statistics?}
 }
 \value{
 Returns vector of test statistics computed from the bootstrapped sample.

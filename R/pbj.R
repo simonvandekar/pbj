@@ -153,7 +153,7 @@ vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(s
 #'
 #' @param stat A statistical Nifti image as an RNifti image object.
 #' @param mask A statistical Nifti image mask used in the analysis or a character path to one.
-#' @param thr Vector of thresholds to threshold the test statistic image.
+#' @param cft A a vector of cluster forming thresholds for the test statistic image. Will compute cluster sizes for each threshold.
 #' @param method character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.
 #' @param kernel The kernel type to compute connected components.
 #' @param rois If TRUE, return image with voxel values having the indices of the clusters returned if rois=FALSE.
@@ -161,13 +161,13 @@ vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(s
 #' @export
 #' @importFrom mmand shapeKernel
 #'
-cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box', rois=FALSE){
+cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', rois=FALSE){
   method = tolower(method[1])
   if(is.character(mask)) mask = readNifti(mask)
   ndims = length(dim(mask))
   tmp = mask
   k = mmand::shapeKernel(3, ndims, type=kernel)
-  tmp = lapply(thr, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
+  tmp = lapply(cft, function(th){ tmp[ mask!=0] = (stat[mask!=0]>th); tmp})
   if(rois){
     ccomps = lapply(tmp, function(tm){cc = mmand::components(tm, k); mask[mask!=0]=0; mask[!is.na(cc)] = cc[!is.na(cc)]; mask} )
   } else {
@@ -178,7 +178,8 @@ cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box', ro
                     'mass'={
                       lapply(tmp, function(tm) c(by(c(stat), c(mmand::components(tm, k)), sum) ))
                     })
-    names(ccomps) = paste0(method, '_cft', thr)
+    # modifies ccomps attribute in cluster function
+    lapply(1:length(cft), function(ind){ attributes(ccomps[[ind]], 'cft') <<- cft[ind]})
   }
   return(ccomps)
 }
@@ -189,7 +190,7 @@ cluster = function(stat, mask, thr, method=c('extent', 'mass'), kernel='box', ro
 #' @param kernel Type of kernel to use for max/dilation filter
 #' @param width Width of kernel (assumes isotropic)
 #' @param rois If TRUE, return image with voxel values having the indices of the local maxima returned if rois=FALSE.
-#' @return Returns list of tables of sizes of the connected components above thr.
+#' @return Returns vector of local maxima in the image.
 #' @export
 #' @importFrom mmand shapeKernel
 #'
@@ -241,10 +242,10 @@ wecdf = function (x, w=rep(1, length(x)))
 #' analysis using the pbjInference and mmeStat functions.
 #' @return Returns table of unadjusted and FWER adjusted p-values and other summary statistics. Results depend on what statistic
 #' function was used for pbjInference.
-#' @seealso [mmeStat], [pbjInference]
+#' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
 #' @export
 #'
-table.pbj = function(x, method=c('CEI', 'maxima', 'CMI')){
+table.pbj = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
   method = method[1]
   ind = grep(method, names(x$obsStat))
   Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
@@ -269,22 +270,22 @@ c('Cluster Mass', 'Centroid (vox)', 'Unadjusted p-value', 'FWER p-value')
 #' @param max Compute local maxima?
 #' @param CMI Compute cluster masses?
 #' @param CEI Compute cluster extents?
-#' @param thr Threshold for CEI or CMI.
+#' @param thr A single threshold for CEI or CMI.
 #' @return Returns a list with the maxima and CEI for the given image.
 #' function was used for pbjInference.
 #' @export
 #'
-mmeStat = function(stat, rois=FALSE, mask, thr, max=FALSE, CMI=FALSE,
+mmeStat = function(stat, rois=FALSE, mask, cft, max=FALSE, CMI=FALSE,
 CEI=TRUE){
   res = c()
   if(max){
    res = c(maxima=list(maxima(stat, rois=rois)) )
   }
   if(CMI) {
-    res = c(res, CMI=cluster(stat, mask=mask, thr=thr, rois=rois, method='mass'))
+    res = c(res, CMI=cluster(stat, mask=mask, cft=cft, rois=rois, method='mass'))
   }
   if(CEI){
-    res = c(res, CEI=cluster(stat, mask=mask, thr=thr, rois=rois,
+    res = c(res, CEI=cluster(stat, mask=mask, cft=cft, rois=rois,
 method='extent'))
   }
   res
@@ -303,8 +304,21 @@ colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=ntic
 }
 
 
-# image.pbj(obj, slices=NULL, roi=NULL, outputdir=NULL, orientation=c('axial', 'sagittal', 'coronal') ){
+# image.pbj(pbjObj, statmapObj, method='CEI', cft=NULL, roi=NULL, slice=NULL, clustIDs=TRUE, outputdir=NULL, orientation=c('axial', 'sagittal', 'coronal') ){
 #   image(displayParamBoot, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+#
+#   st = table.pbj(pbjObj, method=method)
+#   # if roi is non-null draw single slice with centroid of each selected ROI
+#   if(!is.null(roi)){
+#     for(ro in roi){
+#       # get coordinates from table
+#      coords = as.numeric(strsplit(st[1,2], split=', ')[[1]])
+#     }
+#   }
+#   # if slice is non-null draw single slice with centroid of each
+#
+#   # if roi and slice are null, do lightbox view
+#
 #   if(!is.null(slices)){
 #     for (slice in slices){
 #       if(!is.null(outputdir)){

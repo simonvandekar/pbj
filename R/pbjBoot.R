@@ -3,7 +3,6 @@
 #' @param sqrtSigma list from statmap object
 #' @param rboot a function that draws a bootstrapped sample. Should return an n vector. Defaults to Rademacher random variable.
 #' @param null Is this a simulation under the null hypothesis?
-#' @param robust Generate robust statistics?
 #' @param method character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
 #'
 #' @return Returns vector of test statistics computed from the bootstrapped sample.
