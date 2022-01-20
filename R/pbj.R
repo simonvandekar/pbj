@@ -180,7 +180,7 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
                     })
   }
   # modifies ccomps attribute in cluster function
-  ccomps = lapply(1:length(cft), function(ind){ attributes(ccomps[[ind]]) <<- list('cft'=cft[ind])})
+  lapply(1:length(cft), function(ind){ attributes(ccomps[[ind]]) <<- list('cft'=cft[ind])})
 
   return(ccomps)
 }
@@ -241,6 +241,7 @@ wecdf = function (x, w=rep(1, length(x)))
 #' @param x pbj object
 #' @param method What statistic to provide summary for? must have run that
 #' analysis using the pbjInference and mmeStat functions.
+#' @param cft cluster forming threshold to display. If NULL, just display the first.
 #' @return Returns table of unadjusted and FWER adjusted p-values and other summary statistics. Results depend on what statistic
 #' function was used for pbjInference.
 #' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
@@ -248,6 +249,9 @@ wecdf = function (x, w=rep(1, length(x)))
 #'
 table.pbj = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
   method = method[1]
+  if(method %in% c('CEI', 'CMI')){
+
+  }
   ind = grep(method, names(x$obsStat))
   Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
                      'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind) paste(round(colMeans(which(x$ROIs[[2]]==ind, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
@@ -305,63 +309,64 @@ colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=ntic
 }
 
 
-# image.pbj(pbjObj, statmapObj, method='CEI', cft=NULL, roi=NULL, slice=NULL, clustIDs=TRUE, outputdir=NULL, plane=c('axial', 'sagittal', 'coronal') ){
-#   image(displayParamBoot, template, thresh=(-log10(0.01)), index=slice, cex=cex)
-#
-#   st = table.pbj(pbjObj, method=method)
-#   # if roi is non-null draw single slice with centroid of each selected ROI
-#   if(!is.null(roi)){
-#     for(ro in roi){
-#      # get coordinates from table
-#      coords = as.numeric(strsplit(st[1,2], split=', ')[[1]])
-#      planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
-#      # slice to display
-#      planecoord = coords[planenum]
-#      # coordinates to display the number
-#      othercoords = coords[-planenum]
-#
-#     }
-#   }
-#   # if slice is non-null draw single slice with centroid of each
-#
-#   # if roi and slice are null, do lightbox view
-#
-#   if(!is.null(slices)){
-#     for (slice in slices){
-#       if(!is.null(outputdir)){
-#         fname = file.path(outputdir, 'images', paste0('slice', slice, '.png') )
-#         dir.create(dirname(fname), showWarnings = FALSE, recursive = TRUE)
-#         png(filename = fname, height=4, width=4, units = 'in', res = 300)
-#       }
-#       cex=1.5
-#       # graphical parameters
-#       fgcol = 'white'
-#       bgcol = 'black'
-#       oldpar = par(mgp=c(0.9,.7,0), lwd=1.5, lend=2,
-#           cex.lab=cex, cex.axis=0.8*cex, cex.main=1*cex,
-#           mar=c(0,2.2,2.2,0), bty='l', oma=c(0,0,0,0), bg=bgcol, fg=fgcol, col.axis=fgcol, col.lab=fgcol, col.main = fgcol, col.sub=fgcol)
-#       layout(cbind(matrix(1:4, nrow=2, byrow=TRUE) %x% matrix(1, nrow=3, ncol=3) , 5))
-#       # display parametric bootstrap statistic
-#
-#       mtext('Parametric', side=2, cex = 0.8*cex, font = 2)
-#       mtext('Bootstrap', side = 3, cex = 0.8*cex, font = 2)
-#       # display parametric permutation statistic
-#       image(displayParamPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
-#       mtext('Permutation', side = 3, cex = 0.8*cex, font=2)
-#       # display Robust bootstrap statistic
-#       image(displayRobustBoot, template, thresh=(-log10(0.01)), index=slice, cex=cex)
-#       mtext('Robust', side=2, cex = 0.8*cex, font = 2 )
-#       # display robust permutation statistic
-#       image(displayRobustPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
-#
-#       # main title
-#       #mtext('Probability', side=3, outer = TRUE, cex=1*cex, font=2)
-#
-#       par(mar=c(10,2,10,0.5))
-#       color.bar(pbj:::redyellow(64), min=threshs[1], max=threshs[2], nticks=4)
-#       if(!is.null(outputdir)) dev.off()
-#     }
-#   }
-# }
+image.pbj(pbjObj, statmapObj, method='CEI', cft=NULL, roi=NULL, slice=NULL, clustIDs=TRUE, outputdir=NULL, plane=c('axial', 'sagittal', 'coronal') ){
+
+  st = table.pbj(pbjObj, method=method)
+  statmap = stat.statMap(statmapObj)
+  template = if(is.character(statmapObj$template)) readNifti(statmapObj$template) else statmapObj$template
+  # if roi is non-null draw single slice with centroid of each selected ROI
+  if(!is.null(roi)){
+    for(ro in roi){
+     # get coordinates from table
+     coords = as.numeric(strsplit(st[1,2], split=', ')[[1]])
+     planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
+     # slice to display
+     planecoord = coords[planenum]
+     # coordinates to display the cluster index number
+     othercoords = coords[-planenum]
+
+    }
+  }
+  # if slice is non-null draw single slice with centroid of each
+
+  # if roi and slice are null, do lightbox view
+
+  if(!is.null(slices)){
+    for (slice in slices){
+      if(!is.null(outputdir)){
+        fname = file.path(outputdir, 'images', paste0('slice', slice, '.png') )
+        dir.create(dirname(fname), showWarnings = FALSE, recursive = TRUE)
+        png(filename = fname, height=4, width=4, units = 'in', res = 300)
+      }
+      cex=1.5
+      # graphical parameters
+      fgcol = 'white'
+      bgcol = 'black'
+      oldpar = par(mgp=c(0.9,.7,0), lwd=1.5, lend=2,
+          cex.lab=cex, cex.axis=0.8*cex, cex.main=1*cex,
+          mar=c(0,2.2,2.2,0), bty='l', oma=c(0,0,0,0), bg=bgcol, fg=fgcol, col.axis=fgcol, col.lab=fgcol, col.main = fgcol, col.sub=fgcol)
+      layout(cbind(matrix(1:4, nrow=2, byrow=TRUE) %x% matrix(1, nrow=3, ncol=3) , 5))
+      # display parametric bootstrap statistic
+
+      mtext('Parametric', side=2, cex = 0.8*cex, font = 2)
+      mtext('Bootstrap', side = 3, cex = 0.8*cex, font = 2)
+      # display parametric permutation statistic
+      image(displayParamPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+      mtext('Permutation', side = 3, cex = 0.8*cex, font=2)
+      # display Robust bootstrap statistic
+      image(displayRobustBoot, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+      mtext('Robust', side=2, cex = 0.8*cex, font = 2 )
+      # display robust permutation statistic
+      image(displayRobustPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
+
+      # main title
+      #mtext('Probability', side=3, outer = TRUE, cex=1*cex, font=2)
+
+      par(mar=c(10,2,10,0.5))
+      color.bar(pbj:::redyellow(64), min=threshs[1], max=threshs[2], nticks=4)
+      if(!is.null(outputdir)) dev.off()
+    }
+  }
+}
 
 
