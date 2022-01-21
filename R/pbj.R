@@ -248,10 +248,16 @@ wecdf = function (x, w=rep(1, length(x)))
 #'
 table.pbj = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
   method = method[1]
-  if(method %in% c('CEI', 'CMI')){
-
-  }
   ind = grep(method, names(x$obsStat))
+  if(!is.null(cft)){
+    # get index corresponding to this cft
+    cfts = sapply(x$obsStat[ind], attr, which='cft')
+    ind = ind[which(cfts==cft)]
+    if(length(ind)==0){
+      stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
+    }
+  }
+  ind = ind[1]
   Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
                      'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind) paste(round(colMeans(which(x$ROIs[[2]]==ind, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
                      'Unadjusted p-value' = (1-x$margCDF[[ind]](c(x$obsStat[[ind]]))),
@@ -317,12 +323,14 @@ colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=ntic
 #   if(!is.null(roi)){
 #     for(ro in roi){
 #      # get coordinates from table
-#      coords = as.numeric(strsplit(st[1,2], split=', ')[[1]])
+#      coords = as.numeric(strsplit(st[ro,2], split=', ')[[1]])
 #      planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
 #      # slice to display
 #      planecoord = coords[planenum]
 #      # coordinates to display the cluster index number
 #      othercoords = coords[-planenum]
+#      image(statmapObj, plane=plane, index=planenum,
+#            other=function(){text(othercoords, othercoords, labels=ro, col='white')})
 #
 #     }
 #   }
@@ -366,6 +374,6 @@ colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=ntic
 #       if(!is.null(outputdir)) dev.off()
 #     }
 #   }
-# }x
+# }
 
 

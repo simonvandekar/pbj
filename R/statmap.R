@@ -86,13 +86,14 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' @param oma A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.
 #' @param mar A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.
 #' @param bg background color, defaults to black.
+#' @param other argumentless function containing expression of other stuff to draw on the image.
 #' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
 #' @importFrom graphics par
 # modified from oro.nifti:::image.nifti
 #' @export
 image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
-     plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...)
+     plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", other=function(){}, ...)
   {
     object <- x
     # mask can't be empty in typical statMap object unless it's manually constructed
@@ -160,6 +161,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
         breaks = breaksneg, asp = aspect, axes = axes, add=TRUE,
         xlab = xlab, ylab = ylab, ...)
     }
+    other()
     par(oldpar)
     invisible()
 }
