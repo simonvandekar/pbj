@@ -146,13 +146,13 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #' @details
 #' For `rdata_rds`, if the string has an RDS extension the `statMap` object is saved in the RDS file. If it has any other extension the `statMap` object and computing time are saved as an rdata file.
 pbjInferenceBG = function(statMap, mask, cft, rdata_rds, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method='wild', max=FALSE, CMI=FALSE, CEI=TRUE){
- rcallRes = r_bg(function(statMap, nboot, rboot, method, mask, cft, progress, max, CMI, CEI, rdata){
+ rcallRes = r_bg(function(statMap, nboot, rboot, method, mask, cft, progress, max, CMI, CEI, rdata_rds){
   computeTime = system.time(statMap <- pbj::pbjInference(statMap, nboot = nboot, method=method, mask = mask, cft = cft, max=max, CMI=CMI, CEI=CEI, runMode='cdf'))
   if(grepl('.rds', rdata_rds)){
     saveRDS(statMap, file=rdata_rds)
   } else {
     save(statMap, computeTime, file=rdata_rds)
   }
-}, args=list(statMap=statMap, nboot=nboot, rboot=rboot, method=method, mask=mask, cft=cft, max=max, CMI=CMI, CEI=CEI, rdata=rdata))
+}, args=list(statMap=statMap, nboot=nboot, rboot=rboot, method=method, mask=mask, cft=cft, max=max, CMI=CMI, CEI=CEI, rdata_rds=rdata_rds))
  rcallRes
 }
