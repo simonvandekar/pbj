@@ -75,7 +75,7 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' @param outdir the directory to write into
 #' @return a list of what was written
 #' @export
-write.statMap <- function(x,outdir){
+write.statMap <- function(x, outdir){
   statimg  = file.path(outdir, 'stat.nii.gz')
   coefimg   = file.path(outdir, 'coef.nii.gz')
   res   = file.path(outdir, 'sqrtSigma.rds')
@@ -84,23 +84,25 @@ write.statMap <- function(x,outdir){
     file.copy(x$sqrtSigma, res)
     file.copy(x$coef, coefimg)
   } else {
-    message('Writing output images.\n')
+    message('Writing stat and coef images.')
     dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
     writeNifti(stat.statMap(x), statimg)
     writeNifti(coef.statMap(x), coefimg)
 
-    message('Writing sqrtSigma object.\n')
+    message('Writing sqrtSigma object.')
     saveRDS(x$sqrtSigma, file = res)
   }
 
 
-    pbj = x$pbj
-    if(!is.null(pbj)){
+  pbj = x$pbj
+  if(!is.null(pbj)){
     #if(is.null(x$template)) x$template = x$mask
     #sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
     #voxvol = prod(RNifti::pixdim(x$template))
+    inference=list()
+    message('Writing inference images.')
     for(infType in names(pbj$ROIs)){
-      if(grep('CEI|CMI', infType)) cft = attr(pbj$obsStat[[infType]], 'cft')
+      if(grepl('CEI|CMI', infType)) cft = attr(pbj$obsStat[[infType]], 'cft')
       # removes number from name if infType
       method = gsub("[0-9]", '', infType)
       tab = table.statMap(x, method=method, cft=cft)
@@ -108,22 +110,13 @@ write.statMap <- function(x,outdir){
       clustmapimg = file.path(outdir, paste0('clustIDs_', infType, '.nii.gz'))
       pmap = pbj$ROIs[[infType]]
       # sets clusters to their p-value. This is wrong currently
-      pmap[ match(tab$`cluster ID`, pmap) ] = tab$`FWER p-value`
-      writeNifti(pbj[[infType]]$pmap, pmapimg)
-      writeNifti(pbj[[infType]]$clustermap, clustmapimg)
-
-      ### WRITE OUT CLUSTER STATISTICS TABLE ###
-      clustmapinds = unique(c(x[[cft]]$clustermap))
-      clustmapinds = sort(clustmapinds[ clustmapinds>0])
-      clusttab = data.frame('Index'=numeric(0), 'Adjusted p-value'=numeric(0), 'Signed log10(p-value)'=numeric(0), 'Volume (mm)'=numeric(0), 'Centroid'= character(0), stringsAsFactors = FALSE, check.names = FALSE)
-      tabname = file.path(outdir, paste0('sei_table_', cft, '.csv') )
-      for(ind in clustmapinds){
-        clusttab[ind,c('Index','Adjusted p-value', 'Signed log10(p-value)', 'Volume (mm)')] = c(ind, 10^(-abs(x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1])), x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1], sum(x[[cft]]$clustermap==ind)*voxvol)
-        clusttab[ind, 'Centroid'] = paste(round(sform %*% c(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 1 ), 0), collapse=', ')
-      }
+      pmap[ which(pmap!=0) ] = -log10(tab$`FWER p-value`[ pmap[which(pmap!=0)] ])
+      writeNifti(pmap, pmapimg)
+      writeNifti(pbj$ROIs[[infType]], clustmapimg)
+      inference[[infType]] = c(pmapimg, clustmapimg)
     }
-    }
-  return(list(stat=statimg, coef=coefimg, sqrtSigma=res))
+  }
+  return(c(list(stat=statimg, coef=coefimg, sqrtSigma=res), inference) )
 }
 
 #' Gets a 4D niftiImage of the coefficient image from a statMap object

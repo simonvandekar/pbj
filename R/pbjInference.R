@@ -128,7 +128,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #' @param statMap statMap object as obtained from lmPBJ function.
 #' @param mask The mask file used for the analysis passed to `mmeStat`
 #' @param cft The cluster forming threshold to use if CEI or CMI are specified.
-#' @param rdata The location the save the results as an rdata file.
+#' @param rdata_rds The location the save the results as an rdata file or an rds file as a character.
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.
 #' @param method Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
@@ -143,10 +143,16 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #' @importFrom RNifti readNifti
 #' @seealso [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
 #' @export
-pbjInferenceBG = function(statMap, mask, cft, rdata, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method='wild', max=FALSE, CMI=FALSE, CEI=TRUE){
+#' @details
+#' For `rdata_rds`, if the string has an RDS extension the `statMap` object is saved in the RDS file. If it has any other extension the `statMap` object and computing time are saved as an rdata file.
+pbjInferenceBG = function(statMap, mask, cft, rdata_rds, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method='wild', max=FALSE, CMI=FALSE, CEI=TRUE){
  rcallRes = r_bg(function(statMap, nboot, rboot, method, mask, cft, progress, max, CMI, CEI, rdata){
   computeTime = system.time(statMap <- pbj::pbjInference(statMap, nboot = nboot, method=method, mask = mask, cft = cft, max=max, CMI=CMI, CEI=CEI, runMode='cdf'))
-  save(statMap, computeTime, file=rdata)
+  if(grepl('.rds', rdata_rds)){
+    saveRDS(statMap, file=rdata_rds)
+  } else {
+    save(statMap, computeTime, file=rdata_rds)
+  }
 }, args=list(statMap=statMap, nboot=nboot, rboot=rboot, method=method, mask=mask, cft=cft, max=max, CMI=CMI, CEI=CEI, rdata=rdata))
  rcallRes
 }
