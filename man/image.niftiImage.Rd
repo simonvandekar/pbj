@@ -19,6 +19,7 @@
   oma = rep(0, 4),
   mar = rep(0, 4),
   bg = "black",
+  other = function() { },
   ...
 )
 }
@@ -50,6 +51,8 @@
 \item{mar}{A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.}
 
 \item{bg}{background color, defaults to black.}
+
+\item{other}{A function used to add features to the plot.}
 
 \item{...}{additional arguments passed to par}
 }

@@ -16,7 +16,7 @@ maxima(stat, kernel = "box", width = 7, rois = FALSE)
 \item{rois}{If TRUE, return image with voxel values having the indices of the local maxima returned if rois=FALSE.}
 }
 \value{
-Returns list of tables of sizes of the connected components above thr.
+Returns vector of local maxima in the image.
 }
 \description{
 Computes local maxima from an nifti image

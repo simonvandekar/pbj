@@ -17,6 +17,7 @@
 #' @param oma A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.
 #' @param mar A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.
 #' @param bg background color, defaults to black.
+#' @param other A function used to add features to the plot.
 #' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
 #' @importFrom graphics par
@@ -25,7 +26,7 @@
 image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",
                                                                                                   "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE,
-                             oma = rep(0, 4), mar = rep(0, 4), bg = "black", ...)
+                             oma = rep(0, 4), mar = rep(0, 4), bg = "black", other=function(){}, ...)
 {
   eps = 10^-6
   thresh = thresh + eps
@@ -33,11 +34,15 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
   stat = if (is.character(object))
     readNifti(object)
   else object
-  x = if (is.character(bgimg)) {
-    readNifti(bgimg)
+  if (is.character(bgimg)) {
+    x=readNifti(bgimg)
   }
   else if (is.null(bgimg)) {
-    bgimg = stat
+    x = stat
+    # if only one argument was passed, display as the background img (foreground is blank)
+    if(thresh==eps){
+     thresh=max(stat)+eps
+    }
   }
   else bgimg
   pixdim = RNifti::pixdim(x)
@@ -45,12 +50,12 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
     aspect <- pixdim[3]/pixdim[2]
   }, coronal = {
     x <- aperm(x, c(1, 3, 2))
-    mask <- aperm(mask, c(1, 3, 2))
+    #mask <- aperm(mask, c(1, 3, 2))
     stat <- aperm(stat, c(1, 3, 2))
     aspect <- pixdim[4]/pixdim[2]
   }, sagittal = {
     x <- aperm(x, c(2, 3, 1))
-    mask <- aperm(mask, c(2, 3, 1))
+    #mask <- aperm(mask, c(2, 3, 1))
     stat <- aperm(stat, c(2, 3, 1))
     aspect <- pixdim[4]/pixdim[3]
   }, stop(paste("Orthogonal plane", plane[1], "is not valid.")))
@@ -88,10 +93,13 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
     breaksneg <- c(thresh[1], seq(thresh[1], thresh[2], length = length(colneg) -
                                     1), maxstatneg)
   }
-  if (is.null(index))
+  if (is.null(index)) {
     index = 1:imgdim[3]
-  if (length(index) != 1) {
     par(mfrow = ceiling(rep(sqrt(length(index)), 2)), oma = oma,
+        mar = mar, bg = bg)
+    oldpar <- par(no.readonly = TRUE)
+  } else {
+    par(oma = oma,
         mar = mar, bg = bg)
     oldpar <- par(no.readonly = TRUE)
   }
@@ -110,6 +118,7 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
                       axes = axes, add = TRUE, xlab = xlab, ylab = ylab,
                       ...)
   }
+  other()
   if (length(index) != 1)
     par(oldpar)
   invisible()

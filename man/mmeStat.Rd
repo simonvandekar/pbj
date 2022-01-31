@@ -4,7 +4,7 @@
 \alias{mmeStat}
 \title{Compute maxima, CMI, or CEI inference statistics}
 \usage{
-mmeStat(stat, rois = FALSE, mask, thr, max = FALSE, CMI = FALSE, CEI = TRUE)
+mmeStat(stat, rois = FALSE, mask, cft, max = FALSE, CMI = FALSE, CEI = TRUE)
 }
 \arguments{
 \item{stat}{statistical image}
@@ -14,7 +14,7 @@ indices?}
 
 \item{mask}{Mask image.}
 
-\item{thr}{Threshold for CEI or CMI.}
+\item{cft}{A single threshold for CEI or CMI.}
 
 \item{max}{Compute local maxima?}
 
@@ -24,7 +24,7 @@ indices?}
 }
 \value{
 Returns a list with the maxima and CEI for the given image.
-function was used for pbjInference.
+This function is used  as the default `statistic` argument in [pbjInference()].
 }
 \description{
 Compute maxima, CMI, or CEI inference statistics

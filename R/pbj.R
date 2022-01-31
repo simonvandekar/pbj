@@ -34,75 +34,6 @@ summary.pbj <- function(object, ...)
   }
 }
 
-#' Image a pbj object
-#' See image.statMap for additional arguments
-#'
-#' @export
-#' @param x pbj object to create images for
-#' @param alpha numeric; threshold to apply to adjusted p-values.
-#' @param ... Arguments passed to image.statMap
-#' @importFrom graphics image
-#' @importFrom graphics par
-image.pbj <- function(x, alpha=0.05, ...)
-{
-  x$mask = if(is.character(x$mask)) readNifti(x$mask) else x$mask
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
-    stat = x$stat
-    # mask stat image with significant voxels
-    stat[ abs(x[[cft]]$pmap) < (-log10(alpha) ) ] = 0
-    # create a barebones statmap object
-    statmap = list(stat=stat, sqrtSigma=NULL, mask=x$mask, template=x$template, formulas=NULL, robust=NULL)
-    class(statmap) = "statMap"
-    # call image.statMap
-    if(x$df==0){
-      image(statmap, thresh=qnorm(1-as.numeric(gsub("[^0-9\\.]", "", cft)) ), ...  )
-    } else {
-      image(statmap, thresh=qchisq(as.numeric(gsub("[^0-9\\.]", "", cft)) * 2, df=x$df, lower.tail=FALSE ), ...  )
-    }
-  }
-}
-
-#' Write a pbj object to disk
-#'
-#' Write a pbj object to disk in parts
-#'
-#' @param x pbj object to write
-#' @param outdir output directory to write pbj pieces
-#' @param ... additional arguments; unused.
-#' @importFrom utils write.csv
-#' @export
-write.pbj <- function(x, outdir, ...)
-{
-  if(!file.exists(outdir)) dir.create(outdir)
-  statimg = file.path(outdir, 'stat.nii.gz')
-  if(!file.exists(statimg)){
-    if(is.character(x$stat)){
-      file.copy(x$stat, statimg)
-    } else {
-      writeNifti(x$stat, statimg)
-    }
-  }
-  if(is.null(x$template)) x$template = x$mask
-  sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
-  voxvol = prod(RNifti::pixdim(x$template))
-  for(cft in names(x)[ ! names(x) %in% c('stat', 'template', 'mask', 'df') ]){
-    pmapimg = file.path(outdir, paste0('pbj_sei_log10p_', cft, '.nii.gz'))
-    clustmapimg = file.path(outdir, paste0('pbj_sei_clust_', cft, '.nii.gz'))
-    writeNifti(x[[cft]]$pmap, pmapimg)
-    writeNifti(x[[cft]]$clustermap, clustmapimg)
-
-    ### WRITE OUT CLUSTER STATISTICS TABLE ###
-    clustmapinds = unique(c(x[[cft]]$clustermap))
-    clustmapinds = sort(clustmapinds[ clustmapinds>0])
-    clusttab = data.frame('Index'=numeric(0), 'Adjusted p-value'=numeric(0), 'Signed log10(p-value)'=numeric(0), 'Volume (mm)'=numeric(0), 'Centroid'= character(0), stringsAsFactors = FALSE, check.names = FALSE)
-    tabname = file.path(outdir, paste0('sei_table_', cft, '.csv') )
-    for(ind in clustmapinds){
-      clusttab[ind,c('Index','Adjusted p-value', 'Signed log10(p-value)', 'Volume (mm)')] = c(ind, 10^(-abs(x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1])), x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1], sum(x[[cft]]$clustermap==ind)*voxvol)
-      clusttab[ind, 'Centroid'] = paste(round(sform %*% c(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 1 ), 0), collapse=', ')
-    }
-    write.csv(clusttab[order(clusttab[, 'Adjusted p-value']),], row.names=FALSE, file=tabname)
-  }
-}
 
 #' Image a CoPE object
 #'
@@ -197,14 +128,14 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
 maxima = function(stat, kernel='box', width=7, rois=FALSE){
   ndims = length(dim(stat))
   dil = dilate(stat, shapeKernel(width, ndims, type=kernel))
-    stat[which(stat<dil)] = 0
-    imginds = which(stat!=0)
-    if(rois){
-      stat[imginds] = 1:length(imginds)
-      stat
-    } else {
-      stat[ imginds]
-    }
+  stat[which(stat<dil)] = 0
+  imginds = which(stat!=0)
+  if(rois){
+    stat[imginds] = 1:length(imginds)
+    stat
+  } else {
+    stat[ imginds]
+  }
 }
 
 #' Computes empirical weighted cdf. Modified from ecdf
@@ -246,12 +177,17 @@ wecdf = function (x, w=rep(1, length(x)))
 #' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
 #' @export
 #'
-table.pbj = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
+table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
+  x = x$pbj
+  if(is.null(x)){
+    stop("Must run pbjInference to create cluster table.")
+  }
   method = method[1]
   ind = grep(method, names(x$obsStat))
-  if(!is.null(cft)){
-    # get index corresponding to this cft
-    cfts = sapply(x$obsStat[ind], attr, which='cft')
+  # get indices corresponding to this method
+  cfts = sapply(x$obsStat[ind], attr, which='cft')
+  # maxima don't have cft attribute
+  if(!is.null(cft) & method!='maxima'){
     ind = ind[which(cfts==cft)]
     if(length(ind)==0){
       stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
@@ -259,15 +195,18 @@ table.pbj = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
   }
   ind = ind[1]
   Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
-                     'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind) paste(round(colMeans(which(x$ROIs[[2]]==ind, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
+                     'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
                      'Unadjusted p-value' = (1-x$margCDF[[ind]](c(x$obsStat[[ind]]))),
                      'FWER p-value' = (1-x$globCDF[[ind]](c(x$obsStat[[ind]]))),
                      check.names=FALSE )
   names(Table) = if(method=='CEI') c('Cluster Extent', 'Centroid (vox)',
-'Unadjusted p-value', 'FWER p-value') else if(method=='maxima') c('Chi-square',
-'Coord (vox)', 'Unadjusted p-value', 'FWER p-value') else if(method=='CMI')
-c('Cluster Mass', 'Centroid (vox)', 'Unadjusted p-value', 'FWER p-value')
+                                     'Unadjusted p-value', 'FWER p-value') else if(method=='maxima') c('Chi-square',
+                                                                                                       'Coord (vox)', 'Unadjusted p-value', 'FWER p-value') else if(method=='CMI')
+                                                                                                         c('Cluster Mass', 'Centroid (vox)', 'Unadjusted p-value', 'FWER p-value')
   Table = Table[order(Table[,1], decreasing = TRUE),]
+  Table[,'cluster ID'] = 1:nrow(Table)
+  Table = Table[, c(ncol(Table), 1:(ncol(Table)-1) )]
+  #attributes(Table) <- list('cft'=cfts[ind], 'ind'=ind)
   Table
 }
 
@@ -280,23 +219,23 @@ c('Cluster Mass', 'Centroid (vox)', 'Unadjusted p-value', 'FWER p-value')
 #' @param max Compute local maxima?
 #' @param CMI Compute cluster masses?
 #' @param CEI Compute cluster extents?
-#' @param thr A single threshold for CEI or CMI.
+#' @param cft A single threshold for CEI or CMI.
 #' @return Returns a list with the maxima and CEI for the given image.
-#' function was used for pbjInference.
+#' This function is used  as the default `statistic` argument in [pbjInference()].
 #' @export
 #'
 mmeStat = function(stat, rois=FALSE, mask, cft, max=FALSE, CMI=FALSE,
-CEI=TRUE){
+                   CEI=TRUE){
   res = c()
   if(max){
-   res = c(maxima=list(maxima(stat, rois=rois)) )
+    res = c(maxima=list(maxima(stat, rois=rois)) )
   }
   if(CMI) {
     res = c(res, CMI=cluster(stat, mask=mask, cft=cft, rois=rois, method='mass'))
   }
   if(CEI){
     res = c(res, CEI=cluster(stat, mask=mask, cft=cft, rois=rois,
-method='extent'))
+                             method='extent'))
   }
   res
 }
@@ -314,66 +253,128 @@ colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=ntic
 }
 
 
-# image.pbj(pbjObj, statmapObj, method='CEI', cft=NULL, roi=NULL, slice=NULL, clustIDs=TRUE, outputdir=NULL, plane=c('axial', 'sagittal', 'coronal') ){
-#
-#   st = table.pbj(pbjObj, method=method)
-#   statmap = stat.statMap(statmapObj)
-#   template = if(is.character(statmapObj$template)) readNifti(statmapObj$template) else statmapObj$template
-#   # if roi is non-null draw single slice with centroid of each selected ROI
-#   if(!is.null(roi)){
-#     for(ro in roi){
-#      # get coordinates from table
-#      coords = as.numeric(strsplit(st[ro,2], split=', ')[[1]])
-#      planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
-#      # slice to display
-#      planecoord = coords[planenum]
-#      # coordinates to display the cluster index number
-#      othercoords = coords[-planenum]
-#      image(statmapObj, plane=plane, index=planenum,
-#            other=function(){text(othercoords, othercoords, labels=ro, col='white')})
-#
-#     }
-#   }
-#   # if slice is non-null draw single slice with centroid of each
-#
-#   # if roi and slice are null, do lightbox view
-#
-#   if(!is.null(slices)){
-#     for (slice in slices){
-#       if(!is.null(outputdir)){
-#         fname = file.path(outputdir, 'images', paste0('slice', slice, '.png') )
-#         dir.create(dirname(fname), showWarnings = FALSE, recursive = TRUE)
-#         png(filename = fname, height=4, width=4, units = 'in', res = 300)
-#       }
-#       cex=1.5
-#       # graphical parameters
-#       fgcol = 'white'
-#       bgcol = 'black'
-#       oldpar = par(mgp=c(0.9,.7,0), lwd=1.5, lend=2,
-#           cex.lab=cex, cex.axis=0.8*cex, cex.main=1*cex,
-#           mar=c(0,2.2,2.2,0), bty='l', oma=c(0,0,0,0), bg=bgcol, fg=fgcol, col.axis=fgcol, col.lab=fgcol, col.main = fgcol, col.sub=fgcol)
-#       layout(cbind(matrix(1:4, nrow=2, byrow=TRUE) %x% matrix(1, nrow=3, ncol=3) , 5))
-#       # display parametric bootstrap statistic
-#
-#       mtext('Parametric', side=2, cex = 0.8*cex, font = 2)
-#       mtext('Bootstrap', side = 3, cex = 0.8*cex, font = 2)
-#       # display parametric permutation statistic
-#       image(displayParamPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
-#       mtext('Permutation', side = 3, cex = 0.8*cex, font=2)
-#       # display Robust bootstrap statistic
-#       image(displayRobustBoot, template, thresh=(-log10(0.01)), index=slice, cex=cex)
-#       mtext('Robust', side=2, cex = 0.8*cex, font = 2 )
-#       # display robust permutation statistic
-#       image(displayRobustPerm, template, thresh=(-log10(0.01)), index=slice, cex=cex)
-#
-#       # main title
-#       #mtext('Probability', side=3, outer = TRUE, cex=1*cex, font=2)
-#
-#       par(mar=c(10,2,10,0.5))
-#       color.bar(pbj:::redyellow(64), min=threshs[1], max=threshs[2], nticks=4)
-#       if(!is.null(outputdir)) dev.off()
-#     }
-#   }
-# }
+
+#' View pbj results
+#'
+#' Uses a pbj object and statMap object to visualize CEI, CMI, or maxima results
+#'
+#' @param pbjObj pbj object to visualize
+#' @param object the statMap that created the pbj object.
+#' @param cft The cluster forming threshold or threshold for visualizing results (in the case of maxima). On the chi-square scale.
+#' @param pCFT For convenience, the user can specify the CFT in terms of a p-value.
+#' @param clusterMask logical indicating whether to mask the results with significant clusters.
+#' @param alpha Adjusted p-value threshold to display clusters.
+#' @param ... Arguments passed to image.niftiImage.
+#' @importFrom utils write.csv
+#' @export
+image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, outputdir=NULL, plane=c('axial', 'sagittal', 'coronal'), ... ){
+
+  if(!is.null(pCFT)) cft = qchisq(pCFT, df=object$sqrtSigma$df, lower.tail=FALSE)
+  # use mask if user didn't provide a template
+  if(is.null(object$template)) object$template=object$mask
+  # read template if stored as a character
+  x = if(is.character(object$template)) readNifti(object$template) else object$template
+  method = method[1]
+  plane=plane[1]
+
+  pbjObj = object$pbj
+  # if user hasn't run pbj yet visualize using image.niftiImage
+  if(is.null(pbjObj)){
+    if(is.null(cft)) cft=0
+    image.niftiImage(stat.statMap(object), bgimg = object$template, thresh = cft, index = slice, plane=plane)
+  } else {
+    if(is.character(object$mask)){
+      object$mask = readNifti(object$mask)
+    }
+    ind = grep(method, names(pbjObj$obsStat))
+    # get indices corresponding to this method
+    cfts = sapply(pbjObj$obsStat[ind], attr, which='cft')
+    # maxima don't have cft attribute
+    if(!is.null(cft) & method!='maxima'){
+      ind = ind[which(cfts==cft)]
+      if(length(ind)==0){
+        stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
+      }
+    } else {
+      cft = cfts[1]
+    }
+    ind = ind[1]
+    if(is.null(cft)) stop("Must specify cft for visualization with method='maxima'")
+
+    st = table.pbj(pbjObj, method=method, cft=cft)
+    imgdims = dim(stat.statMap(object))
+    planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
+    otherplanes = which(!1:3 %in% planenum)
+    if(!is.null(alpha)){
+      pbjObj$ROIs[[ind]][ pbjObj$ROIs[[ind]] %in% which(st$`FWER p-value`>alpha) ] = 0
+      object$stat[pbjObj$ROIs[[ind]][ object$mask>0 ] ==0] = 0
+      st = st[which(st$`FWER p-value`<=alpha),]
+    } else if(clusterMask){
+      # zero values outside of clusterMask
+      object$stat[pbjObj$ROIs[[ind]][ object$mask>0 ]==0] = 0
+    }
+
+    # image.statMap crops the image, so we need to do that here
+    xoffset = which(apply(x!=0, 1, any))
+    xoffset = c(xoffset[1], length(xoffset))+ c(-1, 0)
+    yoffset = which(apply(x!=0, 2, any))
+    yoffset = c(yoffset[1], length(yoffset))+ c(-1, 0)
+    zoffset = which(apply(x!=0, 3, any))
+    zoffset = c(zoffset[1], length(zoffset))+ c(-1, 0)
+    offsets = list(xoffset, yoffset, zoffset)
+    rm(zoffset, yoffset, xoffset)
+    # if roi is non-null draw single slice with centroid of each selected ROI
+    if(!is.null(roi)){
+      for(ro in roi){
+        # get coordinates from table
+        coords = as.numeric(strsplit(st[ro,3], split=', ')[[1]])
+
+        # slice to display
+        planecoord = coords[planenum]
+        # coordinates to display the cluster index number
+        othercoords = coords[-planenum]
+        if(clusterID){
+          otherfunc=function(){text(othercoords[1]-offsets[[otherplanes[1]]][1]+1, othercoords[2]-offsets[[otherplanes[2]]][1]+1, labels=ro, col='white', font=2)}
+          # trying to debug coordinates
+          #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
+          #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
+          #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
+          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum], thresh=cft, other=otherfunc, ...)
+        } else {
+          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum], thresh=cft, ...)
+        }
+      }
+    } else if(!is.null(slice)){
+      for (slic in slice){
+        if(clusterID){
+          coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
+          coordInds = which(coords[,planenum]==slic)
+          if(length(coordInds)==0){
+            image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic, thresh=cft, ...)
+          } else {
+            coordLabels = st$`cluster ID`[coordInds]
+            othercoords = coords[coordInds,-planenum, drop=FALSE]
+            # if(plane %in% c('axial', 'coronal'){
+            #   #p1 =
+            #   #p2 =
+            # } else {
+            #
+            # }
+            otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
+            image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
+                  other=otherfunc, ...)
+          }
+        } else {
+          image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+        }
+      }
+
+      # if roi and slice are null, do lightbox view
+    } else {
+      image(stat.statMap(object), bgimg=object$template, plane=plane, thresh=cft, ...)
+
+    }
+  }
+}
 
 

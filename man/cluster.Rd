@@ -7,7 +7,7 @@
 cluster(
   stat,
   mask,
-  thr,
+  cft,
   method = c("extent", "mass"),
   kernel = "box",
   rois = FALSE
@@ -18,7 +18,7 @@ cluster(
 
 \item{mask}{A statistical Nifti image mask used in the analysis or a character path to one.}
 
-\item{thr}{Vector of thresholds to threshold the test statistic image.}
+\item{cft}{A a vector of cluster forming thresholds for the test statistic image. Will compute cluster sizes for each threshold.}
 
 \item{method}{character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.}
 

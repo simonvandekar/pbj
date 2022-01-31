@@ -68,104 +68,6 @@ redyellow = colorRampPalette(c('red', 'yellow'), space='Lab')
 bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 
 
-#' Create images of a statMap
-#'
-#' modified from oro.nifti:::image.nifti
-#'
-#' @export
-#' @param x the statMap object to display images of
-#' @param thresh A threshold to apply to the image, defaults to 2.32
-#' @param index Any selected image indexes to use for the z. defaults to NULL
-#' @param col a vector of colors to use for scaled intensities defaults to a grey scale.
-#' @param colpos a vector of colors to use for positive values.
-#' @param colneg a vector of colors to use for negative values.
-#' @param plane the plane to display, can be axial, coronal or sagittal.
-#' @param xlab a title for the x axis.
-#' @param ylab a title for the u axis.
-#' @param axes display axes, defaults to false
-#' @param oma A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.
-#' @param mar A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.
-#' @param bg background color, defaults to black.
-#' @param other argumentless function containing expression of other stuff to draw on the image.
-#' @param ... additional arguments passed to par
-#' @importFrom grDevices gray
-#' @importFrom graphics par
-# modified from oro.nifti:::image.nifti
-#' @export
-image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), colpos=redyellow(64), colneg=bluecyan(64),
-     plane = c("axial", "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE, oma = rep(0, 4), mar = rep(0, 4), bg = "black", other=function(){}, ...)
-  {
-    object <- x
-    # mask can't be empty in typical statMap object unless it's manually constructed
-    if(is.null(object$mask)) object$mask=object$template
-    if(is.null(object$template)) object$template=object$mask
-    x = if(is.character(object$template)) readNifti(object$template) else object$template
-    pixdim = RNifti::pixdim(x)
-    mask = if(is.character(object$mask)) readNifti(object$mask) else object$mask
-    stat = if(is.character(object$stat)){
-      readNifti(object$stat)
-    } else if (length(dim(object$stat))!= length(dim(mask)))
-       stat.statMap(object)
-      else object$stat
-
-    switch(plane[1], axial = {
-        aspect <- pixdim[3]/pixdim[2]
-    }, coronal = {
-            x <- aperm(x, c(1, 3, 2))
-            mask <- aperm(mask, c(1, 3, 2))
-            stat <- aperm(stat, c(1, 3, 2))
-        aspect <- pixdim[4]/pixdim[2]
-    }, sagittal = {
-            x <- aperm(x, c(2, 3, 1))
-            mask <- aperm(mask, c(2, 3, 1))
-            stat <- aperm(stat, c(2, 3, 1))
-        aspect <- pixdim[4]/pixdim[3]
-    }, stop(paste("Orthogonal plane", plane[1], "is not valid.")))
-    # permuted image dimensions
-
-    # crop image and get image dimensions
-    xinds = apply(x!=0, 1, any)
-    yinds = apply(x!=0, 2, any)
-    zinds = apply(x!=0, 3, any)
-    x = x[xinds,,]
-    x = x[,yinds,]
-    x = x[,,zinds]
-    stat = stat[xinds,,]
-    stat = stat[,yinds,]
-    stat = stat[,,zinds]
-    statneg = stat
-    statneg[ statneg> -thresh] = 0
-    statneg = abs(statneg)
-    stat[ stat<thresh ] = 0
-    imgdim = dim(x)
-    zlim = range(x, na.rm=TRUE)
-    maxstat = max(c(stat[ stat>0], thresh), na.rm=TRUE)
-    maxstatneg = max(c(statneg[ statneg>0], thresh), na.rm=TRUE)
-    breaks <- c(zlim[1], seq(zlim[1], zlim[2], length = length(col) - 1), zlim[2])
-    breakspos <- c(thresh, seq(thresh, maxstat, length = length(colpos)-1), maxstat)
-    breaksneg <- c(thresh, seq(thresh, maxstatneg, length = length(colneg)-1), maxstatneg)
-    if(is.null(index)) index = 1:imgdim[3]
-    oldpar <- par(no.readonly = TRUE)
-    par(mfrow = ceiling(rep(sqrt(length(index)), 2)), oma = oma, mar = mar, bg = bg)
-    for (z in index) {
-      # background image
-      graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
-        breaks = breaks, asp = aspect, axes = axes,
-        xlab = xlab, ylab = ylab, ...)
-      # overlay positive
-      graphics::image(1:imgdim[1], 1:imgdim[2], stat[, , z], col = colpos,
-        breaks = breakspos, asp = aspect, axes = axes, add=TRUE,
-        xlab = xlab, ylab = ylab, ...)
-      # overlay negative
-      graphics::image(1:imgdim[1], 1:imgdim[2], statneg[, , z], col = colneg,
-        breaks = breaksneg, asp = aspect, axes = axes, add=TRUE,
-        xlab = xlab, ylab = ylab, ...)
-    }
-    other()
-    par(oldpar)
-    invisible()
-}
-
 #' Write the statMap objects out
 #'
 #' Given a statMap object and a directory write the objects as stat.nii.gz, coef.nii.gz and sqrtSigma.nii.gz
@@ -173,8 +75,7 @@ image.statMap = function (x, thresh=2.32, index = NULL, col = gray(0:64/64), col
 #' @param outdir the directory to write into
 #' @return a list of what was written
 #' @export
-write.statMap <- function(x,outdir)
-{
+write.statMap <- function(x,outdir){
   statimg  = file.path(outdir, 'stat.nii.gz')
   coefimg   = file.path(outdir, 'coef.nii.gz')
   res   = file.path(outdir, 'sqrtSigma.rds')
@@ -191,6 +92,37 @@ write.statMap <- function(x,outdir)
     message('Writing sqrtSigma object.\n')
     saveRDS(x$sqrtSigma, file = res)
   }
+
+
+    pbj = x$pbj
+    if(!is.null(pbj)){
+    #if(is.null(x$template)) x$template = x$mask
+    #sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
+    #voxvol = prod(RNifti::pixdim(x$template))
+    for(infType in names(pbj$ROIs)){
+      if(grep('CEI|CMI', infType)) cft = attr(pbj$obsStat[[infType]], 'cft')
+      # removes number from name if infType
+      method = gsub("[0-9]", '', infType)
+      tab = table.statMap(x, method=method, cft=cft)
+      pmapimg = file.path(outdir, paste0('log10p_', infType, '.nii.gz'))
+      clustmapimg = file.path(outdir, paste0('clustIDs_', infType, '.nii.gz'))
+      pmap = pbj$ROIs[[infType]]
+      # sets clusters to their p-value. This is wrong currently
+      pmap[ match(tab$`cluster ID`, pmap) ] = tab$`FWER p-value`
+      writeNifti(pbj[[infType]]$pmap, pmapimg)
+      writeNifti(pbj[[infType]]$clustermap, clustmapimg)
+
+      ### WRITE OUT CLUSTER STATISTICS TABLE ###
+      clustmapinds = unique(c(x[[cft]]$clustermap))
+      clustmapinds = sort(clustmapinds[ clustmapinds>0])
+      clusttab = data.frame('Index'=numeric(0), 'Adjusted p-value'=numeric(0), 'Signed log10(p-value)'=numeric(0), 'Volume (mm)'=numeric(0), 'Centroid'= character(0), stringsAsFactors = FALSE, check.names = FALSE)
+      tabname = file.path(outdir, paste0('sei_table_', cft, '.csv') )
+      for(ind in clustmapinds){
+        clusttab[ind,c('Index','Adjusted p-value', 'Signed log10(p-value)', 'Volume (mm)')] = c(ind, 10^(-abs(x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1])), x[[cft]]$pmap[ which(x[[cft]]$clustermap==ind) ][1], sum(x[[cft]]$clustermap==ind)*voxvol)
+        clusttab[ind, 'Centroid'] = paste(round(sform %*% c(colMeans(which(x[[cft]]$clustermap==ind, arr.ind=TRUE)), 1 ), 0), collapse=', ')
+      }
+    }
+    }
   return(list(stat=statimg, coef=coefimg, sqrtSigma=res))
 }
 

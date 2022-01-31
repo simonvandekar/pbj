@@ -10,14 +10,15 @@ pbjInference(
   nboot = 5000,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = c("wild", "permutation", "nonparametric"),
-  runMode = c("bootstrap", "cdf"),
+  runMode = c("cdf", "bootstrap"),
+  progress = FALSE,
   ...
 )
 }
 \arguments{
-\item{statMap}{statMap object as obtained from computeStats.}
+\item{statMap}{statMap object as obtained from lmPBJ function.}
 
-\item{statistic}{A user specified function that takes a RNifti image object and computes a particular statistic of interest.}
+\item{statistic}{A user specified function that takes an RNifti image object and computes a particular statistic of interest. There are several provided in the pbj package. See referenced functions below.}
 
 \item{nboot}{Number of bootstrap samples to use.}
 
@@ -27,11 +28,22 @@ pbjInference(
 
 \item{runMode}{character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.}
 
+\item{progress}{Logical indicating whether to track progress with a progress bar.}
+
 \item{...}{arguments passed to statistic function.}
 }
 \value{
-Returns a list. if runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting.
+Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.
 }
 \description{
 Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Inference
+}
+\details{
+This function runs a bootstrap or permutation procedure to perform inference on topological features of neuroimaging statistics.
+The topological feature is determined by the `statistic` function. Several exist in the pbj package. The statistic function should take an image as input
+and compute some topological feature from the image. returned as a list. Multiple topological features can be returned, as in [mmeStat()] and [cluster()].
+To use default methods the statistic must have a logical `rois` argument that outputs an integer valued image identifying where each topological features is located. Details of the resampling procedures are available in Vandekar et al. (2022).
+}
+\seealso{
+[mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
 }

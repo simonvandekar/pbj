@@ -43,8 +43,8 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP idmat, SEXP h, SEXP 
     statimg <- matrix(corge, nrow=df, ncol=V)
   */
 
-  SEXP qr_qr, qr_qraux, elt, attr, dim, iddim, statimg;
-  int *dim_ii, iddim_i, arr_idx_i, idval_i, k_i, n_i, ny_i, nrow_i, ncol_i, idncol_i,*idmat_ii, row_i, col_i, row2_i, col2_i,
+  SEXP qr_qr, qr_qraux, elt, attr, dim, statimg;
+  int *dim_ii, arr_idx_i, idval_i, k_i, n_i, ny_i, nrow_i, ncol_i, idncol_i,*idmat_ii, row_i, col_i, row2_i, col2_i,
       rsd_idx_i, idmat_idx_i, x1res_idx_i, corge_idx_i, df_i, layer_i, dim_prod_i, x_idx_i,
       ldx_i, p_i, *pivot_ii, bsqrtinv_idx_i, idx_i, df_sq_i, one_i;
   double *rsd_dd, *h_dd, *x1res_dd, *corge_dd, *idres_dd, *res_dd, *res2_dd, *x_dd, tol_d,
