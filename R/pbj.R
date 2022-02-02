@@ -165,6 +165,32 @@ wecdf = function (x, w=rep(1, length(x)))
   rval
 }
 
+#' Gets numeric index of observed stat corresponding to the method and CFT
+#'
+#' @param obsStat Field in statMap$pbj$obsStat
+#' @param method What statistic to provide summary for? must have run that
+#' analysis using the pbjInference and mmeStat functions.
+#' @param cft cluster forming threshold to display. If NULL, just display the first.
+#' @return Returns an index that corresponds to the method and CFT.
+#' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
+#' @export
+inferenceIndex = function(obsStat, method, cft=NULL){
+ind = grep(method, names(obsStat))
+if(length(ind)==0){
+  stop('Method ', method, ' was not run on this statMap.')
+}
+# get indices corresponding to this method
+cfts = sapply(obsStat[ind], attr, which='cft')
+# maxima don't have cft attribute
+if(!is.null(cft) & method!='maxima'){
+  ind = ind[which(cfts==cft)]
+  if(length(ind)==0){
+    stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
+  }
+}
+ind = ind[1]
+ind
+}
 
 #' Create cluster/maxima summary table
 #'
@@ -183,17 +209,7 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
     stop("Must run pbjInference to create cluster table.")
   }
   method = method[1]
-  ind = grep(method, names(x$obsStat))
-  # get indices corresponding to this method
-  cfts = sapply(x$obsStat[ind], attr, which='cft')
-  # maxima don't have cft attribute
-  if(!is.null(cft) & method!='maxima'){
-    ind = ind[which(cfts==cft)]
-    if(length(ind)==0){
-      stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
-    }
-  }
-  ind = ind[1]
+  ind = inferenceIndex(x$obsStat, method=method, cft=cft)
   Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
                      'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
                      'Unadjusted p-value' = (1-x$margCDF[[ind]](c(x$obsStat[[ind]]))),
@@ -241,20 +257,7 @@ mmeStat = function(stat, rois=FALSE, mask, cft, max=FALSE, CMI=FALSE,
 }
 
 
-# color bar function
-colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=nticks), title='') {
-  scale = (length(lut)-1)/(max-min)
-  plot(c(0,10), c(min,max), type='n', bty='n', xaxt='n', xlab='', yaxt='n', ylab='', main=title)
-  axis(2, round(ticks, 2), las=1, cex.axis=cex*0.7, font=2)
-  for (i in 1:(length(lut)-1)) {
-    y = (i-1)/scale + min
-    rect(0,y,10,y+1/scale, col=lut[i], border=NA)
-  }
-}
-
-
-
-#' View pbj results
+#' View statMap and pbj results in a statMap object
 #'
 #' Uses a pbj object and statMap object to visualize CEI, CMI, or maxima results
 #'
@@ -267,9 +270,12 @@ colorBar <- function(lut, min, max=-min, nticks=11, ticks=seq(min, max, len=ntic
 #' @param ... Arguments passed to image.niftiImage.
 #' @importFrom utils write.csv
 #' @export
-image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, outputdir=NULL, plane=c('axial', 'sagittal', 'coronal'), ... ){
-
+image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, outputdir=NULL, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
   if(!is.null(pCFT)) cft = qchisq(pCFT, df=object$sqrtSigma$df, lower.tail=FALSE)
+  # set graphical parameters
+  par(oma = oma,
+      mar = mar, bg = bg)
+  oldpar <- par(no.readonly = TRUE)
   # use mask if user didn't provide a template
   if(is.null(object$template)) object$template=object$mask
   # read template if stored as a character
@@ -301,7 +307,7 @@ image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCF
     ind = ind[1]
     if(is.null(cft)) stop("Must specify cft for visualization with method='maxima'")
 
-    st = table.pbj(pbjObj, method=method, cft=cft)
+    st = table.statMap(object, method=method, cft=cft)
     imgdims = dim(stat.statMap(object))
     planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
     otherplanes = which(!1:3 %in% planenum)
@@ -339,9 +345,9 @@ image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCF
           #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
           #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
           #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
-          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum], thresh=cft, other=otherfunc, ...)
+          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
         } else {
-          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum], thresh=cft, ...)
+          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
         }
       }
     } else if(!is.null(slice)){
@@ -350,16 +356,10 @@ image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCF
           coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
           coordInds = which(coords[,planenum]==slic)
           if(length(coordInds)==0){
-            image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic, thresh=cft, ...)
+            image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
           } else {
             coordLabels = st$`cluster ID`[coordInds]
             othercoords = coords[coordInds,-planenum, drop=FALSE]
-            # if(plane %in% c('axial', 'coronal'){
-            #   #p1 =
-            #   #p2 =
-            # } else {
-            #
-            # }
             otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
             image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
                   other=otherfunc, ...)

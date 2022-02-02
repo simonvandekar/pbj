@@ -1,60 +1,30 @@
 
-sizing <- function(fn) paste0(round(file.info(fn)$size/1024^2, 2), "M")
-statFile  <- function(label, fn) paste0(label, "'", fn, "' ", sizing(fn), "\n")
-statNifti <- function(label, im)
-{
-  paste0(
-    label, "nifti[",
-    paste0(dim(im), collapse=" x "),
-    "] Pixel dimensions: ",
-    paste0(attr(im, "pixdim"), c(attr(im, "pixunits")[1], attr(im, "pixunits")), collapse=" x "),
-    '\n'
-  )
-}
-statMatrix <- function(label, mm)
-{
-  paste0(
-    label, "matrix[",
-    paste0(dim(mm), collapse=" x "),
-    "]\n"
-  )
-}
-
-statVector <- function(label, mm)
-{
-  paste0(
-    label, "vector[",
-    length(mm),
-    "]\n"
-  )
-}
-
-statInner <- function(label, obj)
-{
-  if(is.null(obj))    return("")
-  if(all(is.na(obj))) return(paste0(label, "NA"))
-
-  if(class(obj)[1] == "character")  return(statFile(label, obj))
-  if(class(obj)[1] == "niftiImage") return(statNifti(label, obj))
-  if(class(obj)[1] == "matrix")     return(statMatrix(label, obj))
-  if(class(obj)[1] == "matrix")     return(statVector(label, obj))
-
-  paste0(label, "Unhandled Class(",class(obj)[1],")\n")
-}
-
 #' @export
 summary.statMap <- function(object, ...)
 {
-  cat(paste0(
-    "\nFormula: ", paste0(as.character(object$formulas[[2]]), collapse=''), paste0(as.character(object$formulas[[1]]), collapse=''), "\n",
-    "\nContents:\n",
-    statInner("  Stat:       ", object$stat),
-    statInner("  Coef:       ", object$coef),
-    statInner("  Sqrt Sigma: ", object$sqrtSigma),
-    statInner("  Mask:       ", object$mask),
-    statInner("  Template:   ", object$template),
-    "  Robust:     ", object$robust, "\n"
-  ))
+  cat("Full formula: ", paste0(as.character(object$formulas[[1]])) )
+  cat("\nReduced formula: ", as.character(object$formulas[[2]]), collapse='', '\n')
+  cat(sum(if(is.character(object$mask)) readNifti(object$mask) else object$mask), ' voxels in mask')
+  cat("\nStatMap quantiles: [", paste(round(quantile(object$stat, probs = c(0, 0.01, 0.05, 0.95, 0.99, 1)), 2), collapse=', '), "]" )
+  cat("\nsqrtSigma: \n")
+  cat("  [n = ", object$sqrtSigma$n, '; df = ', object$sqrtSigma$df, '; rdf = ', object$sqrtSigma$rdf, ']\n')
+  cat("id variable is:\n")
+  str(object$sqrtSigma$id)
+  cat("lmPBJ inference settings:\n  robust = ", object$sqrtSigma$robust, '; HC3 = ', object$sqrtSigma$HC3, '; transform = ',  object$sqrtSigma$transform)
+  if(is.null(object$pbj)){
+    cat('\npbjInference not run yet.')
+  } else {
+    cat('\npbjInference results:')
+    if(any(grepl('CEI', names(object$pbj$obsStat))) ){
+      cat('\n  CEI run with cft = ', paste(round(sapply(object$pbj$obsStat[grep('CEI', names(object$pbj$obsStat))], attr, 'cft'), 2), collapse=', ') )
+    }
+    if(any(grepl('CMI', names(object$pbj$obsStat)) )){
+      cat('\n  CMI run with cft = ', paste(round(sapply(object$pbj$obsStat[grep('CMI', names(object$pbj$obsStat))], attr, 'cft'), 2), collapse=', ') )
+    }
+    if(any(grepl('maxima', names(object$pbj$obsStat)))){
+      cat('\n  Inference run on local maxima.')
+    }
+  }
 }
 
 #' @export
@@ -73,24 +43,32 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' Given a statMap object and a directory write the objects as stat.nii.gz, coef.nii.gz and sqrtSigma.nii.gz
 #' @param x the statMap object to write out
 #' @param outdir the directory to write into
+#' @param images Logical indicating whether or not to write out the nifti images.
+#' @param sqrtSigma Logical indicating whether or not to write out the objects needed for bootstrapping.
 #' @return a list of what was written
 #' @export
-write.statMap <- function(x, outdir){
+write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
   statimg  = file.path(outdir, 'stat.nii.gz')
   coefimg   = file.path(outdir, 'coef.nii.gz')
   res   = file.path(outdir, 'sqrtSigma.rds')
   if(is.character(x$stat)){
-    file.copy(x$stat, statimg)
-    file.copy(x$sqrtSigma, res)
-    file.copy(x$coef, coefimg)
+    if(images){
+      file.copy(x$stat, statimg)
+      file.copy(x$sqrtSigma, res)
+      file.copy(x$coef, coefimg)
+    }
   } else {
-    message('Writing stat and coef images.')
-    dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
-    writeNifti(stat.statMap(x), statimg)
-    writeNifti(coef.statMap(x), coefimg)
+    if(images){
+      message('Writing stat and coef images.')
+      dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
+      writeNifti(stat.statMap(x), statimg)
+      writeNifti(coef.statMap(x), coefimg)
+    }
 
-    message('Writing sqrtSigma object.')
-    saveRDS(x$sqrtSigma, file = res)
+    if(sqrtSigma){
+      message('Writing sqrtSigma object.')
+      saveRDS(x$sqrtSigma, file = res)
+    }
   }
 
 
@@ -145,7 +123,7 @@ stat.statMap = function(x){
 #' @export
 coef.statMap = function(object, ...){
   # output 4D coefficient image
-  coef = simplify2array(lapply(1:nrow(object$coef), function(coefv){ object$mask[object$mask!=0] = coefv; object$mask}))
+  coef = simplify2array(lapply(1:nrow(object$coef), function(coefv){ object$mask[object$mask!=0] = object$coef[coefv,]; object$mask}))
   coef = updateNifti(coef, template=object$mask)
   return(coef)
 }
@@ -163,4 +141,125 @@ var.statMap = function(x){
   varimg = x$mask
   varimg[ varimg!=0] = rowSums(x$sqrtSigma$res^2)/x$sqrtSigma$rdf
   return(varimg)
+}
+
+#' Plots the tested variables in a statMap object
+#'
+#' Returns a statistical niftiImage object from a statMap object
+#' @param statMap the statMap object with pbjInference run
+#' @param emForm a formula specifying how to
+#' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
+#' @param cft A numeric specifying CFT to plot results for, defaults to the first one
+#' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
+#' @return a niftiImage object of the coefficient image
+#' @export
+plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NULL){
+
+  pbjObj = statMap$pbj
+  if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
+  st = table.statMap(statMap, method, cft)
+  ind = inferenceIndex(statMap$pbj$obsStat, method=method, cft=cft)
+  rois = pbjObj$ROIs[[ind]]
+  obsstat = pbjObj$obsStat[[ind]]
+
+
+  # load data
+  imgs = RNifti::readNifti(statMap$images)
+  # fit model on average data
+  full = as.formula(statMap$formulas$full)
+  red = as.formula(statMap$formulas$reduced)
+  fullT = terms(full)
+  redT = terms(red)
+  # formula elements to condition on
+  term = attr(fullT, 'term.labels')[!attr(fullT, 'term.labels') %in% attr(redT, 'term.labels') ]
+  condVars = sapply(all.vars(full), function(x) grepl(x, term) )
+  condVars = names(condVars)[condVars]
+  robust = statMap$sqrtSigma$robust
+  data = get_all_vars(full, data=data)
+  for(roiInd in roiInds){
+    data$y = sapply(imgs, function(img) mean(img[ rois==roiInd]) )
+
+    fullModel = lm(update.formula(full, y ~ .), data=data)
+    #redModel = lm(update.formula(red, y ~ .), data=data)
+
+    # emmeans argument using condVars
+    # known warning about as.numeric on characters
+    suppressWarnings(ats <- apply(data[,condVars], 2, function(x) sort(unique(ifelse(is.na(as.numeric(x)), x, as.numeric(x) ) ) ) ))
+    emg = emmeans::ref_grid(fullModel, at=ats)
+    plotdf = as.data.frame(emmeans::emmeans(emg, ~ age | sex))
+
+
+    cex=1.5
+    # graphical parameters
+    fgcol = 'white'
+    bgcol = 'black'
+    par(mgp=c(1.7,.7,0), lwd=1.5, lend=2,
+        cex.lab=cex, cex.axis=0.8*cex, cex.main=1*cex,
+        mar=c(3,3,2.2,0), bty='l', oma=c(0,0,0,0), bg=bgcol, fg=fgcol, col.axis=fgcol, col.lab=fgcol, col.main = fgcol, col.sub=fgcol)
+
+    # plot predictions with raw data
+    cols=c('#fb9a99', '#a6cee3', '#e31a1c', '#1f78b4')
+    plot(data[,'age'], data[,'y'], col=cols[2+as.numeric(factor(data[,'sex']))], pch=16, ylab='Gray matter volume (AU)', xlab='Age (Years)')
+    by(plotdf, plotdf$sex, function(df){
+      polygon(c(df$age, rev(df$age)), c(df$lower.CL, rev(df$upper.CL)), col=scales::alpha(cols[as.numeric(df$sex)], alpha=0.8), border=NA)
+      points(df$age, df$emmean, type='l', col=cols[as.numeric(df$sex)+2])
+    } )
+  }
+
+}
+
+
+
+#' Plots the tested variables in a statMap object
+#'
+#' Returns a statistical niftiImage object from a statMap object
+#' @param statMap the statMap object with pbjInference run
+#' @param emForm a formula specifying how to
+#' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
+#' @param cft A numeric specifying CFT to plot results for, defaults to the first one
+#' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
+#' @return a niftiImage object of the coefficient image
+#' @export
+roiMeans = function(statMap, method='CEI', cft=NULL, roiInds=NULL, data=NULL){
+  pbjObj = statMap$pbj
+  if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
+  st = table.statMap(statMap, method, cft)
+  ind = inferenceIndex(statMap$pbj$obsStat, method=method, cft=cft)
+  rois = pbjObj$ROIs[[ind]]
+  obsstat = pbjObj$obsStat[[ind]]
+
+  # load data
+  imgs = RNifti::readNifti(statMap$images)
+  if(is.null(data)){
+    data = get_all_vars(full, statMap$data)
+  } else {
+    data = get_all_vars(full, data=data)
+  }
+  for(roi in roiInds){
+    data[,paste0('roi', roi)] = sapply(imgs, function(img) mean(img[ rois==roi]) )
+    return(data)
+  }
+}
+
+#' Draws a color bar in a figure
+#'
+#' Can be used in combination with layout and image.statMap to create figures.
+#'
+#' Returns a statistical niftiImage object from a statMap object
+#' @param lut the range of colors to display
+#' @param min Where to put the minimum tick mark.
+#' @param max Where to put the maximum tick mark.
+#' @param nticks Number of ticks on the color bar.
+#' @param title The title for the color bar
+#' @return a niftiImage object of the coefficient image
+#' @export
+colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=nticks), title='', ylab='', las=1) {
+  scale = (length(lut)-1)/(max-min)
+  plot(c(0,10), c(min,max), type='n', bty='n', xaxt='n', xlab='', yaxt='n', ylab='', main=title)
+  axis(2, round(ticks, 2), las=las, font=2)
+  title(ylab=ylab, font=2)
+  for (i in 1:(length(lut)-1)) {
+    y = (i-1)/scale + min
+    rect(0,y,10,y+1/scale, col=lut[i], border=NA)
+  }
 }

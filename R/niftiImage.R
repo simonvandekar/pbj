@@ -98,10 +98,6 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
     par(mfrow = ceiling(rep(sqrt(length(index)), 2)), oma = oma,
         mar = mar, bg = bg)
     oldpar <- par(no.readonly = TRUE)
-  } else {
-    par(oma = oma,
-        mar = mar, bg = bg)
-    oldpar <- par(no.readonly = TRUE)
   }
   for (z in index) {
     graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
@@ -119,7 +115,7 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
                       ...)
   }
   other()
-  if (length(index) != 1)
-    par(oldpar)
+  # if (length(index) != 1)
+  #   par(oldpar)
   invisible()
 }
