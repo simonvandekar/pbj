@@ -72,12 +72,12 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
   }
 
 
+  inference=list()
   pbj = x$pbj
   if(!is.null(pbj)){
     #if(is.null(x$template)) x$template = x$mask
     #sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
     #voxvol = prod(RNifti::pixdim(x$template))
-    inference=list()
     message('Writing inference images.')
     for(infType in names(pbj$ROIs)){
       if(grepl('CEI|CMI', infType)) cft = attr(pbj$obsStat[[infType]], 'cft')
