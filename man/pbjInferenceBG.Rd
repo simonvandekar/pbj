@@ -8,7 +8,7 @@ pbjInferenceBG(
   statMap,
   mask,
   cft,
-  rdata,
+  rdata_rds,
   nboot = 5000,
   rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = "wild",
@@ -24,7 +24,7 @@ pbjInferenceBG(
 
 \item{cft}{The cluster forming threshold to use if CEI or CMI are specified.}
 
-\item{rdata}{The location the save the results as an rdata file.}
+\item{rdata_rds}{The location the save the results as an rdata file or an rds file as a character.}
 
 \item{nboot}{Number of bootstrap samples to use.}
 
@@ -45,6 +45,9 @@ Returns the statMap object, with a pbj object added. If runMode=='cdf', the firs
 }
 \description{
 This is a wrapper to pbjInference that runs it in the background using the `mmeStat` function for the `statistic` argument.
+}
+\details{
+For `rdata_rds`, if the string has an RDS extension the `statMap` object is saved in the RDS file. If it has any other extension the `statMap` object and computing time are saved as an rdata file.
 }
 \seealso{
 [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.

@@ -4,12 +4,16 @@
 \alias{write.statMap}
 \title{Write the statMap objects out}
 \usage{
-write.statMap(x, outdir)
+write.statMap(x, outdir, images = TRUE, sqrtSigma = TRUE)
 }
 \arguments{
 \item{x}{the statMap object to write out}
 
 \item{outdir}{the directory to write into}
+
+\item{images}{Logical indicating whether or not to write out the nifti images.}
+
+\item{sqrtSigma}{Logical indicating whether or not to write out the objects needed for bootstrapping.}
 }
 \value{
 a list of what was written

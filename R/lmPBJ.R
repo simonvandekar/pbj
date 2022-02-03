@@ -14,10 +14,9 @@
 #' @param id Vector to identify measurements from the same observation.
 #' @param data R data frame containing variables in form. If form and formred
 #' are matrices then this can be NULL.
-#' @param W Weights for regression model. Can be used to deweight noisy
+#' @param W Numeric vector of weights for regression model. Can be used to deweight noisy
 #'  observations. Same as what should be passed to lm.
-#' @param Winv Inverse weights for regression model. Inverse of W. Required when
-#' passing variance images as the inverse weights.
+#' @param Winv Inverse weights for regression model. Inverse of W.
 #' @param template Template image used for visualization.
 #' @param formImages n X p matrix of images where n is the number of subjects and
 #'  each column corresponds to an imaging covariate. Currently, not supported.
@@ -68,13 +67,16 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
     if(nrow(X)!=n)
       stop('length(images) and nrow(X) must be the same.')
     Y = simplify2array(RNifti::readNifti(images))
-    } else {
-      n = nrow(X)
-      Y = images
-      rm(images)
-    }
-    dims = dim(Y)
+  } else {
+    n = nrow(X)
+    Y = images
+    rm(images)
+  }
+  dims = dim(Y)
 
+  if(is.character(W)){
+    stop('Image valued weights are not supported.')
+  }
   # check if inverse weights are given
   if(is.null(Winv)){
     Winv = FALSE
@@ -103,11 +105,11 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
     } else {
       temp = template
     }
-      dims = dim(temp)
-      rm(temp)
-      if(any(dims[1:ndims] != dim(mask))  ){
-        stop('template image and mask dimensions (or pixel dimensions) do not match.')
-      }
+    dims = dim(temp)
+    rm(temp)
+    if(any(dims[1:ndims] != dim(mask))  ){
+      stop('template image and mask dimensions (or pixel dimensions) do not match.')
+    }
   }
 
   # load images
@@ -122,17 +124,6 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
   peind = which(!colnames(X) %in% colnames(Xred))
   rdf = n - ncol(X) # this is true unless X is rank deficient
 
-  if(is.character(W)){
-    message('Weights are voxel-wise.')
-    voxwts = TRUE
-    W = simplify2array(RNifti::readNifti(W))
-    W = t(apply(W, 4, function(x) x[mask!=0]))
-    W = sqrt(W)
-  } else {
-    voxwts=FALSE
-    # compute W half
-    W = c(sqrt(W))
-  }
   # inverse weights were passed
   if(Winv) W[W!=0] = 1/W[W!=0]
   X1 = X[,peind]
@@ -140,109 +131,59 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
   Y = Y * W
 
   # fit model to all image data
-  # if weights are voxel specific then design must also be treated separately
-  if(voxwts){
-    message('Running voxel-wise weighted linear models.')
-    # cannot be parallelized due to memory use
-    qrs = apply(W, 2, function(Wcol) qr(X * Wcol))# cannot be parallelized due to memory use. Also reshaping to a list to use mclapply takes longer.
-    coef = simplify2array(  lapply(1:V, function(ind) qr.coef(qrs[[ind]], Y[,ind])[peind]) )
+  QR = qr(X * W)
+  coef = qr.coef(QR, Y)[peind,,drop=FALSE]
+  res=qr.resid(QR, Y);
 
-    # Changed this, Xred will never be NULL now
-    X1res = simplify2array(lapply(1:V, function(ind) matrix(qr.resid(qr(Xred * W[,ind]), X1 * W[,ind]), nrow=n, ncol=df) ) )
+  X1res = qr.resid(qr(Xred * W), X1 * W)
 
+  # standardize residuals and Y
+  sigmas = sqrt(colSums(res^2)/rdf)
+  res = sweep(res, 2, sigmas, FUN = '/')
+  Y = sweep(Y, 2, sigmas, FUN = '/')
 
-    if(!robust){
-      res = Y
-      res = simplify2array( lapply(1:V, function(ind) qr.resid(qrs[[ind]], res[,ind])) )
-      rm(qrs) # free memory
-      # standardize residuals and Y
-      sigmas = sqrt(colSums(res^2)/rdf)
-      res = sweep(res, 2, sigmas, FUN = '/')
-      Y = sweep(Y, 2, sigmas, FUN = '/')
-      AsqrtInv = matrix(apply(X1res, 3, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }),   nrow=df^2, ncol=V)
-      sqrtSigma = simplify2array( lapply(1:V, function(ind) crossprod(matrix(AsqrtInv[,ind], nrow=df, ncol=df), matrix(X1res[,,ind], df, n, byrow=TRUE)) ) )
-      # used to compute chi-squared statistic
-      normedCoef = apply(sweep(sqrtSigma, MARGIN=c(2,3), Y, '*'), c(1,3), sum)
-      # used for generating distribution of normedCoef
-      sqrtSigma = sweep(sqrtSigma, MARGIN = c(2,3), res, '*' )
-      sqrtSigma = aperm(sqrtSigma, c(2,3,1))
-      rm(AsqrtInv, Y, res, sigmas, X1res)
-    } else {
-      # Only difference here is BsqrtInv instead of AsqrtInv and Q instead of res
-      # compute Q(v)
-      Q = simplify2array( lapply(1:V, function(ind){r=qr.resid(qrs[[ind]], Y[,ind]);
-      if(HC3){
-        h=rowSums(qr.Q(qrs[[ind]])^2); h = ifelse(h>=1, 1-eps, h)
-        Q = r/(1-h)} else Q=r }) )
-      rm(qrs) # free memory
-      # first part of normedCoef
-      normedCoef = colSums(sweep(X1res, MARGIN = c(1,3), Y, '*'), dims = 1)
-      X1resQ = sweep(X1res, c(1,3), Q, '*')
-      BsqrtInv = matrix(apply(X1resQ, 3, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }),   nrow=df^2, ncol=V)
-      # second part of normedCoef
-      normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[,ind])) ), nrow=df)
-      sqrtSigma = X1resQ
-      sqrtSigma = aperm(sqrtSigma, c(1,3,2))
-      rm(BsqrtInv, Y, Q, X1resQ, X1res)
-    }
-    # weights are not voxel specific
+  if(!robust){
+    AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
+    sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
+    # used to compute chi-squared statistic
+    normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
+    # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
+    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
+    rm(AsqrtInv, Y, res, sigmas, X1res)
   } else {
-
-    message('Running weighted linear models.')
-    QR = qr(X * W)
-    coef = qr.coef(QR, Y)[peind,,drop=FALSE]
-    res=qr.resid(QR, Y);
-
-    X1res = qr.resid(qr(Xred * W), X1 * W)
-
-    # standardize residuals and Y
-    sigmas = sqrt(colSums(res^2)/rdf)
-    res = sweep(res, 2, sigmas, FUN = '/')
-    Y = sweep(Y, 2, sigmas, FUN = '/')
-
-    if(!robust){
-      AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
-      sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
-      # used to compute chi-squared statistic
-      normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
-      # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
-      rm(AsqrtInv, Y, res, sigmas, X1res)
+    # first part of normedCoef
+    normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), STATS = X1res, FUN = '*'), dims=1)
+    if(HC3){
+      h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
+      X1resQ = sweep(simplify2array(rep(list(res/(1-h)), df)),  c(1,3), X1res, '*')
     } else {
-      # first part of normedCoef
-      normedCoef = colSums(sweep(simplify2array(rep(list(Y), df)), MARGIN = c(1,3), STATS = X1res, FUN = '*'), dims=1)
-      if(HC3){
-        h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
-        X1resQ = sweep(simplify2array(rep(list(res/(1-h)), df)),  c(1,3), X1res, '*')
-      } else {
-        # returns nXVXm_1 array
-        X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
-      }
-      if(!is.null(id)){
-        id = factor(id)
-        IDmat = model.matrix(~-1+id)
-        id = as.integer(id)
-        X1resQ = array(apply(X1resQ, 3, function(mat) crossprod(IDmat, mat)), dim=c(ncol(IDmat), V, df))
-      }
-      # apply across voxels. returns V X m_1^2 array
-      BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }), nrow=df^2, ncol=V)
-      #assign('BsqrtInvlmPBJ', BsqrtInv, envir = .GlobalEnv)
-      # second part of normedCoef
-      normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
-      #assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
-      # Things needed to resample the robust statistics
-      sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform, id=id)
-      rm(BsqrtInv, Y, res, X1resQ, X1res)
+      # returns nXVXm_1 array
+      X1resQ = sweep(simplify2array(rep(list(res), df)),  c(1,3), X1res, '*')
     }
+    if(!is.null(id)){
+      id = factor(id)
+      IDmat = model.matrix(~-1+id)
+      id = as.integer(id)
+      X1resQ = array(apply(X1resQ, 3, function(mat) crossprod(IDmat, mat)), dim=c(ncol(IDmat), V, df))
+    }
+    # apply across voxels. returns V X m_1^2 array
+    BsqrtInv = matrix(apply(X1resQ, 2, function(x){ backsolve(r=qr.R(qr(x)), x=diag(df)) }), nrow=df^2, ncol=V)
+    #assign('BsqrtInvlmPBJ', BsqrtInv, envir = .GlobalEnv)
+    # second part of normedCoef
+    normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
+    #assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
+    # Things needed to resample the robust statistics
+    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform, id=id)
+    rm(BsqrtInv, Y, res, X1resQ, X1res)
   }
 
   # use transform to compute chi-squared statistic
   normedCoef = switch(tolower(transform[1]),
-         none=normedCoef,
-         t={ qnorm(pt(normedCoef, df=rdf ) )},
-         edgeworth={message('Computing edgeworth transform.')
-           matrix(qnorm(vpapx_edgeworth(stat=normedCoef, mu3=colSums(sqrtSigma^3, dims=1), mu4=colSums(sqrtSigma^4, dims=1) ) ), nrow=df)
-         })
+                      none=normedCoef,
+                      t={ qnorm(pt(normedCoef, df=rdf ) )},
+                      edgeworth={message('Computing edgeworth transform.')
+                        matrix(qnorm(vpapx_edgeworth(stat=normedCoef, mu3=colSums(sqrtSigma^3, dims=1), mu4=colSums(sqrtSigma^4, dims=1) ) ), nrow=df)
+                      })
   stat = colSums(normedCoef^2)
 
 
