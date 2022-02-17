@@ -16,7 +16,7 @@ lmPBJ(
   template = NULL,
   formImages = NULL,
   robust = TRUE,
-  transform = c("none", "t", "edgeworth"),
+  transform = c("none", "t", "f", "edgeworth"),
   outdir = NULL,
   zeros = FALSE,
   HC3 = TRUE,
@@ -41,11 +41,10 @@ column than X.}
 \item{data}{R data frame containing variables in form. If form and formred
 are matrices then this can be NULL.}
 
-\item{W}{Weights for regression model. Can be used to deweight noisy
+\item{W}{Numeric vector of weights for regression model. Can be used to deweight noisy
 observations. Same as what should be passed to lm.}
 
-\item{Winv}{Inverse weights for regression model. Inverse of W. Required when
-passing variance images as the inverse weights.}
+\item{Winv}{Inverse weights for regression model. Inverse of W.}
 
 \item{template}{Template image used for visualization.}
 
@@ -54,8 +53,7 @@ each column corresponds to an imaging covariate. Currently, not supported.}
 
 \item{robust}{Logical, compute robust standard error estimates?}
 
-\item{transform}{character indicating type of transformation to use. "t" or "edgeworth." are currently accepted
-(instead of niftiImage objects; defaults to FALSE).}
+\item{transform}{character indicating type of transformation to use. "none", "t", "f", or "edgeworth" are currently accepted. Edgeworth is slow.}
 
 \item{outdir}{If specified, output is saved as NIfTIs and statMap object is
 saved as strings. This approach conserves memory, but has longer IO time.

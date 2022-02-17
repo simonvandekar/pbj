@@ -22,8 +22,7 @@
 #'  each column corresponds to an imaging covariate. Currently, not supported.
 #' @param robust Logical, compute robust standard error estimates?
 #' @param HC3 Logical, Uses HC3 SE estimates from Long and Ervin 2000? Defaults to TRUE.
-#' @param transform character indicating type of transformation to use. "t" or "edgeworth." are currently accepted
-#' (instead of niftiImage objects; defaults to FALSE).
+#' @param transform character indicating type of transformation to use. "none", "t", "f", or "edgeworth" are currently accepted. Edgeworth is slow.
 #' @param outdir If specified, output is saved as NIfTIs and statMap object is
 #' saved as strings. This approach conserves memory, but has longer IO time.
 #' Currently, not supported.
@@ -46,7 +45,7 @@
 #' @importFrom parallel mclapply
 #' @importFrom PDQutils papx_edgeworth
 #' @export
-lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('none', 't', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('none', 't', 'f', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
@@ -180,11 +179,15 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
   # use transform to compute chi-squared statistic
   normedCoef = switch(tolower(transform[1]),
                       none=normedCoef,
-                      t={ qnorm(pt(normedCoef, df=rdf ) )},
+                      f=normedCoef,
+                      t={ qnorm(pt(normedCoef, df=rdf, log.p = TRUE ), log.p=TRUE )},
                       edgeworth={message('Computing edgeworth transform.')
                         matrix(qnorm(vpapx_edgeworth(stat=normedCoef, mu3=colSums(sqrtSigma^3, dims=1), mu4=colSums(sqrtSigma^4, dims=1) ) ), nrow=df)
                       })
   stat = colSums(normedCoef^2)
+  if(tolower(transform)=='f'){
+    stat = qchisq(pf(normedCoef/df, df1=df, df2=rdf, log.p = TRUE ), df=df, log.p=TRUE )
+  }
 
 
   # used later to indicated t-statistic
