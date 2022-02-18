@@ -397,6 +397,6 @@ ptfce.statmap = function(statMap, ...){
   statimg = stat.statMap(statMap)
   # convert Chisq to Z
   statimg[statMap$mask>0] = qnorm(pchisq(statimg[statMap$mask>0], df=statMap$sqrtSigma$df, log.p = TRUE), log.p=TRUE)
-  invisible(capture.output(test <- ptfce(oro.nifti::as.nifti(array(statimg, dim = dim(statimg))), oro.nifti::as.nifti(array(permStatMap$mask, dim=dim(permStatMap$mask))) )))
+  invisible(capture.output(test <- ptfce(oro.nifti::as.nifti(array(statimg, dim = dim(statimg))), oro.nifti::as.nifti(array(statMap$mask, dim=dim(statMap$mask))) )))
   return(test)
 }
