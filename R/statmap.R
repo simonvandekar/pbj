@@ -266,7 +266,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 
 #' View statMap and pbj results in a statMap object
 #'
-#' Uses a pbj object and statMap object to visualize CEI, CMI, or maxima results
+#' Uses a statMap with inferences results to visualize CEI, CMI, or maxima
 #'
 #' @param pbjObj pbj object to visualize
 #' @param object the statMap that created the pbj object.
@@ -382,4 +382,21 @@ image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCF
 
     }
   }
+}
+
+#' Compute pTFCE image
+#'
+#' Uses a statMap object to perform pTFCE inference
+#'
+#' @param statMap A statmap object.
+#' @param ... Arguments passed to ptfce.
+#' @importFrom pTFCE ptfce
+#' @export
+ptfce.statmap = function(statMap, ...){
+  if(is.character(statMap$mask))  statMap$mask = readNifti(statMap$mask)
+  statimg = stat.statMap(statMap)
+  # convert Chisq to Z
+  statimg[statMap$mask>0] = qnorm(pchisq(statimg[statMap$mask>0], df=statMap$sqrtSigma$df, log.p = TRUE), log.p=TRUE)
+  invisible(capture.output(test <- ptfce(oro.nifti::as.nifti(array(statimg, dim = dim(statimg))), oro.nifti::as.nifti(array(permStatMap$mask, dim=dim(permStatMap$mask))) )))
+  return(test)
 }

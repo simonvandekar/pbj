@@ -38,5 +38,5 @@
 \item{pbjObj}{pbj object to visualize}
 }
 \description{
-Uses a pbj object and statMap object to visualize CEI, CMI, or maxima results
+Uses a statMap with inferences results to visualize CEI, CMI, or maxima
 }

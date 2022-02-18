@@ -186,7 +186,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
                       })
   stat = colSums(normedCoef^2)
   if(tolower(transform)=='f'){
-    stat = qchisq(pf(normedCoef/df, df1=df, df2=rdf, log.p = TRUE ), df=df, log.p=TRUE )
+    stat = qchisq(pf(stat/df, df1=df, df2=rdf, log.p = TRUE ), df=df, log.p=TRUE )
   }
 
 

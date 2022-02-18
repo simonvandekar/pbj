@@ -40,7 +40,7 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
       sqrtSigma$QR = qr(sqrtSigma$XW)
     }
     # for bootstrapping under the alternative
-    if(!null) sqrtSigma$res = sqrtSigma$XW %*% sqrtSigma$coef
+    if(!null) sqrtSigma$res = sqrtSigma$XW %*% sqrtSigma$coef + sqrtSigma$res
 
     statimg = .Call("pbj_pbjBootRobustX", sqrtSigma$QR, sqrtSigma$res, sqrtSigma$X1res, id, h, df)
   } else {
@@ -56,7 +56,8 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
       sqrtSigma$QR = qr(sqrtSigma$XW)
     }
     # for bootstrapping under the alternative
-    if(!null) sqrtSigma$res = sqrtSigma$XW %*% sqrtSigma$coef
+    if(!null) sqrtSigma$res = sqrtSigma$XW %*% sqrtSigma$coef + sqrtSigma$res
+
     sigmas = sqrt(colSums(qr.resid(sqrtSigma$QR, sqrtSigma$res)^2)/(rdf))
     sqrtSigma$res = sweep(sqrtSigma$res, 2, sigmas, FUN = '/')
     # this could be performed outside of the bootstrap function
@@ -68,7 +69,14 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
 
 
   statimg = switch(tolower(transform[1]),
-                   none=statimg,
-                   t={ qnorm(pt(statimg, df=rdf ) )})
+                      none=statimg,
+                      f=statimg,
+                      t={ qnorm(pt(statimg, df=rdf, log.p = TRUE ), log.p=TRUE )},
+                      edgeworth={message('Computing edgeworth transform.')
+                        matrix(qnorm(vpapx_edgeworth(stat=statimg, mu3=colSums(sqrtSigma$res^3, dims=1), mu4=colSums(sqrtSigma$res^4, dims=1) ) ), nrow=df)
+                      })
   statimg = colSums(statimg^2)
+  if(tolower(transform)=='f'){
+    statimg = qchisq(pf(statimg/df, df1=df, df2=rdf, log.p = TRUE ), df=df, log.p=TRUE )
+  }
 }
