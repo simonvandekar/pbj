@@ -78,5 +78,6 @@ pbjBoot = function(sqrtSigma, rboot=function(n){ (2*stats::rbinom(n, size=1, pro
   statimg = colSums(statimg^2)
   if(tolower(transform)=='f'){
     statimg = qchisq(pf(statimg/df, df1=df, df2=rdf, log.p = TRUE ), df=df, log.p=TRUE )
+    return(statimg)
   }
 }
