@@ -137,9 +137,9 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
   X1res = qr.resid(qr(Xred * W), X1 * W)
 
   # standardize residuals and Y
-  sigmas = sqrt(colSums(res^2)/rdf)
-  res = sweep(res, 2, sigmas, FUN = '/')
-  Y = sweep(Y, 2, sigmas, FUN = '/')
+  #sigmas = sqrt(colSums(res^2)/rdf)
+  #res = sweep(res, 2, sigmas, FUN = '/')
+  #Y = sweep(Y, 2, sigmas, FUN = '/')
 
   if(!robust){
     AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )

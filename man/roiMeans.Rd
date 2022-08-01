@@ -15,7 +15,7 @@ roiMeans(statMap, method = "CEI", cft = NULL, roiInds = NULL, data = NULL)
 
 \item{roiInds}{A numeric/integer vector specifying which ROIs to plot results for.}
 
-\item{emForm}{a formula specifying how to}
+\item{data}{Data frame with covariates. Optional if available in statMap object.}
 }
 \value{
 a niftiImage object of the coefficient image

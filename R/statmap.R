@@ -147,11 +147,14 @@ var.statMap = function(x){
 #'
 #' Returns a statistical niftiImage object from a statMap object
 #' @param statMap the statMap object with pbjInference run
-#' @param emForm a formula specifying how to
+#' @param emForm a formula specifying how to plot the data
 #' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
 #' @param cft A numeric specifying CFT to plot results for, defaults to the first one
 #' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
 #' @return a niftiImage object of the coefficient image
+#' @importFrom graphics polygon points
+#' @importFrom stats terms
+#' @importFrom emmeans emmeans ref_grid
 #' @export
 plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NULL){
 
@@ -185,8 +188,8 @@ plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NU
     # emmeans argument using condVars
     # known warning about as.numeric on characters
     suppressWarnings(ats <- apply(data[,condVars], 2, function(x) sort(unique(ifelse(is.na(as.numeric(x)), x, as.numeric(x) ) ) ) ))
-    emg = emmeans::ref_grid(fullModel, at=ats)
-    plotdf = as.data.frame(emmeans::emmeans(emg, ~ age | sex))
+    emg = ref_grid(fullModel, at=ats)
+    plotdf = as.data.frame(emmeans(emg, ~ age | sex))
 
 
     cex=1.5
@@ -214,14 +217,15 @@ plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NU
 #'
 #' Returns a statistical niftiImage object from a statMap object
 #' @param statMap the statMap object with pbjInference run
-#' @param emForm a formula specifying how to
 #' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
 #' @param cft A numeric specifying CFT to plot results for, defaults to the first one
 #' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
+#' @param data Data frame with covariates. Optional if available in statMap object.
 #' @return a niftiImage object of the coefficient image
 #' @export
 roiMeans = function(statMap, method='CEI', cft=NULL, roiInds=NULL, data=NULL){
   pbjObj = statMap$pbj
+  full = statMap$formulas$full
   if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
   st = table.statMap(statMap, method, cft)
   ind = inferenceIndex(statMap$pbj$obsStat, method=method, cft=cft)
@@ -250,6 +254,9 @@ roiMeans = function(statMap, method='CEI', cft=NULL, roiInds=NULL, data=NULL){
 #' @param min Where to put the minimum tick mark.
 #' @param max Where to put the maximum tick mark.
 #' @param nticks Number of ticks on the color bar.
+#' @param ticks Locations for ticks.
+#' @param ylab label for the color bar.
+#' @param las argument passed to par.
 #' @param title The title for the color bar
 #' @return a niftiImage object of the coefficient image
 #' @export
@@ -270,14 +277,21 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #'
 #' @param pbjObj pbj object to visualize
 #' @param object the statMap that created the pbj object.
+#' @param method Which inference method to visualize.
 #' @param cft The cluster forming threshold or threshold for visualizing results (in the case of maxima). On the chi-square scale.
 #' @param pCFT For convenience, the user can specify the CFT in terms of a p-value.
+#' @param roi Which ROI index to visualize.
+#' @param slice Which slice number to visualize.
+#' @param clusterID logical indicating whether to include the clusterID in the figure.
 #' @param clusterMask logical indicating whether to mask the results with significant clusters.
 #' @param alpha Adjusted p-value threshold to display clusters.
+#' @param oma argument passed to par
+#' @param mar argument passed to par
+#' @param bf argument passed to par
 #' @param ... Arguments passed to image.niftiImage.
 #' @importFrom utils write.csv
 #' @export
-image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, outputdir=NULL, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
+image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
   if(!is.null(pCFT)) cft = qchisq(pCFT, df=object$sqrtSigma$df, lower.tail=FALSE)
   # set graphical parameters
   par(oma = oma,
@@ -391,6 +405,8 @@ image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCF
 #' @param statMap A statmap object.
 #' @param ... Arguments passed to ptfce.
 #' @importFrom pTFCE ptfce
+#' @importFrom stats pchisq
+#' @importFrom utils capture.output
 #' @export
 ptfce.statmap = function(statMap, ...){
   if(is.character(statMap$mask))  statMap$mask = readNifti(statMap$mask)

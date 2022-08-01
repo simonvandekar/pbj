@@ -24,7 +24,13 @@ colorBar(
 
 \item{nticks}{Number of ticks on the color bar.}
 
+\item{ticks}{Locations for ticks.}
+
 \item{title}{The title for the color bar}
+
+\item{ylab}{label for the color bar.}
+
+\item{las}{argument passed to par.}
 }
 \value{
 a niftiImage object of the coefficient image

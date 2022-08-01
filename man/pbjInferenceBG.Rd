@@ -10,7 +10,9 @@ pbjInferenceBG(
   cft,
   rdata_rds,
   nboot = 5000,
-  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
+  rboot = function(n) {
+     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
+ },
   method = "wild",
   max = FALSE,
   CMI = FALSE,

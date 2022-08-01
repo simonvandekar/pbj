@@ -9,7 +9,7 @@
 \arguments{
 \item{statMap}{the statMap object with pbjInference run}
 
-\item{emForm}{a formula specifying how to}
+\item{emForm}{a formula specifying how to plot the data}
 
 \item{method}{A character specifying which inference method to plot results for. One of maxima, CEI, or CMI}
 

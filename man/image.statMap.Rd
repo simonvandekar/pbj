@@ -14,7 +14,6 @@
   alpha = NULL,
   clusterMask = TRUE,
   clusterID = TRUE,
-  outputdir = NULL,
   plane = c("axial", "sagittal", "coronal"),
   oma = rep(0, 4),
   mar = rep(0, 4),
@@ -25,17 +24,31 @@
 \arguments{
 \item{object}{the statMap that created the pbj object.}
 
+\item{method}{Which inference method to visualize.}
+
 \item{cft}{The cluster forming threshold or threshold for visualizing results (in the case of maxima). On the chi-square scale.}
 
 \item{pCFT}{For convenience, the user can specify the CFT in terms of a p-value.}
+
+\item{roi}{Which ROI index to visualize.}
+
+\item{slice}{Which slice number to visualize.}
 
 \item{alpha}{Adjusted p-value threshold to display clusters.}
 
 \item{clusterMask}{logical indicating whether to mask the results with significant clusters.}
 
+\item{clusterID}{logical indicating whether to include the clusterID in the figure.}
+
+\item{oma}{argument passed to par}
+
+\item{mar}{argument passed to par}
+
 \item{...}{Arguments passed to image.niftiImage.}
 
 \item{pbjObj}{pbj object to visualize}
+
+\item{bf}{argument passed to par}
 }
 \description{
 Uses a statMap with inferences results to visualize CEI, CMI, or maxima
