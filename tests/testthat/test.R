@@ -233,6 +233,13 @@ test_that("Output from PBJ with nonlinear polynomial and scalar weights matches 
                    Winv = pain$data$Winv, zeros=TRUE, transform='none')
   expect_equal(statmap$coef[,1], coefficients(model)[-c(1,2)], tolerance=tol )
   expect_equal(statmap$stat[1]/statmap$sqrtSigma$df, waldtestres$F[2], tolerance=tol)
+  with(statmap$sqrtSigma, {
+    h=rowSums(qr.Q(QR)^2); h = ifelse(h>=1, 1-eps, h)
+    X1resQ = sweep(simplify2array(rep(list(res/(1-h)), df)),  c(1,3), X1res, '*')
+    XtXinv = solve(crossprod(X1res))
+    apply(X1resQ, 2, function(x) sqrt(diag(XtXinv %*% crossprod(x) %*% XtXinv)) )
+  })
+  sqrt(diag(vcovHC(model)))
 })
 
 
@@ -433,6 +440,7 @@ test_that("Output from PBJ with df=3 and scalar weights matches output from gee.
                    formred = ~ 1, mask = mask, id=pain$data$ID,
                    template=pain$template, data = pain$data, # Winv = pain$data$Winv,
                    zeros=TRUE, transform='none', HC3 = FALSE)
+
   expect_equal(statmap$coef[,1], coefficients(model)[-1], tolerance=tol )
   expect_equal(statmap$stat[1], geepackanova$X2, tolerance=tol)
 })

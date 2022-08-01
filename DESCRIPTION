@@ -45,11 +45,13 @@ Imports:
   fslr,
   mgcv,
   mmand,
+  oro.nifti,
   parallel,
   pracma,
   pTFCE,
   RNifti,
   R.rsp,
+  scales,
   utils
 RoxygenNote: 7.2.1.9000
 Suggests: 

@@ -15,13 +15,6 @@ cat0 <- function(...) cat(..., sep='')
 #' @importFrom stats quantile
 summary.pbj <- function(object, ...)
 {
-  cat0(
-    "\nContents:\n",
-    statInner("  Stat:       ", object$stat),
-    statInner("  Template:   ", object$template),
-    statInner("  Mask:   ", object$mask)
-  )
-
   for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask', 'df') ]){
     cat0('\n', cft, ':\n')
 

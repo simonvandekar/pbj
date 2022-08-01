@@ -1,4 +1,4 @@
-
+#' @importFrom utils str
 #' @export
 summary.statMap <- function(object, ...)
 {
@@ -155,6 +155,7 @@ var.statMap = function(x){
 #' @importFrom graphics polygon points
 #' @importFrom stats terms
 #' @importFrom emmeans emmeans ref_grid
+#' @importFrom scales alpha
 #' @export
 plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NULL){
 
@@ -204,7 +205,7 @@ plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NU
     cols=c('#fb9a99', '#a6cee3', '#e31a1c', '#1f78b4')
     plot(data[,'age'], data[,'y'], col=cols[2+as.numeric(factor(data[,'sex']))], pch=16, ylab='Gray matter volume (AU)', xlab='Age (Years)')
     by(plotdf, plotdf$sex, function(df){
-      polygon(c(df$age, rev(df$age)), c(df$lower.CL, rev(df$upper.CL)), col=scales::alpha(cols[as.numeric(df$sex)], alpha=0.8), border=NA)
+      polygon(c(df$age, rev(df$age)), c(df$lower.CL, rev(df$upper.CL)), col=alpha(cols[as.numeric(df$sex)], alpha=0.8), border=NA)
       points(df$age, df$emmean, type='l', col=cols[as.numeric(df$sex)+2])
     } )
   }
@@ -259,6 +260,7 @@ roiMeans = function(statMap, method='CEI', cft=NULL, roiInds=NULL, data=NULL){
 #' @param las argument passed to par.
 #' @param title The title for the color bar
 #' @return a niftiImage object of the coefficient image
+#' @importFrom graphics axis rect
 #' @export
 colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=nticks), title='', ylab='', las=1) {
   scale = (length(lut)-1)/(max-min)
@@ -275,7 +277,6 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #'
 #' Uses a statMap with inferences results to visualize CEI, CMI, or maxima
 #'
-#' @param pbjObj pbj object to visualize
 #' @param object the statMap that created the pbj object.
 #' @param method Which inference method to visualize.
 #' @param cft The cluster forming threshold or threshold for visualizing results (in the case of maxima). On the chi-square scale.
@@ -283,13 +284,15 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @param roi Which ROI index to visualize.
 #' @param slice Which slice number to visualize.
 #' @param clusterID logical indicating whether to include the clusterID in the figure.
+#' @param plane Which anatomical plane to visualize.
 #' @param clusterMask logical indicating whether to mask the results with significant clusters.
 #' @param alpha Adjusted p-value threshold to display clusters.
 #' @param oma argument passed to par
 #' @param mar argument passed to par
-#' @param bf argument passed to par
+#' @param bg argument passed to par
 #' @param ... Arguments passed to image.niftiImage.
 #' @importFrom utils write.csv
+#' @iimportFrom graphics text
 #' @export
 image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
   if(!is.null(pCFT)) cft = qchisq(pCFT, df=object$sqrtSigma$df, lower.tail=FALSE)
@@ -407,12 +410,13 @@ image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCF
 #' @importFrom pTFCE ptfce
 #' @importFrom stats pchisq
 #' @importFrom utils capture.output
+#' @importFrom oro.nifti as.nifti
 #' @export
 ptfce.statmap = function(statMap, ...){
   if(is.character(statMap$mask))  statMap$mask = readNifti(statMap$mask)
   statimg = stat.statMap(statMap)
   # convert Chisq to Z
   statimg[statMap$mask>0] = qnorm(pchisq(statimg[statMap$mask>0], df=statMap$sqrtSigma$df, log.p = TRUE), log.p=TRUE)
-  invisible(capture.output(test <- ptfce(oro.nifti::as.nifti(array(statimg, dim = dim(statimg))), oro.nifti::as.nifti(array(statMap$mask, dim=dim(statMap$mask))) )))
+  invisible(capture.output(test <- ptfce(as.nifti(array(statimg, dim = dim(statimg))), as.nifti(array(statMap$mask, dim=dim(statMap$mask))) )))
   return(test)
 }

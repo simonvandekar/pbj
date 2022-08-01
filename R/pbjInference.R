@@ -132,7 +132,6 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.
 #' @param method Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
-#' @param runMode character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.
 #' @param max Logical indicating whether to do inference on local maxima.
 #' @param CMI Logical indicating whether to do inference for cluster masses.
 #' @param CEI Logical indicating whether to do inference for cluster extents.

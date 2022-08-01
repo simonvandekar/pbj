@@ -126,6 +126,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
   # inverse weights were passed
   if(Winv) W[W!=0] = 1/W[W!=0]
   X1 = X[,peind]
+  W = sqrt(W)
   # this is a pointwise matrix multiplication if W was passed as images
   Y = Y * W
 
@@ -137,7 +138,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
   X1res = qr.resid(qr(Xred * W), X1 * W)
 
   # standardize residuals and Y
-  #sigmas = sqrt(colSums(res^2)/rdf)
+  sigmas = sqrt(colSums(res^2)/rdf)
   #res = sweep(res, 2, sigmas, FUN = '/')
   #Y = sweep(Y, 2, sigmas, FUN = '/')
 
@@ -145,7 +146,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
     AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
     sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
     # used to compute chi-squared statistic
-    normedCoef = sqrtSigma %*% Y # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
+    normedCoef = sweep(sqrtSigma %*% Y, 2, sigmas, FUN='/') # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
     # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
     sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
     rm(AsqrtInv, Y, res, sigmas, X1res)

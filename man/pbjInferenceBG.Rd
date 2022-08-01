@@ -10,9 +10,7 @@ pbjInferenceBG(
   cft,
   rdata_rds,
   nboot = 5000,
-  rboot = function(n) {
-     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
- },
+  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = "wild",
   max = FALSE,
   CMI = FALSE,
@@ -39,8 +37,6 @@ pbjInferenceBG(
 \item{CMI}{Logical indicating whether to do inference for cluster masses.}
 
 \item{CEI}{Logical indicating whether to do inference for cluster extents.}
-
-\item{runMode}{character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.}
 }
 \value{
 Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.

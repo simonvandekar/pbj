@@ -40,15 +40,15 @@
 
 \item{clusterID}{logical indicating whether to include the clusterID in the figure.}
 
+\item{plane}{Which anatomical plane to visualize.}
+
 \item{oma}{argument passed to par}
 
 \item{mar}{argument passed to par}
 
+\item{bg}{argument passed to par}
+
 \item{...}{Arguments passed to image.niftiImage.}
-
-\item{pbjObj}{pbj object to visualize}
-
-\item{bf}{argument passed to par}
 }
 \description{
 Uses a statMap with inferences results to visualize CEI, CMI, or maxima

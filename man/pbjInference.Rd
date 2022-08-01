@@ -8,9 +8,7 @@ pbjInference(
   statMap,
   statistic = mmeStat,
   nboot = 5000,
-  rboot = function(n) {
-     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
- },
+  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
   method = c("wild", "permutation", "nonparametric"),
   runMode = c("cdf", "bootstrap"),
   progress = FALSE,
