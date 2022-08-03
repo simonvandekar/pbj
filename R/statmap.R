@@ -292,7 +292,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @param bg argument passed to par
 #' @param ... Arguments passed to image.niftiImage.
 #' @importFrom utils write.csv
-#' @iimportFrom graphics text
+#' @importFrom graphics text
 #' @export
 image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
   if(!is.null(pCFT)) cft = qchisq(pCFT, df=object$sqrtSigma$df, lower.tail=FALSE)
