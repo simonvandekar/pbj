@@ -59,18 +59,18 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
   }
 
 
-  if(class(images)[1] != 'niftiImage'){
-    n=length(images)
-    images = as.character(images)
-    images = gsub(" +$", "", images)
-    if(nrow(X)!=n)
+  n = nrow(X)
+  if(class(images[[1]]) != 'niftiImage'){
+    if(n!=length(images))
       stop('length(images) and nrow(X) must be the same.')
-    Y = simplify2array(RNifti::readNifti(images))
-  } else {
-    n = nrow(X)
-    Y = simplify2array(images)
-    rm(images)
+    images = as.character(images)
+    # removes white space after images if there is any
+    images = gsub(" +$", "", images)
+    Y = RNifti::readNifti(images)
   }
+
+  Y = simplify2array(images)
+  rm(images)
   dims = dim(Y)
 
   if(is.character(W)){
