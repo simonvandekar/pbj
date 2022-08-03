@@ -68,7 +68,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
     Y = simplify2array(RNifti::readNifti(images))
   } else {
     n = nrow(X)
-    Y = images
+    Y = simplify2array(images)
     rm(images)
   }
   dims = dim(Y)
