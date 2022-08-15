@@ -1,8 +1,8 @@
 
 [![AppVeyor build
-status](https://ci.appveyor.com/api/projects/status/github/simonvandekar/pbj?branch=master&svg=true)](https://ci.appveyor.com/project/simonvandekar/pbj)
+status](https://ci.appveyor.com/api/projects/status/github/simonvandekar/pbj?branch=longitudinal&svg=true)](https://ci.appveyor.com/project/simonvandekar/pbj)
 [![Travis build
-status](https://travis-ci.com/simonvandekar/pbj.svg?branch=master)](https://travis-ci.com/simonvandekar/pbj)
+status](https://travis-ci.com/simonvandekar/pbj.svg?branch=longitudinal)](https://travis-ci.com/simonvandekar/pbj)
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -22,7 +22,6 @@ The pbj package is in alpha stage as many features are still being
 added.
 
   - A graphical user interface
-  - Semiparametric multidimensional inference (F-tests)
   - Semiparametric longitudinal multidimensional inference (F-test in
     repeated measurements models)
   - Semiparametric confidence set inference
