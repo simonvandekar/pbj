@@ -1,9 +1,3 @@
-
-[![AppVeyor build
-status](https://ci.appveyor.com/api/projects/status/github/simonvandekar/pbj?branch=longitudinal&svg=true)](https://ci.appveyor.com/project/simonvandekar/pbj)
-[![Travis build
-status](https://travis-ci.com/simonvandekar/pbj.svg?branch=longitudinal)](https://travis-ci.com/simonvandekar/pbj)
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 <!-- <img align='center' src="inst/images/pbj-jpg.jpg" width="200"> -->
