@@ -140,6 +140,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #' @importFrom stats rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
+#' @importFrom callr r_bg
 #' @seealso [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
 #' @export
 #' @details

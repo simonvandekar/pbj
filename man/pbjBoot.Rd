@@ -6,7 +6,9 @@
 \usage{
 pbjBoot(
   sqrtSigma,
-  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
+  rboot = function(n) {
+     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
+ },
   null = TRUE,
   method = c("wild", "permutation", "nonparametric")
 )

@@ -10,7 +10,9 @@ pbjSEI(
   cfts.p = NULL,
   nboot = 5000,
   kernel = "box",
-  rboot = function(n) {     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1) },
+  rboot = function(n) {
+     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
+ },
   method = c("nonparametric", "t", "conditional", "permutation"),
   progress = c("bar", "json", "none"),
   progress.file = ""

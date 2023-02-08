@@ -19,7 +19,8 @@
   oma = rep(0, 4),
   mar = rep(0, 4),
   bg = "black",
-  other = function() { },
+  other = function() {
+ },
   ...
 )
 }

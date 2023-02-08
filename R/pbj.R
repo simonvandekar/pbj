@@ -21,9 +21,6 @@ summary.pbj <- function(object, ...)
     cat0("  P-Values:\n")
     print(quantile(object[[cft]]$pvalues))
 
-    cat0(statInner("  Cluster Map: ", object[[cft]]$clustermap),
-         statInner("  P Map:       ", object[[cft]]$pmap)
-    )
   }
 }
 

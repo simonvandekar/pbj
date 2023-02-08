@@ -186,7 +186,7 @@ lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Win
                         matrix(qnorm(vpapx_edgeworth(stat=normedCoef, mu3=colSums(sqrtSigma^3, dims=1), mu4=colSums(sqrtSigma^4, dims=1) ) ), nrow=df)
                       })
   stat = colSums(normedCoef^2)
-  if(tolower(transform)=='f'){
+  if(tolower(transform[1])=='f'){
     stat = qchisq(pf(stat/df, df1=df, df2=rdf, log.p = TRUE ), df=df, log.p=TRUE )
   }
 
