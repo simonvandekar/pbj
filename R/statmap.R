@@ -146,18 +146,19 @@ var.statMap = function(x){
 #' Plots the tested variables in a statMap object
 #'
 #' Returns a statistical niftiImage object from a statMap object
-#' @param statMap the statMap object with pbjInference run
+#' @param x the statMap object with pbjInference run
 #' @param emForm a formula specifying how to plot the data
 #' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
 #' @param cft A numeric specifying CFT to plot results for, defaults to the first one
 #' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
+#' @param ... arguments passed to plot
 #' @return a niftiImage object of the coefficient image
 #' @importFrom graphics polygon points
 #' @importFrom stats terms
 #' @importFrom emmeans emmeans ref_grid
 #' @importFrom scales alpha
 #' @export
-plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NULL){
+plot.statMap = function(x, emForm=NULL, method='CEI', cft=NULL, roiInds=NULL, ...){
 
   pbjObj = statMap$pbj
   if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
@@ -203,7 +204,7 @@ plot.statMap = function(statMap, emForm=NULL, method='CEI', cft=NULL, roiInds=NU
 
     # plot predictions with raw data
     cols=c('#fb9a99', '#a6cee3', '#e31a1c', '#1f78b4')
-    plot(data[,'age'], data[,'y'], col=cols[2+as.numeric(factor(data[,'sex']))], pch=16, ylab='Gray matter volume (AU)', xlab='Age (Years)')
+    plot(data[,'age'], data[,'y'], col=cols[2+as.numeric(factor(data[,'sex']))], pch=16, ylab='Gray matter volume (AU)', xlab='Age (Years)', ...)
     by(plotdf, plotdf$sex, function(df){
       polygon(c(df$age, rev(df$age)), c(df$lower.CL, rev(df$upper.CL)), col=alpha(cols[as.numeric(df$sex)], alpha=0.8), border=NA)
       points(df$age, df$emmean, type='l', col=cols[as.numeric(df$sex)+2])
@@ -277,7 +278,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #'
 #' Uses a statMap with inferences results to visualize CEI, CMI, or maxima
 #'
-#' @param object the statMap that created the pbj object.
+#' @param x the statMap that created the pbj object.
 #' @param method Which inference method to visualize.
 #' @param cft The cluster forming threshold or threshold for visualizing results (in the case of maxima). On the chi-square scale.
 #' @param pCFT For convenience, the user can specify the CFT in terms of a p-value.
@@ -294,7 +295,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @importFrom utils write.csv
 #' @importFrom graphics text
 #' @export
-image.statMap = function(object, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
+image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
   if(!is.null(pCFT)) cft = qchisq(pCFT, df=object$sqrtSigma$df, lower.tail=FALSE)
   # set graphical parameters
   par(oma = oma,

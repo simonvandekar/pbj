@@ -4,10 +4,10 @@
 \alias{plot.statMap}
 \title{Plots the tested variables in a statMap object}
 \usage{
-\method{plot}{statMap}(statMap, emForm = NULL, method = "CEI", cft = NULL, roiInds = NULL)
+\method{plot}{statMap}(x, emForm = NULL, method = "CEI", cft = NULL, roiInds = NULL, ...)
 }
 \arguments{
-\item{statMap}{the statMap object with pbjInference run}
+\item{x}{the statMap object with pbjInference run}
 
 \item{emForm}{a formula specifying how to plot the data}
 
@@ -16,6 +16,8 @@
 \item{cft}{A numeric specifying CFT to plot results for, defaults to the first one}
 
 \item{roiInds}{A numeric/integer vector specifying which ROIs to plot results for.}
+
+\item{...}{arguments passed to plot}
 }
 \value{
 a niftiImage object of the coefficient image

@@ -37,18 +37,15 @@ Collate:
     'pbj.R'
     'pbjBoot.R'
     'pbjInference.R'
-    'pbjSEI.R'
     'resave.R'
 Imports:
   callr,
   PDQutils,
   emmeans,
   fslr,
-  mgcv,
   mmand,
   oro.nifti,
   parallel,
-  pracma,
   pTFCE,
   RNifti,
   R.rsp,

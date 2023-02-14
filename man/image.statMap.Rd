@@ -5,7 +5,7 @@
 \title{View statMap and pbj results in a statMap object}
 \usage{
 \method{image}{statMap}(
-  object,
+  x,
   method = c("CEI", "maxima", "CMI"),
   cft = NULL,
   pCFT = NULL,
@@ -22,7 +22,7 @@
 )
 }
 \arguments{
-\item{object}{the statMap that created the pbj object.}
+\item{x}{the statMap that created the pbj object.}
 
 \item{method}{Which inference method to visualize.}
 
