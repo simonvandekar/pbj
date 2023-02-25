@@ -160,26 +160,26 @@ var.statMap = function(x){
 #' @export
 plot.statMap = function(x, emForm=NULL, method='CEI', cft=NULL, roiInds=NULL, ...){
 
-  pbjObj = statMap$pbj
+  pbjObj = x$pbj
   if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
-  st = table.statMap(statMap, method, cft)
-  ind = inferenceIndex(statMap$pbj$obsStat, method=method, cft=cft)
+  st = table.statMap(x, method, cft)
+  ind = inferenceIndex(x$pbj$obsStat, method=method, cft=cft)
   rois = pbjObj$ROIs[[ind]]
   obsstat = pbjObj$obsStat[[ind]]
 
 
   # load data
-  imgs = RNifti::readNifti(statMap$images)
+  imgs = RNifti::readNifti(x$images)
   # fit model on average data
-  full = as.formula(statMap$formulas$full)
-  red = as.formula(statMap$formulas$reduced)
+  full = as.formula(x$formulas$full)
+  red = as.formula(x$formulas$reduced)
   fullT = terms(full)
   redT = terms(red)
   # formula elements to condition on
   term = attr(fullT, 'term.labels')[!attr(fullT, 'term.labels') %in% attr(redT, 'term.labels') ]
   condVars = sapply(all.vars(full), function(x) grepl(x, term) )
   condVars = names(condVars)[condVars]
-  robust = statMap$sqrtSigma$robust
+  robust = x$sqrtSigma$robust
   data = get_all_vars(full, data=data)
   for(roiInd in roiInds){
     data$y = sapply(imgs, function(img) mean(img[ rois==roiInd]) )
@@ -302,20 +302,20 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
       mar = mar, bg = bg)
   oldpar <- par(no.readonly = TRUE)
   # use mask if user didn't provide a template
-  if(is.null(object$template)) object$template=object$mask
+  if(is.null(x$template)) x$template=x$mask
   # read template if stored as a character
-  x = if(is.character(object$template)) readNifti(object$template) else object$template
+  x = if(is.character(x$template)) readNifti(x$template) else x$template
   method = method[1]
   plane=plane[1]
 
-  pbjObj = object$pbj
+  pbjObj = x$pbj
   # if user hasn't run pbj yet visualize using image.niftiImage
   if(is.null(pbjObj)){
     if(is.null(cft)) cft=0
-    image.niftiImage(stat.statMap(object), bgimg = object$template, thresh = cft, index = slice, plane=plane)
+    image.niftiImage(stat.statMap(x), bgimg = x$template, thresh = cft, index = slice, plane=plane)
   } else {
-    if(is.character(object$mask)){
-      object$mask = readNifti(object$mask)
+    if(is.character(x$mask)){
+      x$mask = readNifti(x$mask)
     }
     ind = grep(method, names(pbjObj$obsStat))
     # get indices corresponding to this method
@@ -332,17 +332,17 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
     ind = ind[1]
     if(is.null(cft)) stop("Must specify cft for visualization with method='maxima'")
 
-    st = table.statMap(object, method=method, cft=cft)
-    imgdims = dim(stat.statMap(object))
+    st = table.statMap(x, method=method, cft=cft)
+    imgdims = dim(stat.statMap(x))
     planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
     otherplanes = which(!1:3 %in% planenum)
     if(!is.null(alpha)){
       pbjObj$ROIs[[ind]][ pbjObj$ROIs[[ind]] %in% which(st$`FWER p-value`>alpha) ] = 0
-      object$stat[pbjObj$ROIs[[ind]][ object$mask>0 ] ==0] = 0
+      x$stat[pbjObj$ROIs[[ind]][ x$mask>0 ] ==0] = 0
       st = st[which(st$`FWER p-value`<=alpha),]
     } else if(clusterMask){
       # zero values outside of clusterMask
-      object$stat[pbjObj$ROIs[[ind]][ object$mask>0 ]==0] = 0
+      x$stat[pbjObj$ROIs[[ind]][ x$mask>0 ]==0] = 0
     }
 
     # image.statMap crops the image, so we need to do that here
@@ -370,9 +370,9 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
           #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
           #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
           #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
-          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
+          image(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
         } else {
-          image(stat.statMap(object), bgimg=object$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
+          image(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
         }
       }
     } else if(!is.null(slice)){
@@ -381,22 +381,22 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
           coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
           coordInds = which(coords[,planenum]==slic)
           if(length(coordInds)==0){
-            image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+            image(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
           } else {
             coordLabels = st$`cluster ID`[coordInds]
             othercoords = coords[coordInds,-planenum, drop=FALSE]
             otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
-            image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
+            image(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
                   other=otherfunc, ...)
           }
         } else {
-          image(stat.statMap(object), bgimg=object$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+          image(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
         }
       }
 
       # if roi and slice are null, do lightbox view
     } else {
-      image(stat.statMap(object), bgimg=object$template, plane=plane, thresh=cft, ...)
+      image(stat.statMap(x), bgimg=x$template, plane=plane, thresh=cft, ...)
 
     }
   }
