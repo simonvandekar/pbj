@@ -346,11 +346,11 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
     }
 
     # image.statMap crops the image, so we need to do that here
-    xoffset = which(apply(x!=0, 1, any))
+    xoffset = which(apply(x$template!=0, 1, any))
     xoffset = c(xoffset[1], length(xoffset))+ c(-1, 0)
-    yoffset = which(apply(x!=0, 2, any))
+    yoffset = which(apply(x$template!=0, 2, any))
     yoffset = c(yoffset[1], length(yoffset))+ c(-1, 0)
-    zoffset = which(apply(x!=0, 3, any))
+    zoffset = which(apply(x$template!=0, 3, any))
     zoffset = c(zoffset[1], length(zoffset))+ c(-1, 0)
     offsets = list(xoffset, yoffset, zoffset)
     rm(zoffset, yoffset, xoffset)
