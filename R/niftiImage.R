@@ -44,7 +44,7 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
      thresh=max(stat)+eps
     }
   }
-  else bgimg
+  else x=bgimg
   pixdim = RNifti::pixdim(x)
   switch(plane[1], axial = {
     aspect <- pixdim[3]/pixdim[2]
