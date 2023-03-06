@@ -304,7 +304,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
   # use mask if user didn't provide a template
   if(is.null(x$template)) x$template=x$mask
   # read template if stored as a character
-  x = if(is.character(x$template)) readNifti(x$template) else x$template
+  x$template = if(is.character(x$template)) readNifti(x$template) else x$template
   method = method[1]
   plane=plane[1]
 
