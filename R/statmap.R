@@ -296,7 +296,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @importFrom graphics text
 #' @export
 image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
-  if(!is.null(pCFT)) cft = qchisq(pCFT, df=object$sqrtSigma$df, lower.tail=FALSE)
+  if(!is.null(pCFT)) cft = qchisq(pCFT, df=x$sqrtSigma$df, lower.tail=FALSE)
   # set graphical parameters
   par(oma = oma,
       mar = mar, bg = bg)
