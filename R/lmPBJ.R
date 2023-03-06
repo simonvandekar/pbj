@@ -45,7 +45,8 @@
 #' @importFrom parallel mclapply
 #' @importFrom PDQutils papx_edgeworth
 #' @export
-lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL, Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('none', 't', 'f', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
+lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL,
+Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none', 'f', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
 
