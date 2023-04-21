@@ -1,3 +1,4 @@
+#' object A statMap object
 #' @importFrom utils str
 #' @export
 summary.statMap <- function(object, ...)
@@ -97,12 +98,22 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
   return(c(list(stat=statimg, coef=coefimg, sqrtSigma=res), inference) )
 }
 
-#' Gets a 4D niftiImage of the coefficient image from a statMap object
-#'
 #' Returns a statistical niftiImage object from a statMap object
+#'
+#'
 #' @param x the statMap object to extract a coefficient niftiImage from
-#' @return a niftiImage object of the coefficient image
+#' @return a niftiImage object of the chi-square statistical image.
 #' @export
+#' @examples
+#' # loading example data
+#' library(pain21)
+#' pain = pain21()
+#' pdata = pain$data
+#'
+#' # fitting regression of images onto study sample size, weights proportional to study sample size
+#' pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1, W = pdata$n, mask=pain$mask, data=pdata)
+#' stat.statMap(pbjModel2)
+#'
 stat.statMap = function(x){
   if(is.character(x$stat)){
     stat = readNifti(x$stat)

@@ -74,11 +74,12 @@ vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(s
 #'
 #' @param stat A statistical Nifti image as an RNifti image object.
 #' @param mask A statistical Nifti image mask used in the analysis or a character path to one.
-#' @param cft A a vector of cluster forming thresholds for the test statistic image. Will compute cluster sizes for each threshold.
+#' @param cft A a vector of cluster forming thresholds (on the scale of the test statistic
+#' image, which is usually chi-squared for pbj) for the test statistic image. Will compute cluster sizes or masses for each threshold.
 #' @param method character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.
 #' @param kernel The kernel type to compute connected components.
 #' @param rois If TRUE, return image with voxel values having the indices of the clusters returned if rois=FALSE.
-#' @return Returns list of tables of sizes of the connected components above thr.
+#' @return Returns list of tables of sizes of the connected components above cft.
 #' @export
 #' @importFrom mmand shapeKernel
 #'
@@ -110,8 +111,8 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
 #' @param stat A statistical Nifti image as an RNifti image object.
 #' @param kernel Type of kernel to use for max/dilation filter
 #' @param width Width of kernel (assumes isotropic)
-#' @param rois If TRUE, return image with voxel values having the indices of the local maxima returned if rois=FALSE.
-#' @return Returns vector of local maxima in the image.
+#' @param rois If TRUE, return image with voxel values having the indices of the local maxima.
+#' @return Default returns vector of local maxima in the image.
 #' @export
 #' @importFrom mmand shapeKernel
 #'
@@ -219,13 +220,12 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
 #' Compute maxima, CMI, or CEI inference statistics
 #'
 #' @param stat statistical image
-#' @param rois passed to maxima and cluster functions. Return image with ROI
-#' indices?
+#' @param rois passed to maxima and cluster functions. Returns image with ROI indices.
 #' @param mask Mask image.
 #' @param max Compute local maxima?
 #' @param CMI Compute cluster masses?
 #' @param CEI Compute cluster extents?
-#' @param cft A single threshold for CEI or CMI.
+#' @param cft A single threshold on the scale of the statistical image (chi-squared) for CEI or CMI.
 #' @return Returns a list with the maxima and CEI for the given image.
 #' This function is used  as the default `statistic` argument in [pbjInference()].
 #' @export

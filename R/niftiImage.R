@@ -21,8 +21,16 @@
 #' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
 #' @importFrom graphics par
-# modified from oro.nifti:::image.nifti
+#' @importFrom RNifti readNifti
 #' @export
+#' @examples
+#' library(readNifti)
+#' library(pain21)
+#' pain = pain21()
+#' templ = readNifti(pain$template)
+#' image(templ)
+#' image(templ, plane='coronal')
+#'
 image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",
                                                                                                   "coronal", "sagittal"), xlab = "", ylab = "", axes = FALSE,

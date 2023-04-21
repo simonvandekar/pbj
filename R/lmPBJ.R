@@ -45,10 +45,12 @@
 #' @importFrom parallel mclapply
 #' @importFrom PDQutils papx_edgeworth
 #' @export
+#' @example inst/examples/lmPBJ.R
 lmPBJ = function(images, form, formred=~1, mask, id=NULL, data=NULL, W=NULL,
 Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none', 'f', 'edgeworth'), outdir=NULL, zeros=FALSE, HC3=TRUE, mc.cores = getOption("mc.cores", 2L)){
   # hard coded epsilon for rounding errors in computing hat values
   eps=0.001
+  transform = tolower(transform[1])
 
   X = getDesign(form, formred, data=data)
   Xred = X[['Xred']]
@@ -179,7 +181,7 @@ Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none',
   }
 
   # use transform to compute chi-squared statistic
-  normedCoef = switch(tolower(transform[1]),
+  normedCoef = switch(transform,
                       none=normedCoef,
                       f=normedCoef,
                       t={ qnorm(pt(normedCoef, df=rdf, log.p = TRUE ), log.p=TRUE )},
@@ -187,7 +189,7 @@ Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none',
                         matrix(qnorm(vpapx_edgeworth(stat=normedCoef, mu3=colSums(sqrtSigma^3, dims=1), mu4=colSums(sqrtSigma^4, dims=1) ) ), nrow=df)
                       })
   stat = colSums(normedCoef^2)
-  if(tolower(transform[1])=='f'){
+  if(transform=='f'){
     stat = qchisq(pf(stat/df, df1=df, df2=rdf, log.p = TRUE ), df=df, log.p=TRUE )
   }
 

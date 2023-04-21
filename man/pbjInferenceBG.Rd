@@ -4,51 +4,19 @@
 \alias{pbjInferenceBG}
 \title{Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Inference}
 \usage{
-pbjInferenceBG(
-  statMap,
-  mask,
-  cft,
-  rdata_rds,
-  nboot = 5000,
-  rboot = function(n) {
-     (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
- },
-  method = "wild",
-  max = FALSE,
-  CMI = FALSE,
-  CEI = TRUE
-)
+pbjInferenceBG(argsList)
 }
 \arguments{
-\item{statMap}{statMap object as obtained from lmPBJ function.}
-
-\item{mask}{The mask file used for the analysis passed to `mmeStat`}
-
-\item{cft}{The cluster forming threshold to use if CEI or CMI are specified.}
-
-\item{rdata_rds}{The location the save the results as an rdata file or an rds file as a character.}
-
-\item{nboot}{Number of bootstrap samples to use.}
-
-\item{rboot}{Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.}
-
-\item{method}{Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric}
-
-\item{max}{Logical indicating whether to do inference on local maxima.}
-
-\item{CMI}{Logical indicating whether to do inference for cluster masses.}
-
-\item{CEI}{Logical indicating whether to do inference for cluster extents.}
-}
-\value{
-Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.
+\item{argsList}{A list of arguments obtained from pbjInference including `rdata_rds` that specifies a file to save the output.}
 }
 \description{
-This is a wrapper to pbjInference that runs it in the background using the `mmeStat` function for the `statistic` argument.
+Performs (semi)Parametric Bootstrap Joint ((s)PBJ) Inference
 }
 \details{
-For `rdata_rds`, if the string has an RDS extension the `statMap` object is saved in the RDS file. If it has any other extension the `statMap` object and computing time are saved as an rdata file.
+This function performs pbj resampling-based inference running the analyses in the background and saving the results as and rdata or rds object.
+If the file name ends in rdata it will save the statMap object and the computing time in an rdata file. Otherwise it will save the statMap object as an rds file.
+Note, the input to this function is different than [pbjInferenceFG()].
 }
 \seealso{
-[mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
+[pbjInference()], [pbjInferenceFG()]
 }
