@@ -24,7 +24,7 @@
 #' @importFrom RNifti readNifti
 #' @export
 #' @examples
-#' library(readNifti)
+#' library(RNifti)
 #' library(pain21)
 #' pain = pain21()
 #' templ = readNifti(pain$template)

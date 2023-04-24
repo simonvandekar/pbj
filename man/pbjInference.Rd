@@ -15,6 +15,8 @@ pbjInference(
   runMode = c("cdf", "bootstrap"),
   progress = FALSE,
   rdata_rds = NULL,
+  cft_s = NULL,
+  cft_p = NULL,
   ...
 )
 }
@@ -35,6 +37,10 @@ pbjInference(
 
 \item{rdata_rds}{A character string specifying a .rdata or .rds file to write the output. If specified, resampling is run as background process.}
 
+\item{cft_s}{A vector of robust effect size index (RESI) cluster forming thresholds}
+
+\item{cft_p}{A vector of p-value cluster forming thresholds}
+
 \item{...}{arguments passed to statistic function.}
 }
 \value{
@@ -52,6 +58,34 @@ image. returned as a list. Multiple topological features can be returned, as in
 [mmeStat()] and [cluster()]. #' To use default methods the statistic must have a logical
 `rois` argument that outputs an integer valued image identifying where each topological
 features is located.
+}
+\examples{
+# loading example data
+library(pain21)
+pain = pain21()
+pdata = pain$data
+
+# fitting regression of images onto study sample size, weights proportional to study sample size
+pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1, W = pdata$n, mask=pain$mask, data=pdata)
+table.statMap(pbjModel2, cft_p=0.01)
+
+
+# p-value thresholding for cluster extent/mass
+pbjModelAll = pbjInference(pbjModel2, nboot=2, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE)
+head(table.statMap(pbjModelAll, method = 'maxima'))
+head(table.statMap(pbjModelAll, method = 'CEI', cft_p=0.01))
+# returns the first threshold used
+head(table.statMap(pbjModelAll, method = 'CMI'))
+# RESI effect size thresholding for cluster extent/mass
+pbjModel2 = pbjInference(pbjModel2, nboot=2, cft_s=c(0.1, 0.25), CMI=TRUE)
+head(table.statMap(pbjModel2, method = 'CEI', cft_s=0.1))
+head(table.statMap(pbjModel2, method = 'CEI', cft_s=0.25))
+# Inference on local maxima
+pbjModel2 = pbjInference(pbjModel2, nboot=2, statistic = maxima)
+# Cluster extent inference
+pbjModelCEI = pbjInference(pbjModel2, nboot=2, statistic = cluster, cft_s=0.1)
+
+
 }
 \seealso{
 [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.

@@ -1,67 +1,8 @@
-# functions for pbj objects
-
-#' @useDynLib pbj, .registration=TRUE
-#' @export
-#' @method print pbj
-print.pbj <- function(x, ...)
-{
-  summary(x, ...)
-}
-
-cat0 <- function(...) cat(..., sep='')
-
-#' @export
-#' @include statmap.R
-#' @importFrom stats quantile
-summary.pbj <- function(object, ...)
-{
-  for(cft in names(object)[ ! names(object) %in% c('stat', 'template', 'mask', 'df') ]){
-    cat0('\n', cft, ':\n')
-
-    cat0("  P-Values:\n")
-    print(quantile(object[[cft]]$pvalues))
-
-  }
-}
-
-
-#' Image a CoPE object
-#'
-#' See image.statMap for additional arguments
-#'
-#' @export
-#' @param x pbj object to create images for
-#' @param alpha Displays 1-alpha CoPE maps
-#' @param ... Arguments passed to image.statMap
-#' @importFrom graphics image
-#' @importFrom graphics par
-image.CoPE <- function(x, alpha=0.05, ...)
-{
-  for(rsq in names(x)[ ! names(x) %in% c('stat', 'template') ]){
-    statminus = statplus = x$stat
-    x[[rsq]]
-    # mask stat image with significant voxels
-    statminus[ x[[rsq]]$Aminus > 1-alpha ] = 0
-    # create a barebones statmap object
-    statmap = list(stat=statminus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL)
-    class(statmap) = "statMap"
-    # call image.statMap
-    image(statmap, thresh=0.01  )
-
-    # mask stat image with significant voxels
-    statplus[ x[[rsq]]$Aplus <= 1-alpha ] = 0
-    # create a barebones statmap object
-    statmap = list(stat=statplus, sqrtSigma=NULL, mask=NULL, template=x$template, formulas=NULL, robust=NULL)
-    class(statmap) = "statMap"
-    # call image.statMap
-    image(statmap, thresh=0.01  )
-  }
-}
-
 #' A vectorized version of papx_edgeworth
 #'
-#' See image.statMap for additional arguments
 #'
+#'
+#' @useDynLib pbj, .registration=TRUE
 #' @param stat Vector of test statistics
 #' @param mu3 The third moment of the test statistics
 #' @param mu4 The fourth moment of the test statistics
@@ -102,6 +43,12 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
                     })
     # modifies ccomps attribute in cluster function
     ccomps = lapply(1:length(cft), function(ind){ attributes(ccomps[[ind]]) <- list('cft'=cft[ind]); ccomps[[ind]]})
+
+  }
+  if(method=='extent'){
+    names(ccomps) = paste('CEI', 1:length(ccomps))
+  }else{
+    names(ccomps) = paste('CMI', 1:length(ccomps))
   }
   return(ccomps)
 }
@@ -110,22 +57,28 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
 #'
 #' @param stat A statistical Nifti image as an RNifti image object.
 #' @param kernel Type of kernel to use for max/dilation filter
-#' @param width Width of kernel (assumes isotropic)
+#' @param width Width of kernel (assumes isotropic). If zero, then returns global maximum.
 #' @param rois If TRUE, return image with voxel values having the indices of the local maxima.
+#' @param roisWidth Width of kernel for computing local maxima used for table output later. Only used if width is unspecified
 #' @return Default returns vector of local maxima in the image.
 #' @export
 #' @importFrom mmand shapeKernel
 #'
-maxima = function(stat, kernel='box', width=7, rois=FALSE){
-  ndims = length(dim(stat))
-  dil = dilate(stat, shapeKernel(width, ndims, type=kernel))
-  stat[which(stat<dil)] = 0
-  imginds = which(stat!=0)
-  if(rois){
-    stat[imginds] = 1:length(imginds)
-    stat
+maxima = function(stat, kernel='box', width=0, rois=FALSE, roisWidth=15){
+  if(width==0 & !rois){
+    list(maxima=max(stat))
   } else {
-    stat[ imginds]
+    if(width==0){width = roisWidth}
+    ndims = length(dim(stat))
+    dil = dilate(stat, shapeKernel(width, ndims, type=kernel))
+    stat[which(stat<dil)] = 0
+    imginds = which(stat!=0)
+    if(rois){
+      stat[imginds] = 1:length(imginds)
+      list(maxima=stat)
+    } else {
+      list(maxima=stat[ imginds])
+    }
   }
 }
 
@@ -166,55 +119,21 @@ wecdf = function (x, w=rep(1, length(x)))
 #' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
 #' @export
 inferenceIndex = function(obsStat, method, cft=NULL){
-ind = grep(method, names(obsStat))
-if(length(ind)==0){
-  stop('Method ', method, ' was not run on this statMap.')
-}
-# get indices corresponding to this method
-cfts = sapply(obsStat[ind], attr, which='cft')
-# maxima don't have cft attribute
-if(!is.null(cft) & method!='maxima'){
-  ind = ind[which(cfts==cft)]
+  ind = grep(method, tolower(names(obsStat)))
   if(length(ind)==0){
-    stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
+    stop('Method ', method, ' was not run on this statMap.')
   }
-}
-ind = ind[1]
-ind
-}
-
-#' Create cluster/maxima summary table
-#'
-#' @param x pbj object
-#' @param method What statistic to provide summary for? must have run that
-#' analysis using the pbjInference and mmeStat functions.
-#' @param cft cluster forming threshold to display. If NULL, just display the first.
-#' @return Returns table of unadjusted and FWER adjusted p-values and other summary statistics. Results depend on what statistic
-#' function was used for pbjInference.
-#' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
-#' @export
-#'
-table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
-  x = x$pbj
-  if(is.null(x)){
-    stop("Must run pbjInference to create cluster table.")
+  # get indices corresponding to this method
+  cfts = sapply(obsStat[ind], attr, which='cft')
+  # maxima don't have cft attribute
+  if(!is.null(cft) & method!='maxima'){
+    ind = ind[which(cfts==cft)]
+    if(length(ind)==0){
+      stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
+    }
   }
-  method = method[1]
-  ind = inferenceIndex(x$obsStat, method=method, cft=cft)
-  Table = data.frame('Cluster Extent' = c(x$obsStat[[ind]]),
-                     'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
-                     'Unadjusted p-value' = (1-x$margCDF[[ind]](c(x$obsStat[[ind]]))),
-                     'FWER p-value' = (1-x$globCDF[[ind]](c(x$obsStat[[ind]]))),
-                     check.names=FALSE )
-  names(Table) = if(method=='CEI') c('Cluster Extent', 'Centroid (vox)',
-                                     'Unadjusted p-value', 'FWER p-value') else if(method=='maxima') c('Chi-square',
-                                                                                                       'Coord (vox)', 'Unadjusted p-value', 'FWER p-value') else if(method=='CMI')
-                                                                                                         c('Cluster Mass', 'Centroid (vox)', 'Unadjusted p-value', 'FWER p-value')
-  Table = Table[order(Table[,1], decreasing = TRUE),]
-  Table[,'cluster ID'] = 1:nrow(Table)
-  Table = Table[, c(ncol(Table), 1:(ncol(Table)-1) )]
-  #attributes(Table) <- list('cft'=cfts[ind], 'ind'=ind)
-  Table
+  ind = ind[1]
+  ind
 }
 
 #' Compute maxima, CMI, or CEI inference statistics
@@ -222,7 +141,7 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
 #' @param stat statistical image
 #' @param rois passed to maxima and cluster functions. Returns image with ROI indices.
 #' @param mask Mask image.
-#' @param max Compute local maxima?
+#' @param maxima Compute local maxima?
 #' @param CMI Compute cluster masses?
 #' @param CEI Compute cluster extents?
 #' @param cft A single threshold on the scale of the statistical image (chi-squared) for CEI or CMI.
@@ -230,18 +149,18 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL){
 #' This function is used  as the default `statistic` argument in [pbjInference()].
 #' @export
 #'
-mmeStat = function(stat, rois=FALSE, mask, cft, max=FALSE, CMI=FALSE,
+mmeStat = function(stat, rois=FALSE, mask, cft, maxima=FALSE, CMI=FALSE,
                    CEI=TRUE){
   res = c()
-  if(max){
-    res = c(maxima=list(maxima(stat, rois=rois)) )
+  if(maxima){
+    res = maxima(stat, rois=rois)
   }
   if(CMI) {
-    res = c(res, CMI=cluster(stat, mask=mask, cft=cft, rois=rois, method='mass'))
+    res = c(res, cluster(stat, mask=mask, cft=cft, rois=rois, method='mass'))
   }
   if(CEI){
-    res = c(res, CEI=cluster(stat, mask=mask, cft=cft, rois=rois,
-                             method='extent'))
+    res = c(res, cluster(stat, mask=mask, cft=cft, rois=rois,
+                         method='extent'))
   }
   res
 }

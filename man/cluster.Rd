@@ -18,7 +18,8 @@ cluster(
 
 \item{mask}{A statistical Nifti image mask used in the analysis or a character path to one.}
 
-\item{cft}{A a vector of cluster forming thresholds for the test statistic image. Will compute cluster sizes for each threshold.}
+\item{cft}{A a vector of cluster forming thresholds (on the scale of the test statistic
+image, which is usually chi-squared for pbj) for the test statistic image. Will compute cluster sizes or masses for each threshold.}
 
 \item{method}{character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.}
 
@@ -27,7 +28,7 @@ cluster(
 \item{rois}{If TRUE, return image with voxel values having the indices of the clusters returned if rois=FALSE.}
 }
 \value{
-Returns list of tables of sizes of the connected components above thr.
+Returns list of tables of sizes of the connected components above cft.
 }
 \description{
 Computes contiguous clusters from a statistical image given a threshold

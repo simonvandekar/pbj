@@ -7,8 +7,8 @@
 \method{image}{statMap}(
   x,
   method = c("CEI", "maxima", "CMI"),
-  cft = NULL,
-  pCFT = NULL,
+  cft_s = NULL,
+  cft_p = NULL,
   roi = NULL,
   slice = NULL,
   alpha = NULL,
@@ -26,9 +26,9 @@
 
 \item{method}{Which inference method to visualize.}
 
-\item{cft}{The cluster forming threshold or threshold for visualizing results (in the case of maxima). On the chi-square scale.}
+\item{cft_s}{The cluster forming threshold or threshold for visualizing results on the RESI effect size scale.}
 
-\item{pCFT}{For convenience, the user can specify the CFT in terms of a p-value.}
+\item{cft_p}{The cluster forming threshold or threshold for visualizing results on the p-value scale.}
 
 \item{roi}{Which ROI index to visualize.}
 

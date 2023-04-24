@@ -60,3 +60,12 @@
 \description{
 modified from oro.nifti:::image.nifti
 }
+\examples{
+library(RNifti)
+library(pain21)
+pain = pain21()
+templ = readNifti(pain$template)
+image(templ)
+image(templ, plane='coronal')
+
+}

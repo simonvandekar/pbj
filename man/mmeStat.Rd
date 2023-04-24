@@ -4,19 +4,18 @@
 \alias{mmeStat}
 \title{Compute maxima, CMI, or CEI inference statistics}
 \usage{
-mmeStat(stat, rois = FALSE, mask, cft, max = FALSE, CMI = FALSE, CEI = TRUE)
+mmeStat(stat, rois = FALSE, mask, cft, maxima = FALSE, CMI = FALSE, CEI = TRUE)
 }
 \arguments{
 \item{stat}{statistical image}
 
-\item{rois}{passed to maxima and cluster functions. Return image with ROI
-indices?}
+\item{rois}{passed to maxima and cluster functions. Returns image with ROI indices.}
 
 \item{mask}{Mask image.}
 
-\item{cft}{A single threshold for CEI or CMI.}
+\item{cft}{A single threshold on the scale of the statistical image (chi-squared) for CEI or CMI.}
 
-\item{max}{Compute local maxima?}
+\item{maxima}{Compute local maxima?}
 
 \item{CMI}{Compute cluster masses?}
 

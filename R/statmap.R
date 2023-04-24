@@ -1,5 +1,7 @@
 #' object A statMap object
 #' @importFrom utils str
+#' @param object A statMap object
+#' @param ... additional arguments
 #' @export
 summary.statMap <- function(object, ...)
 {
@@ -291,8 +293,8 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #'
 #' @param x the statMap that created the pbj object.
 #' @param method Which inference method to visualize.
-#' @param cft The cluster forming threshold or threshold for visualizing results (in the case of maxima). On the chi-square scale.
-#' @param pCFT For convenience, the user can specify the CFT in terms of a p-value.
+#' @param cft_p The cluster forming threshold or threshold for visualizing results on the p-value scale.
+#' @param cft_s The cluster forming threshold or threshold for visualizing results on the RESI effect size scale.
 #' @param roi Which ROI index to visualize.
 #' @param slice Which slice number to visualize.
 #' @param clusterID logical indicating whether to include the clusterID in the figure.
@@ -306,8 +308,13 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @importFrom utils write.csv
 #' @importFrom graphics text
 #' @export
-image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
-  if(!is.null(pCFT)) cft = qchisq(pCFT, df=x$sqrtSigma$df, lower.tail=FALSE)
+image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
+  # CFT passed as p value or effect size converted to chi-squared threshold
+  if(!is.null(cft_s)){
+    cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
+  } else if(!is.null(cft_p)){
+    cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
+  }
   # set graphical parameters
   par(oma = oma,
       mar = mar, bg = bg)
@@ -343,7 +350,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
     ind = ind[1]
     if(is.null(cft)) stop("Must specify cft for visualization with method='maxima'")
 
-    st = table.statMap(x, method=method, cft=cft)
+    st = table.statMap(x, method=method, cft_p=cft_p, cft_s=cft_s)
     imgdims = dim(stat.statMap(x))
     planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
     otherplanes = which(!1:3 %in% planenum)
@@ -381,9 +388,9 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
           #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
           #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
           #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
-          image(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
+          image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
         } else {
-          image(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
+          image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
         }
       }
     } else if(!is.null(slice)){
@@ -392,22 +399,22 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft=NULL, pCFT=NUL
           coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
           coordInds = which(coords[,planenum]==slic)
           if(length(coordInds)==0){
-            image(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+            image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
           } else {
             coordLabels = st$`cluster ID`[coordInds]
             othercoords = coords[coordInds,-planenum, drop=FALSE]
             otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
-            image(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
+            image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
                   other=otherfunc, ...)
           }
         } else {
-          image(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+          image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
         }
       }
 
       # if roi and slice are null, do lightbox view
     } else {
-      image(stat.statMap(x), bgimg=x$template, plane=plane, thresh=cft, ...)
+      image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, thresh=cft, ...)
 
     }
   }
@@ -432,3 +439,66 @@ ptfce.statmap = function(statMap, ...){
   invisible(capture.output(test <- ptfce(as.nifti(array(statimg, dim = dim(statimg))), as.nifti(array(statMap$mask, dim=dim(statMap$mask))) )))
   return(test)
 }
+
+
+#' Create cluster/maxima summary table
+#'
+#' @param x statMap object
+#' @param method What statistic to provide summary for? must have run that
+#' analysis using the pbjInference and mmeStat functions.
+#' @param cft_s cluster forming threshold on effect size scale to show cluster p-values for.
+#' @param cft_p cluster forming threshold on p-value scale to show cluster p-values for.
+#' @details
+#' If both cft_s and cft_p are NULL, then it returns the first CFT that was used.
+#'
+#' @importFrom RESI chisq2S
+#' @return Returns table of unadjusted and FWER adjusted p-values and other summary statistics. Results depend on what statistic
+#' function was used for pbjInference.
+#' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
+#' @export
+#'
+table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL){
+  method = tolower(method[1])
+  # CFT passed as p value or effect size converted to chi-squared threshold
+  cft = NULL
+  if(!is.null(cft_p)){
+    cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
+  }
+  if(!is.null(cft_s)){
+    cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
+  }
+  statImg = stat.statMap(x)
+  mask = x$mask
+  n = x$sqrtSigma$n
+  df = x$sqrtSigma$df
+  x = x$pbj
+  if(is.null(x)){
+    x = list()
+    cei = list('maxima'=FALSE, 'CEI'=FALSE, 'CMI'=FALSE)
+    cei[[grep(method, tolower(names(cei))) ]] = TRUE
+    x$obsStat = do.call(mmeStat, c(list(stat=statImg, mask=mask, cft=cft), cei) )
+    x$ROIs = do.call(mmeStat, c(list(stat=statImg, mask=mask, cft=cft, rois=TRUE), cei) )
+  }
+  ind = inferenceIndex(x$obsStat, method=method, cft=cft)
+  if(method!='maxima'){
+    Table = data.frame('Cluster ID' = 1:length(x$obsStat[[ind]]),
+                       'Cluster Extent' = c(x$obsStat[[ind]]),
+                       'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
+                       check.names=FALSE )
+    if(method=='cmi') names(Table) = c('Cluster ID', 'Cluster Mass', 'Centroid (vox)')
+  } else {
+    # 'Chi-square' assumes ROIs are indexed increasing with data frame indexing.
+    Table = data.frame('Cluster ID' = 1:max(x$ROIs[[ind]]),
+                       'Chi-square' = statImg[x$ROIs[[ind]]>0],
+                       'Coord (vox)' = sapply(1:max(x$ROIs[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
+                       check.names=FALSE )
+  }
+  if(!is.null(x$margCDF)){
+    Table[,'Unadjusted p-value'] =  (1-x$margCDF[[ind]](c(x$obsStat[[ind]])))
+    Table[,'FWER p-value'] = (1-x$globCDF[[ind]](c(x$obsStat[[ind]])))
+  }
+  Table[, 'Max RESI'] = sapply(1:max(x$ROIs[[ind]]), function(ind2, statImg, ROIs, ind, n, df) chisq2S(max(statImg[x$ROIs[[ind]]==ind2]), df=df, n=n), statImg=statImg, ROIs=ROIs, ind=ind, n=n, df=df)
+  Table = Table[order(Table[,2], decreasing = TRUE),]
+  Table
+}
+

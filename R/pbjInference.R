@@ -8,6 +8,8 @@
 #' @param runMode character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.
 #' @param progress Logical indicating whether to track progress with a progress bar.
 #' @param rdata_rds A character string specifying a .rdata or .rds file to write the output. If specified, resampling is run as background process.
+#' @param cft_s A vector of robust effect size index (RESI) cluster forming thresholds
+#' @param cft_p A vector of p-value cluster forming thresholds
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.
@@ -25,8 +27,16 @@
 #' `rois` argument that outputs an integer valued image identifying where each topological
 #' features is located.
 #' @example inst/examples/pbjInference.R
-pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, rdata_rds=NULL, ...){
+pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, rdata_rds=NULL, cft_s=NULL, cft_p=NULL, ...){
   argsList <- c(as.list(environment()), list(...))
+  # CFT passed as p value or effect size converted to chi-squared threshold
+  if(!is.null(cft_s)){
+   argsList$cft = cft_s^2 * statMap$sqrtSigma$n + statMap$sqrtSigma$df
+  } else if(!is.null(cft_p)){
+    argsList$cft = qchisq(cft_p, df=statMap$sqrtSigma$df, lower.tail=FALSE)
+  }
+  argsList = argsList[grep('cft_s|cft_p', names(argsList), invert=TRUE)]
+
   if(is.null(rdata_rds)){
     argsList = argsList[grep('rdata_rds', names(argsList), invert=TRUE)]
    do.call(pbj::pbjInferenceFG, argsList)
@@ -86,7 +96,6 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, nboot=5000, rboot=functi
   } else {
     NULL
   }
-
   dims = dim(sqrtSigma$res)
   n = dims[1]
   V=dims[2]
@@ -153,12 +162,14 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, nboot=5000, rboot=functi
                }
 
                # reindex ROIs and obsStat
-               for(ind in 1:length(obsstat)){
-                 newInds = order(obsstat[[ind]], decreasing=TRUE)
-                 obsstat[[ind]][] = obsstat[[ind]][newInds]
-                 rois[[ind]][,,] = match(rois[[ind]][,,], newInds)
-                 rois[[ind]][is.na(rois[[ind]][,,])] = 0
-               }
+               # for(ind in 1:length(obsstat)){
+               #   newInds = order(obsstat[[ind]], decreasing=TRUE)
+               #   obsstat[[ind]][] = obsstat[[ind]][newInds]
+               #   if(!is.null(rois)){
+               #     rois[[ind]][,,] = match(rois[[ind]][,,], newInds)
+               #     rois[[ind]][is.na(rois[[ind]][,,])] = 0
+               #   }
+               # }
                list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)},
              bootstrap=list(obsStat=obsstat, boots=boots) )
   class(out) = c('pbj', 'list')
