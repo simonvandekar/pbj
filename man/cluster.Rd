@@ -18,7 +18,7 @@ cluster(
 
 \item{mask}{A statistical Nifti image mask used in the analysis or a character path to one.}
 
-\item{cft}{A a vector of cluster forming thresholds (on the scale of the test statistic
+\item{cft}{A vector of cluster forming thresholds (on the scale of the test statistic
 image, which is usually chi-squared for pbj) for the test statistic image. Will compute cluster sizes or masses for each threshold.}
 
 \item{method}{character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.}

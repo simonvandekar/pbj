@@ -28,8 +28,8 @@
 #' library(pain21)
 #' pain = pain21()
 #' templ = readNifti(pain$template)
-#' image(templ)
-#' image(templ, plane='coronal')
+#' # image(templ)
+#' # image(templ, plane='coronal')
 #'
 image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",

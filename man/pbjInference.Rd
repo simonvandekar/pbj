@@ -7,6 +7,7 @@
 pbjInference(
   statMap,
   statistic = mmeStat,
+  null = TRUE,
   nboot = 5000,
   rboot = function(n) {
      (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
@@ -17,6 +18,7 @@ pbjInference(
   rdata_rds = NULL,
   cft_s = NULL,
   cft_p = NULL,
+  cft_chisq = NULL,
   ...
 )
 }
@@ -24,6 +26,8 @@ pbjInference(
 \item{statMap}{statMap object as obtained from lmPBJ function.}
 
 \item{statistic}{A user specified function that takes an RNifti image object and computes a particular statistic of interest. There are several provided in the pbj package. See referenced functions below.}
+
+\item{null}{Perform bootstrap under the null or alternative hypotheses?}
 
 \item{nboot}{Number of bootstrap samples to use.}
 
@@ -40,6 +44,8 @@ pbjInference(
 \item{cft_s}{A vector of robust effect size index (RESI) cluster forming thresholds}
 
 \item{cft_p}{A vector of p-value cluster forming thresholds}
+
+\item{cft_chisq}{A vector of p-value cluster forming thresholds}
 
 \item{...}{arguments passed to statistic function.}
 }

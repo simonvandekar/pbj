@@ -44,6 +44,7 @@ Imports:
   emmeans,
   fslr,
   mmand,
+  methods,
   oro.nifti,
   parallel,
   pTFCE,

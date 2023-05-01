@@ -4,7 +4,16 @@
 \alias{plot.statMap}
 \title{Plots the tested variables in a statMap object}
 \usage{
-\method{plot}{statMap}(x, emForm = NULL, method = "CEI", cft = NULL, roiInds = NULL, ...)
+\method{plot}{statMap}(
+  x,
+  emForm = NULL,
+  method = "CEI",
+  cft_s = NULL,
+  cft_p = NULL,
+  cft_chisq = NULL,
+  roiInds = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{the statMap object with pbjInference run}
@@ -13,7 +22,11 @@
 
 \item{method}{A character specifying which inference method to plot results for. One of maxima, CEI, or CMI}
 
-\item{cft}{A numeric specifying CFT to plot results for, defaults to the first one}
+\item{cft_s}{cluster forming threshold on effect size scale to show cluster p-values for.}
+
+\item{cft_p}{cluster forming threshold on p-value scale to show cluster p-values for.}
+
+\item{cft_chisq}{cluster forming threshold on chi-square statistic scale to show cluster p-values for.}
 
 \item{roiInds}{A numeric/integer vector specifying which ROIs to plot results for.}
 

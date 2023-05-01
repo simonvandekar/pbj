@@ -15,7 +15,7 @@ vpapx_edgeworth = Vectorize(function (stat, mu3, mu4) PDQutils::papx_edgeworth(s
 #'
 #' @param stat A statistical Nifti image as an RNifti image object.
 #' @param mask A statistical Nifti image mask used in the analysis or a character path to one.
-#' @param cft A a vector of cluster forming thresholds (on the scale of the test statistic
+#' @param cft A vector of cluster forming thresholds (on the scale of the test statistic
 #' image, which is usually chi-squared for pbj) for the test statistic image. Will compute cluster sizes or masses for each threshold.
 #' @param method character string 'extent' or 'mass' indicating whether the cluster extent or cluster mass statistic should be used.
 #' @param kernel The kernel type to compute connected components.

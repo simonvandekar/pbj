@@ -7,6 +7,7 @@
 pbjInferenceFG(
   statMap,
   statistic = mmeStat,
+  null = TRUE,
   nboot = 5000,
   rboot = function(n) {
      (2 * stats::rbinom(n, size = 1, prob = 0.5) - 1)
@@ -21,6 +22,8 @@ pbjInferenceFG(
 \item{statMap}{statMap object as obtained from lmPBJ function.}
 
 \item{statistic}{A user specified function that takes an RNifti image object and computes a particular statistic of interest. There are several provided in the pbj package. See referenced functions below.}
+
+\item{null}{Perform bootstrap under the null or alternative hypotheses?}
 
 \item{nboot}{Number of bootstrap samples to use.}
 

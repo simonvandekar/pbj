@@ -86,7 +86,7 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
       if(grepl('CEI|CMI', infType)) cft = attr(pbj$obsStat[[infType]], 'cft')
       # removes number from name if infType
       method = gsub("[0-9]", '', infType)
-      tab = table.statMap(x, method=method, cft=cft)
+      tab = table.statMap(x, method=method, cft_chisq=cft)
       pmapimg = file.path(outdir, paste0('log10p_', infType, '.nii.gz'))
       clustmapimg = file.path(outdir, paste0('clustIDs_', infType, '.nii.gz'))
       pmap = pbj$ROIs[[infType]]
@@ -162,7 +162,9 @@ var.statMap = function(x){
 #' @param x the statMap object with pbjInference run
 #' @param emForm a formula specifying how to plot the data
 #' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
-#' @param cft A numeric specifying CFT to plot results for, defaults to the first one
+#' @param cft_s cluster forming threshold on effect size scale to show cluster p-values for.
+#' @param cft_p cluster forming threshold on p-value scale to show cluster p-values for.
+#' @param cft_chisq cluster forming threshold on chi-square statistic scale to show cluster p-values for.
 #' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
 #' @param ... arguments passed to plot
 #' @return a niftiImage object of the coefficient image
@@ -171,8 +173,16 @@ var.statMap = function(x){
 #' @importFrom emmeans emmeans ref_grid
 #' @importFrom scales alpha
 #' @export
-plot.statMap = function(x, emForm=NULL, method='CEI', cft=NULL, roiInds=NULL, ...){
-
+plot.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roiInds=NULL, ...){
+  method = tolower(method[1])
+  # CFT passed as p value or effect size converted to chi-squared threshold
+  cft = cft_chisq
+  if(!is.null(cft_p)){
+    cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
+  }
+  if(!is.null(cft_s)){
+    cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
+  }
   pbjObj = x$pbj
   if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
   st = table.statMap(x, method, cft)
@@ -448,6 +458,7 @@ ptfce.statmap = function(statMap, ...){
 #' analysis using the pbjInference and mmeStat functions.
 #' @param cft_s cluster forming threshold on effect size scale to show cluster p-values for.
 #' @param cft_p cluster forming threshold on p-value scale to show cluster p-values for.
+#' @param cft_chisq cluster forming threshold on chi-square statistic scale to show cluster p-values for.
 #' @details
 #' If both cft_s and cft_p are NULL, then it returns the first CFT that was used.
 #'
@@ -457,10 +468,10 @@ ptfce.statmap = function(statMap, ...){
 #' @seealso [mmeStat], [cluster], [maxima], [pbjInference]
 #' @export
 #'
-table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL){
+table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, cft_chisq=NULL){
   method = tolower(method[1])
   # CFT passed as p value or effect size converted to chi-squared threshold
-  cft = NULL
+  cft = cft_chisq
   if(!is.null(cft_p)){
     cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
   }
@@ -497,7 +508,7 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
     Table[,'Unadjusted p-value'] =  (1-x$margCDF[[ind]](c(x$obsStat[[ind]])))
     Table[,'FWER p-value'] = (1-x$globCDF[[ind]](c(x$obsStat[[ind]])))
   }
-  Table[, 'Max RESI'] = sapply(1:max(x$ROIs[[ind]]), function(ind2, statImg, ROIs, ind, n, df) chisq2S(max(statImg[x$ROIs[[ind]]==ind2]), df=df, n=n), statImg=statImg, ROIs=ROIs, ind=ind, n=n, df=df)
+  Table[, 'Max RESI'] = sapply(1:max(x$ROIs[[ind]]), function(ind2, statImg, ROIs, ind, n, df) chisq2S(max(statImg[ROIs[[ind]]==ind2]), df=df, n=n), statImg=statImg, ROIs=x$ROIs, ind=ind, n=n, df=df)
   Table = Table[order(Table[,2], decreasing = TRUE),]
   Table
 }

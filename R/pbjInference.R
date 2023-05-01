@@ -2,6 +2,7 @@
 #'
 #' @param statMap statMap object as obtained from lmPBJ function.
 #' @param statistic A user specified function that takes an RNifti image object and computes a particular statistic of interest. There are several provided in the pbj package. See referenced functions below.
+#' @param null Perform bootstrap under the null or alternative hypotheses?
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.
 #' @param method Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
@@ -10,6 +11,7 @@
 #' @param rdata_rds A character string specifying a .rdata or .rds file to write the output. If specified, resampling is run as background process.
 #' @param cft_s A vector of robust effect size index (RESI) cluster forming thresholds
 #' @param cft_p A vector of p-value cluster forming thresholds
+#' @param cft_chisq A vector of p-value cluster forming thresholds
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.
@@ -27,15 +29,16 @@
 #' `rois` argument that outputs an integer valued image identifying where each topological
 #' features is located.
 #' @example inst/examples/pbjInference.R
-pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, rdata_rds=NULL, cft_s=NULL, cft_p=NULL, ...){
+pbjInference = function(statMap, statistic = mmeStat, null = TRUE, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, rdata_rds=NULL, cft_s=NULL, cft_p=NULL, cft_chisq=NULL, ...){
   argsList <- c(as.list(environment()), list(...))
   # CFT passed as p value or effect size converted to chi-squared threshold
+  argsList$cft = cft_chisq
   if(!is.null(cft_s)){
    argsList$cft = cft_s^2 * statMap$sqrtSigma$n + statMap$sqrtSigma$df
   } else if(!is.null(cft_p)){
     argsList$cft = qchisq(cft_p, df=statMap$sqrtSigma$df, lower.tail=FALSE)
   }
-  argsList = argsList[grep('cft_s|cft_p', names(argsList), invert=TRUE)]
+  argsList = argsList[grep('cft_s|cft_p|cft_chisq', names(argsList), invert=TRUE)]
 
   if(is.null(rdata_rds)){
     argsList = argsList[grep('rdata_rds', names(argsList), invert=TRUE)]
@@ -49,6 +52,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #'
 #' @param statMap statMap object as obtained from lmPBJ function.
 #' @param statistic A user specified function that takes an RNifti image object and computes a particular statistic of interest. There are several provided in the pbj package. See referenced functions below.
+#' @param null Perform bootstrap under the null or alternative hypotheses?
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.
 #' @param method Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
@@ -60,6 +64,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #' @importFrom stats rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' @importFrom RNifti readNifti
+#' @importFrom methods formalArgs
 #' @seealso [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
 #' @export
 #' @details This function runs a bootstrap or permutation procedure to perform inference on topological features of neuroimaging statistics.
@@ -67,7 +72,7 @@ pbjInference = function(statMap, statistic = mmeStat, nboot=5000, rboot=function
 #' and compute some topological feature from the image. returned as a list. Multiple topological features can be returned, as in [mmeStat()] and [cluster()].
 #' To use default methods the statistic must have a logical `rois` argument that outputs an integer valued image identifying where each topological features is located. Details of the resampling procedures are available in Vandekar et al. (2022).
 #' @example inst/examples/pbjInference.R
-pbjInferenceFG = function(statMap, statistic = mmeStat, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, ...){
+pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
   runMode = tolower(runMode[1])
@@ -120,7 +125,7 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, nboot=5000, rboot=functi
     tmp = mask
     if(nboot>0){
       for(i in 1:nboot){
-        statimg = pbjBoot(sqrtSigma, rboot, method = method)
+        statimg = pbjBoot(sqrtSigma, rboot, method = method, null=null)
         statArgs$stat[ mask!=0] = statimg
         boots[[i]] = do.call(statistic, statArgs)
       }

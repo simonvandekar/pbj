@@ -8,7 +8,8 @@ table.statMap(
   x,
   method = c("CEI", "maxima", "CMI"),
   cft_s = NULL,
-  cft_p = NULL
+  cft_p = NULL,
+  cft_chisq = NULL
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ analysis using the pbjInference and mmeStat functions.}
 \item{cft_s}{cluster forming threshold on effect size scale to show cluster p-values for.}
 
 \item{cft_p}{cluster forming threshold on p-value scale to show cluster p-values for.}
+
+\item{cft_chisq}{cluster forming threshold on chi-square statistic scale to show cluster p-values for.}
 }
 \value{
 Returns table of unadjusted and FWER adjusted p-values and other summary statistics. Results depend on what statistic
