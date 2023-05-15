@@ -47,10 +47,10 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
   }
   else if (is.null(bgimg)) {
     x = stat
-    # if only one argument was passed, display as the background img (foreground is blank)
-    if(thresh==eps){
-     thresh=max(stat)+eps
-    }
+    # # if only one argument was passed, display as the background img (foreground is blank)
+    # if(thresh==eps){
+    #  thresh=max(stat)+eps
+    # }
   }
   else x=bgimg
   pixdim = RNifti::pixdim(x)

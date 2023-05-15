@@ -104,7 +104,9 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
 #'
 #'
 #' @param x the statMap object to extract a coefficient niftiImage from
+#' @param method the scale of visualization, chi-squared statistic, effect size (S=RESI), p-value. If df is equal to 1, the maps are scaled by the sign of the coefficient.
 #' @return a niftiImage object of the chi-square statistical image.
+#' @importFrom RESI chisq2S
 #' @export
 #' @examples
 #' # loading example data
@@ -115,14 +117,27 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
 #' # fitting regression of images onto study sample size, weights proportional to study sample size
 #' pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1, W = pdata$n, mask=pain$mask, data=pdata)
 #' stat.statMap(pbjModel2)
+#' stat.statMap(pbjModel2, method='p')
+#' stat.statMap(pbjModel2, method='S')
 #'
-stat.statMap = function(x){
+stat.statMap = function(x, method=c('chisq', 'S', 'p')){
+  method = tolower(method[1])
   if(is.character(x$stat)){
     stat = readNifti(x$stat)
+    res = stat[ mask!=0 ]
   } else {
     # output 4D coefficient image
     stat = x$mask
-    stat[ stat!=0 ] = x$stat
+    res = x$stat
+    if(method=='s'){
+      res = chisq2S(stat[stat!=0], x$sqrtSigma$df, x$sqrtSigma$n)
+      res = res * sign(x$coef)
+    }
+    if(method == 'p'){
+      res = -pchisq(stat[stat!=0], df = x$sqrtSigma$df, lower.tail=FALSE, log.p=TRUE)
+      res = res * sign(x$coef)
+    }
+    stat[ stat!=0] = res
   }
   return(stat)
 }
@@ -322,8 +337,14 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   # CFT passed as p value or effect size converted to chi-squared threshold
   if(!is.null(cft_s)){
     cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
+    statmethod='S'
+    thresh = cft_s
   } else if(!is.null(cft_p)){
     cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
+    statmethod='p'
+    thresh = cft_p
+  } else {
+    statmethod = 'chisq'
   }
   # set graphical parameters
   par(oma = oma,
@@ -340,7 +361,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   # if user hasn't run pbj yet visualize using image.niftiImage
   if(is.null(pbjObj)){
     if(is.null(cft)) cft=0
-    image.niftiImage(stat.statMap(x), bgimg = x$template, thresh = cft, index = slice, plane=plane)
+    image.niftiImage(stat.statMap(x, method=statmethod), bgimg = x$template, thresh = thresh, index = slice, plane=plane)
   } else {
     if(is.character(x$mask)){
       x$mask = readNifti(x$mask)
@@ -361,7 +382,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
     if(is.null(cft)) stop("Must specify cft for visualization with method='maxima'")
 
     st = table.statMap(x, method=method, cft_p=cft_p, cft_s=cft_s)
-    imgdims = dim(stat.statMap(x))
+    imgdims = dim(stat.statMap(x, method=statmethod))
     planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
     otherplanes = which(!1:3 %in% planenum)
     if(!is.null(alpha)){
@@ -398,9 +419,9 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
           #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
           #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
           #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
-          image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
         } else {
-          image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
         }
       }
     } else if(!is.null(slice)){
@@ -409,22 +430,22 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
           coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
           coordInds = which(coords[,planenum]==slic)
           if(length(coordInds)==0){
-            image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
           } else {
             coordLabels = st$`cluster ID`[coordInds]
             othercoords = coords[coordInds,-planenum, drop=FALSE]
             otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
-            image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
+            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
                   other=otherfunc, ...)
           }
         } else {
-          image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
         }
       }
 
       # if roi and slice are null, do lightbox view
     } else {
-      image.niftiImage(stat.statMap(x), bgimg=x$template, plane=plane, thresh=cft, ...)
+      image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, thresh=cft, ...)
 
     }
   }
@@ -509,6 +530,7 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
     Table[,'FWER p-value'] = (1-x$globCDF[[ind]](c(x$obsStat[[ind]])))
   }
   Table[, 'Max RESI'] = sapply(1:max(x$ROIs[[ind]]), function(ind2, statImg, ROIs, ind, n, df) chisq2S(max(statImg[ROIs[[ind]]==ind2]), df=df, n=n), statImg=statImg, ROIs=x$ROIs, ind=ind, n=n, df=df)
+  # sort by the statistical value
   Table = Table[order(Table[,2], decreasing = TRUE),]
   Table
 }
