@@ -133,11 +133,11 @@ stat.statMap = function(x, method=c('p', 'S', 'chisq')){
     stat = x$mask
     res = x$stat
     if(method=='s'){
-      res = chisq2S(stat[stat!=0], x$sqrtSigma$df, x$sqrtSigma$n)
+      res = chisq2S(res, x$sqrtSigma$df, x$sqrtSigma$n)
       res = res * sign(x$coef)
     }
     if(method == 'p'){
-      res = -pchisq(stat[stat!=0], df = x$sqrtSigma$df, lower.tail=FALSE, log.p=TRUE)
+      res = -pchisq(res, df = x$sqrtSigma$df, lower.tail=FALSE, log.p=TRUE)
       res = res * sign(x$coef)
     }
     stat[ stat!=0] = res
