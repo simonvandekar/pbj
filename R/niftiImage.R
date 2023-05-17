@@ -46,11 +46,13 @@ image.niftiImage = function (x, bgimg = NULL, thresh = 0, index = NULL, col = gr
     x=readNifti(bgimg)
   }
   else if (is.null(bgimg)) {
+    # this sets foreground image to be the background too
     x = stat
-    # # if only one argument was passed, display as the background img (foreground is blank)
-    # if(thresh==eps){
-    #  thresh=max(stat)+eps
-    # }
+    # if only one argument was passed, display as the background img (foreground is blank)
+    # this sets the threshold high enough so that no overlay is shown (if it wasn't set already)
+    if(thresh==eps){
+     thresh=max(abs(stat))+eps
+    }
   }
   else x=bgimg
   pixdim = RNifti::pixdim(x)

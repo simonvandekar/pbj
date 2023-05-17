@@ -82,7 +82,7 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, r
   sqrtSigma <- if(is.character(sqrtSigma)) readRDS(sqrtSigma) else sqrtSigma
   mask = if(is.character(statMap$mask)) readNifti(statMap$mask) else statMap$mask
   ndims = length(dim(mask))
-  stat = rawstat = stat.statMap(statMap)
+  stat = rawstat = stat.statMap(statMap, method='chisq')
   template = statMap$template
   df = sqrtSigma$df
   rdf = sqrtSigma$rdf

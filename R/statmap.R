@@ -48,10 +48,12 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' @param outdir the directory to write into
 #' @param images Logical indicating whether or not to write out the nifti images.
 #' @param sqrtSigma Logical indicating whether or not to write out the objects needed for bootstrapping.
+#' @param method Passed to stat.statMap to specify how to write the statistical image. p= -log10(p) * sign(coef), S=RESI, chisq=chi-squared statistic
 #' @return a list of what was written
 #' @export
-write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
-  statimg  = file.path(outdir, 'stat.nii.gz')
+write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE, method=c('p', 'S', 'chisq')){
+  method = tolower(method[1])
+  statimg  = file.path(outdir, paste0('stat_', method, '.nii.gz') )
   coefimg   = file.path(outdir, 'coef.nii.gz')
   res   = file.path(outdir, 'sqrtSigma.rds')
   if(is.character(x$stat)){
@@ -64,7 +66,7 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
     if(images){
       message('Writing stat and coef images.')
       dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
-      writeNifti(stat.statMap(x), statimg)
+      writeNifti(stat.statMap(x, method = method), statimg)
       writeNifti(coef.statMap(x), coefimg)
     }
 
@@ -77,6 +79,7 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
 
   inference=list()
   pbj = x$pbj
+  ## SNV: NEED TO EVALUATE THIS OUTPUT
   if(!is.null(pbj)){
     #if(is.null(x$template)) x$template = x$mask
     #sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
@@ -117,10 +120,10 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE){
 #' # fitting regression of images onto study sample size, weights proportional to study sample size
 #' pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1, W = pdata$n, mask=pain$mask, data=pdata)
 #' stat.statMap(pbjModel2)
-#' stat.statMap(pbjModel2, method='p')
+#' stat.statMap(pbjModel2, method='chisq')
 #' stat.statMap(pbjModel2, method='S')
 #'
-stat.statMap = function(x, method=c('chisq', 'S', 'p')){
+stat.statMap = function(x, method=c('p', 'S', 'chisq')){
   method = tolower(method[1])
   if(is.character(x$stat)){
     stat = readNifti(x$stat)
@@ -464,7 +467,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
 #' @export
 ptfce.statmap = function(statMap, ...){
   if(is.character(statMap$mask))  statMap$mask = readNifti(statMap$mask)
-  statimg = stat.statMap(statMap)
+  statimg = stat.statMap(statMap, method='chisq')
   # convert Chisq to Z
   statimg[statMap$mask>0] = qnorm(pchisq(statimg[statMap$mask>0], df=statMap$sqrtSigma$df, log.p = TRUE), log.p=TRUE)
   invisible(capture.output(test <- ptfce(as.nifti(array(statimg, dim = dim(statimg))), as.nifti(array(statMap$mask, dim=dim(statMap$mask))) )))
@@ -499,7 +502,7 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   if(!is.null(cft_s)){
     cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
   }
-  statImg = stat.statMap(x)
+  statImg = stat.statMap(x, method='chisq')
   mask = x$mask
   n = x$sqrtSigma$n
   df = x$sqrtSigma$df

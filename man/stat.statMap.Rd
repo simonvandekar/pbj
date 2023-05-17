@@ -4,7 +4,7 @@
 \alias{stat.statMap}
 \title{Returns a statistical niftiImage object from a statMap object}
 \usage{
-stat.statMap(x, method = c("chisq", "S", "p"))
+stat.statMap(x, method = c("p", "S", "chisq"))
 }
 \arguments{
 \item{x}{the statMap object to extract a coefficient niftiImage from}
@@ -26,7 +26,7 @@ pdata = pain$data
 # fitting regression of images onto study sample size, weights proportional to study sample size
 pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1, W = pdata$n, mask=pain$mask, data=pdata)
 stat.statMap(pbjModel2)
-stat.statMap(pbjModel2, method='p')
+stat.statMap(pbjModel2, method='chisq')
 stat.statMap(pbjModel2, method='S')
 
 }
