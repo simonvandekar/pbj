@@ -137,7 +137,7 @@ stat.statMap = function(x, method=c('p', 'S', 'chisq')){
       res = res * sign(x$coef)
     }
     if(method == 'p'){
-      res = -pchisq(res, df = x$sqrtSigma$df, lower.tail=FALSE, log.p=TRUE)
+      res = -pchisq(res, df = x$sqrtSigma$df, lower.tail=FALSE, log.p=TRUE)/log(10)
       res = res * sign(x$coef)
     }
     stat[ stat!=0] = res
