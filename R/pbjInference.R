@@ -12,12 +12,10 @@
 #' @param cft_s A vector of robust effect size index (RESI) cluster forming thresholds
 #' @param cft_p A vector of p-value cluster forming thresholds
 #' @param cft_chisq A vector of p-value cluster forming thresholds
+#' @param mc.cores Number of cores to parallelize bootstrap.
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.
-#' @importFrom stats rnorm
-#' @importFrom utils setTxtProgressBar txtProgressBar
-#' @importFrom RNifti readNifti
 #' @seealso [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
 #' @export
 #' @details This function runs resampling-based methods to perform inference on topological
@@ -29,7 +27,7 @@
 #' `rois` argument that outputs an integer valued image identifying where each topological
 #' features is located.
 #' @example inst/examples/pbjInference.R
-pbjInference = function(statMap, statistic = mmeStat, null = TRUE, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, rdata_rds=NULL, cft_s=NULL, cft_p=NULL, cft_chisq=NULL, ...){
+pbjInference = function(statMap, statistic = mmeStat, null = TRUE, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, rdata_rds=NULL, cft_s=NULL, cft_p=NULL, cft_chisq=NULL, mc.cores=1, mc.preschedule=FALSE, ...){
   argsList <- c(as.list(environment()), list(...))
   # CFT passed as p value or effect size converted to chi-squared threshold
   argsList$cft = cft_chisq
@@ -56,13 +54,16 @@ pbjInference = function(statMap, statistic = mmeStat, null = TRUE, nboot=5000, r
 #' @param nboot Number of bootstrap samples to use.
 #' @param rboot Function for generating random variables. Should return an n vector. Defaults to Rademacher random variable.
 #' @param method Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric
-#' @param runMode character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.
+#' @param runMode Character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.
 #' @param progress Logical indicating whether to track progress with a progress bar.
+#' @param mc.cores Integer, number of cores to parallelize bootstrap.
+#' @param mc.preschedule Logical, where to preschedule jobs see [parallel()]. FALSE is substantially faster.
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.
 #' @importFrom stats rnorm
 #' @importFrom utils setTxtProgressBar txtProgressBar
+#' @importFrom parallel mclapply
 #' @importFrom RNifti readNifti
 #' @importFrom methods formalArgs
 #' @seealso [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
@@ -72,7 +73,7 @@ pbjInference = function(statMap, statistic = mmeStat, null = TRUE, nboot=5000, r
 #' and compute some topological feature from the image. returned as a list. Multiple topological features can be returned, as in [mmeStat()] and [cluster()].
 #' To use default methods the statistic must have a logical `rois` argument that outputs an integer valued image identifying where each topological features is located. Details of the resampling procedures are available in Vandekar et al. (2022).
 #' @example inst/examples/pbjInference.R
-pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, ...){
+pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, rboot=function(n){ (2*stats::rbinom(n, size=1, prob=0.5)-1)}, method=c('wild', 'permutation', 'nonparametric'), runMode=c('cdf','bootstrap'), progress=FALSE, mc.cores=1, mc.preschedule=FALSE, ...){
   if(class(statMap)[1] != 'statMap')
     warning('Class of first argument is not \'statMap\'.')
   runMode = tolower(runMode[1])
@@ -109,7 +110,13 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, r
 
 
   # If sqrtSigma can be stored and accessed efficiently on disk this can be efficiently run in parallel
-  if(progress){
+  if(mc.cores>1){
+    boots = mclapply(1:nboot, function(ind, sqrtSigma, rboot, method, statistic, statArgs){
+      statimg = pbjBoot(sqrtSigma, rboot, method = method)
+      statArgs$stat[ mask!=0] = statimg
+      do.call(statistic, statArgs)
+    }, mc.cores = mc.cores, mc.preschedule=mc.preschedule, sqrtSigma=sqrtSigma, rboot=rboot, method=method, statistic=statistic, statArgs=statArgs)
+  } else if(progress){
     pb = txtProgressBar(style=3, title='Generating null distribution')
     tmp = mask
     if(nboot>0){

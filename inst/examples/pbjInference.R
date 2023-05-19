@@ -9,7 +9,8 @@ table.statMap(pbjModel2, cft_p=0.01)
 
 
 # p-value thresholding for cluster extent/mass
-pbjModelAll = pbjInference(pbjModel2, nboot=2, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE)
+# run in parallel
+pbjModelAll <- pbjInference(pbjModel2, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE, mc.cores=ceiling(parallel::detectCores()/2))
 head(table.statMap(pbjModelAll, method = 'maxima'))
 head(table.statMap(pbjModelAll, method = 'CEI', cft_p=0.01))
 # returns the first threshold used
@@ -23,4 +24,6 @@ pbjModel2 = pbjInference(pbjModel2, nboot=2, statistic = maxima)
 # Cluster extent inference
 pbjModelCEI = pbjInference(pbjModel2, nboot=2, statistic = cluster, cft_s=0.1)
 
-
+# not run
+outfile = paste0(tempfile(), '.rds')
+bgInfo <- pbjInference(pbjModel2, rdata_rds = outfile, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=FALSE, mc.cores=ceiling(parallel::detectCores()/2))

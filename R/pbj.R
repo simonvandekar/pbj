@@ -59,7 +59,7 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
 #' @param kernel Type of kernel to use for max/dilation filter
 #' @param width Width of kernel (assumes isotropic). If zero, then returns global maximum.
 #' @param rois If TRUE, return image with voxel values having the indices of the local maxima.
-#' @param roisWidth Width of kernel for computing local maxima used for table output later. Only used if width is unspecified
+#' @param roisWidth Width of kernel for computing local maxima used for table output later. Only used if width is zero
 #' @return Default returns vector of local maxima in the image.
 #' @export
 #' @importFrom mmand shapeKernel
@@ -132,8 +132,7 @@ inferenceIndex = function(obsStat, method, cft=NULL){
       stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
     }
   }
-  ind = ind[1]
-  ind
+  ind[1]
 }
 
 #' Compute maxima, CMI, or CEI inference statistics

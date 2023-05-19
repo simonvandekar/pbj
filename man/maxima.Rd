@@ -15,7 +15,7 @@ maxima(stat, kernel = "box", width = 0, rois = FALSE, roisWidth = 15)
 
 \item{rois}{If TRUE, return image with voxel values having the indices of the local maxima.}
 
-\item{roisWidth}{Width of kernel for computing local maxima used for table output later. Only used if width is unspecified}
+\item{roisWidth}{Width of kernel for computing local maxima used for table output later. Only used if width is zero}
 }
 \value{
 Default returns vector of local maxima in the image.

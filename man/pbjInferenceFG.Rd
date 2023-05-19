@@ -15,6 +15,8 @@ pbjInferenceFG(
   method = c("wild", "permutation", "nonparametric"),
   runMode = c("cdf", "bootstrap"),
   progress = FALSE,
+  mc.cores = 1,
+  mc.preschedule = FALSE,
   ...
 )
 }
@@ -31,9 +33,13 @@ pbjInferenceFG(
 
 \item{method}{Character, method to use for resampling procedure. Wild bootstrap, permutation, or nonparametric}
 
-\item{runMode}{character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.}
+\item{runMode}{Character, that controls output. cdf returns the empirical CDFs, bootstrap returns the bootstrapped statistics as a list.}
 
 \item{progress}{Logical indicating whether to track progress with a progress bar.}
+
+\item{mc.cores}{Integer, number of cores to parallelize bootstrap.}
+
+\item{mc.preschedule}{Logical, where to preschedule jobs see [parallel()]. FALSE is substantially faster.}
 
 \item{...}{arguments passed to statistic function.}
 }
@@ -61,7 +67,8 @@ table.statMap(pbjModel2, cft_p=0.01)
 
 
 # p-value thresholding for cluster extent/mass
-pbjModelAll = pbjInference(pbjModel2, nboot=2, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE)
+# run in parallel
+pbjModelAll <- pbjInference(pbjModel2, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE, mc.cores=ceiling(parallel::detectCores()/2))
 head(table.statMap(pbjModelAll, method = 'maxima'))
 head(table.statMap(pbjModelAll, method = 'CEI', cft_p=0.01))
 # returns the first threshold used
@@ -75,7 +82,9 @@ pbjModel2 = pbjInference(pbjModel2, nboot=2, statistic = maxima)
 # Cluster extent inference
 pbjModelCEI = pbjInference(pbjModel2, nboot=2, statistic = cluster, cft_s=0.1)
 
-
+# not run
+outfile = paste0(tempfile(), '.rds')
+bgInfo <- pbjInference(pbjModel2, rdata_rds = outfile, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=FALSE, mc.cores=ceiling(parallel::detectCores()/2))
 }
 \seealso{
 [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.

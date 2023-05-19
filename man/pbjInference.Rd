@@ -19,6 +19,8 @@ pbjInference(
   cft_s = NULL,
   cft_p = NULL,
   cft_chisq = NULL,
+  mc.cores = 1,
+  mc.preschedule = FALSE,
   ...
 )
 }
@@ -46,6 +48,8 @@ pbjInference(
 \item{cft_p}{A vector of p-value cluster forming thresholds}
 
 \item{cft_chisq}{A vector of p-value cluster forming thresholds}
+
+\item{mc.cores}{Number of cores to parallelize bootstrap.}
 
 \item{...}{arguments passed to statistic function.}
 }
@@ -77,7 +81,8 @@ table.statMap(pbjModel2, cft_p=0.01)
 
 
 # p-value thresholding for cluster extent/mass
-pbjModelAll = pbjInference(pbjModel2, nboot=2, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE)
+# run in parallel
+pbjModelAll <- pbjInference(pbjModel2, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE, mc.cores=ceiling(parallel::detectCores()/2))
 head(table.statMap(pbjModelAll, method = 'maxima'))
 head(table.statMap(pbjModelAll, method = 'CEI', cft_p=0.01))
 # returns the first threshold used
@@ -91,7 +96,9 @@ pbjModel2 = pbjInference(pbjModel2, nboot=2, statistic = maxima)
 # Cluster extent inference
 pbjModelCEI = pbjInference(pbjModel2, nboot=2, statistic = cluster, cft_s=0.1)
 
-
+# not run
+outfile = paste0(tempfile(), '.rds')
+bgInfo <- pbjInference(pbjModel2, rdata_rds = outfile, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=FALSE, mc.cores=ceiling(parallel::detectCores()/2))
 }
 \seealso{
 [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.
