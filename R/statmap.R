@@ -127,18 +127,22 @@ stat.statMap = function(x, method=c('p', 'S', 'chisq')){
   method = tolower(method[1])
   if(is.character(x$stat)){
     stat = readNifti(x$stat)
-    res = stat[ mask!=0 ]
+    res = stat[ x$mask!=0 ]
   } else {
     # output 4D coefficient image
     stat = x$mask
     res = x$stat
     if(method=='s'){
       res = chisq2S(res, x$sqrtSigma$df, x$sqrtSigma$n)
-      res = res * sign(x$coef)
+      if(x$sqrtSigma$df==1){
+        res = res * sign(x$coef)
+      }  
     }
     if(method == 'p'){
       res = -pchisq(res, df = x$sqrtSigma$df, lower.tail=FALSE, log.p=TRUE)/log(10)
-      res = res * sign(x$coef)
+      if(x$sqrtSigma$df==1){
+        res = res * sign(x$coef)
+      }  
     }
     stat[ stat!=0] = res
   }

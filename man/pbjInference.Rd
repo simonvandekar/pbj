@@ -51,6 +51,8 @@ pbjInference(
 
 \item{mc.cores}{Number of cores to parallelize bootstrap.}
 
+\item{mc.preschedule}{Logical, where to preschedule jobs see [parallel()]. FALSE is substantially faster.}
+
 \item{...}{arguments passed to statistic function.}
 }
 \value{
@@ -75,14 +77,20 @@ library(pain21)
 pain = pain21()
 pdata = pain$data
 
-# fitting regression of images onto study sample size, weights proportional to study sample size
-pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1, W = pdata$n, mask=pain$mask, data=pdata)
+# fitting regression of images onto study sample size,
+# weights proportional to study sample size
+pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1,
+                  W = pdata$n, mask=pain$mask, data=pdata)
 table.statMap(pbjModel2, cft_p=0.01)
 
 
 # p-value thresholding for cluster extent/mass
-# run in parallel
-pbjModelAll <- pbjInference(pbjModel2, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=TRUE, mc.cores=ceiling(parallel::detectCores()/2))
+# not run, parallel processing
+# pbjModelAll <- pbjInference(pbjModel2, nboot=50, cft_p=0.01,
+#                             CEI=TRUE, CMI=TRUE, max=TRUE,
+#                             mc.cores=ceiling(parallel::detectCores()/2))
+pbjModelAll <- pbjInference(pbjModel2, nboot=5, cft_p=0.01,
+                            CEI=TRUE, CMI=TRUE, max=TRUE)
 head(table.statMap(pbjModelAll, method = 'maxima'))
 head(table.statMap(pbjModelAll, method = 'CEI', cft_p=0.01))
 # returns the first threshold used
@@ -97,8 +105,11 @@ pbjModel2 = pbjInference(pbjModel2, nboot=2, statistic = maxima)
 pbjModelCEI = pbjInference(pbjModel2, nboot=2, statistic = cluster, cft_s=0.1)
 
 # not run
-outfile = paste0(tempfile(), '.rds')
-bgInfo <- pbjInference(pbjModel2, rdata_rds = outfile, nboot=50, cft_p=0.01, CEI=TRUE, CMI=TRUE, max=FALSE, mc.cores=ceiling(parallel::detectCores()/2))
+# outfile = paste0(tempfile(), '.rds')
+# run in parallel in the background
+# bgInfo <- pbjInference(pbjModel2, rdata_rds = outfile, nboot=50, cft_p=0.01,
+# CEI=TRUE, CMI=TRUE, max=TRUE, mc.cores=ceiling(parallel::detectCores()/2))
+# statMap = readRDS(outfile)
 }
 \seealso{
 [mmeStat()], [maxima()], and [cluster()] for statistic functions. See [lmPBJ()] to create statMap objects. See [image.statMap()], and [table.statMap()] for producing summaries of the results.

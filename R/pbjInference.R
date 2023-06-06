@@ -13,6 +13,7 @@
 #' @param cft_p A vector of p-value cluster forming thresholds
 #' @param cft_chisq A vector of p-value cluster forming thresholds
 #' @param mc.cores Number of cores to parallelize bootstrap.
+#' @param mc.preschedule Logical, where to preschedule jobs see [parallel()]. FALSE is substantially faster.
 #' @param ... arguments passed to statistic function.
 #'
 #' @return Returns the statMap object, with a pbj object added. If runMode=='cdf', the first element is the observed statistic value, and the subsequent elements are the CDFs and ROIs, used for computing adjusted p-values and plotting. If runMode=='bootstrap', the first element is the observed statistic value and the second is a list of the boostrap values.
