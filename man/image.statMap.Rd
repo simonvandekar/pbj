@@ -9,6 +9,7 @@
   method = c("CEI", "maxima", "CMI"),
   cft_s = NULL,
   cft_p = NULL,
+  cft_chisq,
   roi = NULL,
   slice = NULL,
   alpha = NULL,

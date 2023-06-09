@@ -8,7 +8,7 @@ summary.statMap <- function(object, ...)
   cat("Full formula: ", paste0(as.character(object$formulas[[1]])) )
   cat("\nReduced formula: ", as.character(object$formulas[[2]]), collapse='', '\n')
   cat(sum(if(is.character(object$mask)) readNifti(object$mask) else object$mask), ' voxels in mask')
-  cat("\nStatMap quantiles: [", paste(round(quantile(object$stat, probs = c(0, 0.01, 0.05, 0.95, 0.99, 1)), 2), collapse=', '), "]" )
+  cat("\nStatMap quantiles (0, 0.01, 0.05, 0.95, 0.99, 1):\n [", paste(round(quantile(object$stat, probs = c(0, 0.01, 0.05, 0.95, 0.99, 1)), 2), collapse=', '), "]" )
   cat("\nsqrtSigma: \n")
   cat("  [n = ", object$sqrtSigma$n, '; df = ', object$sqrtSigma$df, '; rdf = ', object$sqrtSigma$rdf, ']\n')
   cat("id variable is:\n")
@@ -136,13 +136,13 @@ stat.statMap = function(x, method=c('p', 'S', 'chisq')){
       res = chisq2S(res, x$sqrtSigma$df, x$sqrtSigma$n)
       if(x$sqrtSigma$df==1){
         res = res * sign(x$coef)
-      }  
+      }
     }
     if(method == 'p'){
       res = -pchisq(res, df = x$sqrtSigma$df, lower.tail=FALSE, log.p=TRUE)/log(10)
       if(x$sqrtSigma$df==1){
         res = res * sign(x$coef)
-      }  
+      }
     }
     stat[ stat!=0] = res
   }
@@ -340,7 +340,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @importFrom utils write.csv
 #' @importFrom graphics text
 #' @export
-image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
+image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, cft_chisq, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
   # CFT passed as p value or effect size converted to chi-squared threshold
   if(!is.null(cft_s)){
     cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
@@ -349,9 +349,10 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   } else if(!is.null(cft_p)){
     cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
     statmethod='p'
-    thresh = cft_p
+    thresh = -log10(cft_p)
   } else {
     statmethod = 'chisq'
+    thresh = cft = cft_chisq
   }
   # set graphical parameters
   par(oma = oma,
