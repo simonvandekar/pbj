@@ -9,9 +9,9 @@
   method = c("CEI", "maxima", "CMI"),
   cft_s = NULL,
   cft_p = NULL,
-  cft_chisq,
+  cft_chisq = NULL,
   roi = NULL,
-  slice = NULL,
+  index = NULL,
   alpha = NULL,
   clusterMask = TRUE,
   clusterID = TRUE,
@@ -31,9 +31,11 @@
 
 \item{cft_p}{The cluster forming threshold or threshold for visualizing results on the p-value scale.}
 
+\item{cft_chisq}{The cluster forming threshold or threshold for visualizing results on the chi-squared scale.}
+
 \item{roi}{Which ROI index to visualize.}
 
-\item{slice}{Which slice number to visualize.}
+\item{index}{Which slices to visualize. Default is all slices}
 
 \item{alpha}{Adjusted p-value threshold to display clusters.}
 

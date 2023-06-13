@@ -7,7 +7,8 @@
 \method{image}{niftiImage}(
   x,
   bgimg = NULL,
-  thresh = 0,
+  limits = 0,
+  nrow = NULL,
   index = NULL,
   col = gray(0:64/64),
   colpos = pbj:::redyellow(64),
@@ -19,6 +20,7 @@
   oma = rep(0, 4),
   mar = rep(0, 4),
   bg = "black",
+  fg = "white",
   other = function() {
  },
   ...
@@ -29,7 +31,9 @@
 
 \item{bgimg}{background image to use.}
 
-\item{thresh}{A lower (an optionally upper length 2 vector) threshold to apply to the image, defaults to 0}
+\item{limits}{A lower (and optionally upper length 2 vector) limitsold to apply to the image, defaults to 0}
+
+\item{nrow}{number of rows to display the slices as. NULL is default and it's a square shape determined by length of `index` argument.}
 
 \item{index}{Any selected image planes. defaults to NULL}
 
@@ -52,6 +56,8 @@
 \item{mar}{A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.}
 
 \item{bg}{background color, defaults to black.}
+
+\item{fg}{foreground color, defaults to white.}
 
 \item{other}{A function used to add features to the plot.}
 

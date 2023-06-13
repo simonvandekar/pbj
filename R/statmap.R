@@ -327,8 +327,9 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @param method Which inference method to visualize.
 #' @param cft_p The cluster forming threshold or threshold for visualizing results on the p-value scale.
 #' @param cft_s The cluster forming threshold or threshold for visualizing results on the RESI effect size scale.
+#' @param cft_chisq The cluster forming threshold or threshold for visualizing results on the chi-squared scale.
 #' @param roi Which ROI index to visualize.
-#' @param slice Which slice number to visualize.
+#' @param index Which slices to visualize. Default is all slices
 #' @param clusterID logical indicating whether to include the clusterID in the figure.
 #' @param plane Which anatomical plane to visualize.
 #' @param clusterMask logical indicating whether to mask the results with significant clusters.
@@ -340,7 +341,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @importFrom utils write.csv
 #' @importFrom graphics text
 #' @export
-image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, cft_chisq, roi=NULL, slice=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
+image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roi=NULL, index=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, plane=c('axial', 'sagittal', 'coronal'), oma = rep(0, 4), mar = rep(0, 4), bg = "black", ... ){
   # CFT passed as p value or effect size converted to chi-squared threshold
   if(!is.null(cft_s)){
     cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
@@ -350,9 +351,14 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
     cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
     statmethod='p'
     thresh = -log10(cft_p)
-  } else {
+  } else if(!is.null(cft_chisq)){
     statmethod = 'chisq'
     thresh = cft = cft_chisq
+  } else { # if no cft was passed default to log10(0.05)
+    cft_p = 0.05
+    cft = qchisq(cft_p, df=x$sqrtSigma$df, lower.tail=FALSE)
+    statmethod='p'
+    thresh = -log10(cft_p)
   }
   # set graphical parameters
   par(oma = oma,
@@ -369,7 +375,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   # if user hasn't run pbj yet visualize using image.niftiImage
   if(is.null(pbjObj)){
     if(is.null(cft)) cft=0
-    image.niftiImage(stat.statMap(x, method=statmethod), bgimg = x$template, thresh = thresh, index = slice, plane=plane)
+    image.niftiImage(stat.statMap(x, method=statmethod), bgimg = x$template, limits = thresh, index = index, plane=plane, ...)
   } else {
     if(is.character(x$mask)){
       x$mask = readNifti(x$mask)
@@ -427,33 +433,33 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
           #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
           #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
           #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
-          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, other=otherfunc, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, other=otherfunc, ...)
         } else {
-          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], thresh=cft, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, ...)
         }
       }
-    } else if(!is.null(slice)){
-      for (slic in slice){
+    } else if(!is.null(index)){
+      for (slic in index){
         if(clusterID){
           coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
           coordInds = which(coords[,planenum]==slic)
           if(length(coordInds)==0){
-            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, ...)
           } else {
             coordLabels = st$`cluster ID`[coordInds]
             othercoords = coords[coordInds,-planenum, drop=FALSE]
             otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
-            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft,
+            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft,
                   other=otherfunc, ...)
           }
         } else {
-          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], thresh=cft, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, ...)
         }
       }
 
-      # if roi and slice are null, do lightbox view
+      # if roi and index are null, do lightbox view
     } else {
-      image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, thresh=cft, ...)
+      image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, limits=cft, ...)
 
     }
   }
