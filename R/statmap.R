@@ -373,7 +373,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   # if user hasn't run pbj yet visualize using image.niftiImage
   if(is.null(pbjObj)){
     if(is.null(cft)) cft=0
-    image.niftiImage(stat.statMap(x, method=statmethod), bgimg = x$template, limits = thresh, index = index, plane=plane, title=title, ...)
+    image.niftiImage(stat.statMap(x, method=statmethod), BGimg = x$template, limits = thresh, index = index, plane=plane, title=title, ...)
   } else {
     if(is.character(x$mask)){
       x$mask = readNifti(x$mask)
@@ -431,9 +431,9 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
           #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
           #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
           #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
-          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, other=otherfunc, title=title, crop=crop, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, other=otherfunc, title=title, crop=crop, ...)
         } else {
-          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, title=title, crop=crop, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, title=title, crop=crop, ...)
         }
       }
     } else if(!is.null(index)){
@@ -442,22 +442,22 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
           coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
           coordInds = which(coords[,planenum]==slic)
           if(length(coordInds)==0){
-            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, title=title, crop=crop, ...)
+            image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, title=title, crop=crop, ...)
           } else {
             coordLabels = st$`cluster ID`[coordInds]
             othercoords = coords[coordInds,-planenum, drop=FALSE]
             otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
-            image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft,
+            image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft,
                   other=otherfunc, title=title, ...)
           }
         } else {
-          image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, title=title, crop=crop, ...)
+          image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, title=title, crop=crop, ...)
         }
       }
 
       # if roi and index are null, do lightbox view
     } else {
-      image.niftiImage(stat.statMap(x, method=statmethod), bgimg=x$template, plane=plane, limits=cft, title=title, crop=crop, ...)
+      image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, limits=cft, title=title, crop=crop, ...)
 
     }
   }
