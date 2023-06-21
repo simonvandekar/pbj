@@ -17,6 +17,7 @@
   plane = c("axial", "coronal", "sagittal"),
   title = "",
   axes = FALSE,
+  lo = TRUE,
   other = function() {
  },
   ...
@@ -46,6 +47,8 @@
 \item{title}{Title for figure drawn in outer margin with `mtext`.}
 
 \item{axes}{display axes, defaults to false}
+
+\item{lo}{Call layout to arrange images? Default is TRUE.}
 
 \item{other}{A function used to add features to the plot.}
 

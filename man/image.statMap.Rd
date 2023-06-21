@@ -18,6 +18,7 @@
   title = "",
   plane = c("axial", "sagittal", "coronal"),
   crop = FALSE,
+  lo = TRUE,
   ...
 )
 }
@@ -46,9 +47,11 @@
 
 \item{plane}{Which anatomical plane to visualize.}
 
-\item{crop}{whether to crop white space from image, defaults to FALSE.}
+\item{crop}{Whether to crop white space from image. Defaults to FALSE.}
 
-\item{...}{Arguments passed to image.niftiImage.}
+\item{lo}{Whether to perform layout call to arrange images. Defaults to true.}
+
+\item{...}{Arguments passed to par.}
 }
 \description{
 Uses a statMap with inferences results to visualize CEI, CMI, or maxima

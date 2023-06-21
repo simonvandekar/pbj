@@ -15,6 +15,7 @@
 #' @param plane the plane to display, can be axial, coronal or sagittal.
 #' @param title Title for figure drawn in outer margin with `mtext`.
 #' @param axes display axes, defaults to false
+#' @param lo Call layout to arrange images? Default is TRUE.
 #' @param other A function used to add features to the plot.
 #' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
@@ -32,7 +33,7 @@
 image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NULL, crop=FALSE, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",
                                                                                                   "coronal", "sagittal"),
-                             title="", axes = FALSE, other=function(){}, ...)
+                             title="", axes = FALSE, lo=TRUE, other=function(){}, ...)
 {
   eps = 10^-6
   limits = limits + eps
@@ -49,7 +50,7 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
     # if only one argument was passed, display as the background img (foreground is blank)
     # this sets the limitsold high enough so that no overlay is shown (if it wasn't set already)
     if(limits[1]==eps){
-     limits[1]=max(abs(stat))+eps
+      limits[1]=max(abs(stat))+eps
     }
   }
   else x=BGimg
@@ -107,41 +108,43 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
     breaksneg <- c(limits[1], seq(limits[1], limits[2], length = length(colneg) -
                                     1), maxstatneg)
   }
-  if (is.null(index)) {
-    index = 1:imgdim[3]
-  }
-  if(is.null(nrow)){
-    nCol = ceiling(sqrt(length(index)))
-    nrow = ceiling(length(index)/nCol)
-  } else {
-    nCol = ceiling(length(index)/nrow)
-  }
-  # layout
-  lo = matrix(c(1:length(index), rep(NA, nrow * nCol - length(index) )), nrow=nrow, ncol=nCol, byrow=TRUE)
-  # if(colorbar){
-  #   lo = cbind(lo, max(lo, na.rm=TRUE)+1)
-  #   lo[is.na(lo)] = max(lo, na.rm=TRUE)+1
-  #   layout(lo, widths=c(rep(1, nrow), 0.125))
-  # } else {
+  # graphical settings
+  par(fg='white', bg='black')
+  if(lo){
+    if (is.null(index)) {
+      index = 1:imgdim[3]
+    }
+    if(is.null(nrow)){
+      nCol = ceiling(sqrt(length(index)))
+      nrow = ceiling(length(index)/nCol)
+    } else {
+      nCol = ceiling(length(index)/nrow)
+    }
+    # layout
+    lo = matrix(c(1:length(index), rep(NA, nrow * nCol - length(index) )), nrow=nrow, ncol=nCol, byrow=TRUE)
+    # if(colorbar){
+    #   lo = cbind(lo, max(lo, na.rm=TRUE)+1)
+    #   lo[is.na(lo)] = max(lo, na.rm=TRUE)+1
+    #   layout(lo, widths=c(rep(1, nrow), 0.125))
+    # } else {
     lo[is.na(lo)] = max(lo, na.rm=TRUE)+1
     layout(lo)
-  # }
-
-  par(fg='white', bg='black')
-  par(...)
+    # }
+    par(...)
+  }
   oldpar <- par(no.readonly = TRUE)
- for(z in index){
-      graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
-                      breaks = breaks, asp = aspect, axes = axes, ...)
-      if (limits[1] != maxstat)
-        graphics::image(1:imgdim[1], 1:imgdim[2], stat[,
-                                                       , z], col = colpos, breaks = breakspos, asp = aspect,
-                        axes = axes, add = TRUE, ...)
-      if (limits[1] != maxstatneg)
-        graphics::image(1:imgdim[1], 1:imgdim[2], statneg[,
-                                                          , z], col = colneg, breaks = breaksneg, asp = aspect,
-                        axes = axes, add = TRUE, ...)
- }
+  for(z in index){
+    graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
+                    breaks = breaks, asp = aspect, axes = axes, ...)
+    if (limits[1] != maxstat)
+      graphics::image(1:imgdim[1], 1:imgdim[2], stat[,
+                                                     , z], col = colpos, breaks = breakspos, asp = aspect,
+                      axes = axes, add = TRUE, ...)
+    if (limits[1] != maxstatneg)
+      graphics::image(1:imgdim[1], 1:imgdim[2], statneg[,
+                                                        , z], col = colneg, breaks = breaksneg, asp = aspect,
+                      axes = axes, add = TRUE, ...)
+  }
   mtext(title, outer=TRUE)
   # test = plot_grid(plotlist=res, nrow=nrow, ncol=nCol)
   # cb = function(){
