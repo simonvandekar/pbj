@@ -6,7 +6,7 @@
 \usage{
 \method{image}{niftiImage}(
   x,
-  bgimg = NULL,
+  BGimg = NULL,
   limits = 0,
   nrow = NULL,
   index = NULL,
@@ -25,7 +25,7 @@
 \arguments{
 \item{x}{the Nifti object to display images of}
 
-\item{bgimg}{background image to use.}
+\item{BGimg}{background image to use.}
 
 \item{limits}{A lower (and optionally upper length 2 vector) limitsold to apply to the image, defaults to 0}
 

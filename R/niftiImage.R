@@ -4,7 +4,7 @@
 #'
 #' @export
 #' @param x the Nifti object to display images of
-#' @param bgimg background image to use.
+#' @param BGimg background image to use.
 #' @param limits A lower (and optionally upper length 2 vector) limitsold to apply to the image, defaults to 0
 #' @param nrow number of rows to display the slices as. NULL is default and it's a square shape determined by length of `index` argument.
 #' @param index Any selected image planes. defaults to NULL
@@ -29,7 +29,7 @@
 #' # image(templ)
 #' # image(templ, plane='coronal')
 #'
-image.niftiImage = function (x, bgimg = NULL, limits = 0, nrow=NULL, index = NULL, crop=FALSE, col = gray(0:64/64),
+image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NULL, crop=FALSE, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",
                                                                                                   "coronal", "sagittal"),
                              title="", axes = FALSE, other=function(){}, ...)
