@@ -5,7 +5,7 @@
 #' @export
 #' @param x the Nifti object to display images of
 #' @param BGimg background image to use.
-#' @param limits A lower (and optionally upper length 2 vector) limitsold to apply to the image, defaults to 0
+#' @param limits A lower (and optionally upper length 2 vector) limits to apply to the image, defaults to 0
 #' @param nrow number of rows to display the slices as. NULL is default and it's a square shape determined by length of `index` argument.
 #' @param index Any selected image planes. defaults to NULL
 #' @param crop crop white space from image. Default is FALSE.
@@ -109,7 +109,8 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
                                     1), maxstatneg)
   }
   # graphical settings
-  par(fg='white', bg='black')
+  # These represent all the default plotting options
+  par(fg='white', bg='black', mar=c(0,0,0,0), oma=c(0,0,0,0))
   if(lo){
     if (is.null(index)) {
       index = 1:imgdim[3]
