@@ -8,21 +8,17 @@
 #' @param limits A lower (and optionally upper length 2 vector) limitsold to apply to the image, defaults to 0
 #' @param nrow number of rows to display the slices as. NULL is default and it's a square shape determined by length of `index` argument.
 #' @param index Any selected image planes. defaults to NULL
+#' @param crop crop white space from image. Default is FALSE.
 #' @param col a vector of colors to use for scaled intensities defaults to a grey scale.
 #' @param colpos a vector of colors to use for positive values.
 #' @param colneg a vector of colors to use for negative values.
 #' @param plane the plane to display, can be axial, coronal or sagittal.
-#' @param xlab a title for the x axis.
-#' @param ylab a title for the y axis.
+#' @param title Title for figure drawn in outer margin with `mtext`.
 #' @param axes display axes, defaults to false
-#' @param oma A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.
-#' @param mar A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.
-#' @param bg background color, defaults to black.
-#' @param fg foreground color, defaults to white.
 #' @param other A function used to add features to the plot.
 #' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
-#' @importFrom graphics par
+#' @importFrom graphics par layout
 #' @importFrom RNifti readNifti
 #' @export
 #' @examples
@@ -33,11 +29,10 @@
 #' # image(templ)
 #' # image(templ, plane='coronal')
 #'
-image.niftiImage = function (x, bgimg = NULL, limits = 0, nrow=NULL, index = NULL, col = gray(0:64/64),
+image.niftiImage = function (x, bgimg = NULL, limits = 0, nrow=NULL, index = NULL, crop=FALSE, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",
                                                                                                   "coronal", "sagittal"),
-                             xlab = "", ylab = "", axes = FALSE,
-                             oma = rep(0, 4), mar = rep(0, 4), bg = "black",  fg='white', other=function(){}, ...)
+                             title="", axes = FALSE, other=function(){}, ...)
 {
   eps = 10^-6
   limits = limits + eps
@@ -72,15 +67,21 @@ image.niftiImage = function (x, bgimg = NULL, limits = 0, nrow=NULL, index = NUL
     stat <- aperm(stat, c(2, 3, 1))
     aspect <- pixdim[4]/pixdim[3]
   }, stop(paste("Orthogonal plane", plane[1], "is not valid.")))
-  xinds = apply(x != 0, 1, any)
-  yinds = apply(x != 0, 2, any)
-  zinds = apply(x != 0, 3, any)
-  x = x[xinds, , ]
-  x = x[, yinds, ]
-  x = x[, , zinds]
-  stat = stat[xinds, , ]
-  stat = stat[, yinds, ]
-  stat = stat[, , zinds]
+  if(crop){
+    xinds = apply(x != 0, 1, any)
+    yinds = apply(x != 0, 2, any)
+    zinds = apply(x != 0, 3, any)
+    x = x[xinds, , ]
+    x = x[, yinds, ]
+    x = x[, , zinds]
+    stat = stat[xinds, , ]
+    stat = stat[, yinds, ]
+    stat = stat[, , zinds]
+    if(!is.null(index)){
+      # change index to account for cropping
+      index = index - which(diff(!zinds)<0)
+    }
+  }
   statneg = stat
   statneg[statneg > -limits[1]] = 0
   statneg = abs(statneg)
@@ -126,24 +127,22 @@ image.niftiImage = function (x, bgimg = NULL, limits = 0, nrow=NULL, index = NUL
     layout(lo)
   # }
 
-  par(oma = oma,
-      mar = mar, bg = bg)
+  par(fg='white', bg='black')
+  par(...)
   oldpar <- par(no.readonly = TRUE)
  for(z in index){
       graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
-                      breaks = breaks, asp = aspect, axes = axes, xlab = xlab,
-                      ylab = ylab, ...)
+                      breaks = breaks, asp = aspect, axes = axes, ...)
       if (limits[1] != maxstat)
         graphics::image(1:imgdim[1], 1:imgdim[2], stat[,
                                                        , z], col = colpos, breaks = breakspos, asp = aspect,
-                        axes = axes, add = TRUE, xlab = xlab, ylab = ylab,
-                        ...)
+                        axes = axes, add = TRUE, ...)
       if (limits[1] != maxstatneg)
         graphics::image(1:imgdim[1], 1:imgdim[2], statneg[,
                                                           , z], col = colneg, breaks = breaksneg, asp = aspect,
-                        axes = axes, add = TRUE, xlab = xlab, ylab = ylab,
-                        ...)
-  }
+                        axes = axes, add = TRUE, ...)
+ }
+  mtext(title, outer=TRUE)
   # test = plot_grid(plotlist=res, nrow=nrow, ncol=nCol)
   # cb = function(){
   #   par(oma=c(0,0,0,0), mar=c(8, 4, 8, 0.5), mgp=c(3,0.6,0), fg=fg, col.axis=fg, col.lab=fg, col.main = fg, col.sub=fg, bg=bg)

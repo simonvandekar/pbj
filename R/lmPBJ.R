@@ -137,15 +137,11 @@ Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none',
   QR = qr(X * W)
   coef = qr.coef(QR, Y)[peind,,drop=FALSE]
   res=qr.resid(QR, Y);
-
   X1res = qr.resid(qr(Xred * W), X1 * W)
 
-  # standardize residuals and Y
-  sigmas = sqrt(colSums(res^2)/rdf)
-  #res = sweep(res, 2, sigmas, FUN = '/')
-  #Y = sweep(Y, 2, sigmas, FUN = '/')
 
   if(!robust){
+    sigmas = sqrt(colSums(res^2)/rdf)
     AsqrtInv = backsolve(r=qr.R(qr(X1res)), x=diag(df) )
     sqrtSigma = crossprod(AsqrtInv, matrix(X1res, nrow=df, ncol=n, byrow=TRUE))
     # used to compute chi-squared statistic

@@ -15,10 +15,9 @@
   alpha = NULL,
   clusterMask = TRUE,
   clusterID = TRUE,
+  title = "",
   plane = c("axial", "sagittal", "coronal"),
-  oma = rep(0, 4),
-  mar = rep(0, 4),
-  bg = "black",
+  crop = FALSE,
   ...
 )
 }
@@ -43,13 +42,11 @@
 
 \item{clusterID}{logical indicating whether to include the clusterID in the figure.}
 
+\item{title}{Character passed to image.niftiImage}
+
 \item{plane}{Which anatomical plane to visualize.}
 
-\item{oma}{argument passed to par}
-
-\item{mar}{argument passed to par}
-
-\item{bg}{argument passed to par}
+\item{crop}{whether to crop white space from image, defaults to FALSE.}
 
 \item{...}{Arguments passed to image.niftiImage.}
 }

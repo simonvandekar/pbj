@@ -203,6 +203,8 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, r
 pbjInferenceBG = function(argsList){
   rdata_rds = argsList[[grep('rdata_rds',names(argsList) )]]
   argsList = argsList[grep('rdata_rds',names(argsList), invert=TRUE )]
+  # creates parent directories if they don't exist
+  dir.create(dirname(rdata_rds), showWarnings = FALSE, recursive = TRUE)
   rcallRes = r_bg(function(argsList, rdata_rds){
     computeTime = system.time(statMap <- do.call(pbj::pbjInferenceFG, argsList) )
     if(grepl('.rds', tolower(rdata_rds))){
