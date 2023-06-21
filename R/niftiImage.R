@@ -145,7 +145,6 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
                                                         , z], col = colneg, breaks = breaksneg, asp = aspect,
                       axes = axes, add = TRUE, ...)
   }
-  mtext(title, outer=TRUE)
   # test = plot_grid(plotlist=res, nrow=nrow, ncol=nCol)
   # cb = function(){
   #   par(oma=c(0,0,0,0), mar=c(8, 4, 8, 0.5), mgp=c(3,0.6,0), fg=fg, col.axis=fg, col.lab=fg, col.main = fg, col.sub=fg, bg=bg)
