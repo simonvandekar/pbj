@@ -40,10 +40,10 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
   stat = if (is.character(object))
     readNifti(object)
   else object
-  if (is.character(bgimg)) {
-    x=readNifti(bgimg)
+  if (is.character(BGimg)) {
+    x=readNifti(BGimg)
   }
-  else if (is.null(bgimg)) {
+  else if (is.null(BGimg)) {
     # this sets foreground image to be the background too
     x = stat
     # if only one argument was passed, display as the background img (foreground is blank)
@@ -52,7 +52,7 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
      limits[1]=max(abs(stat))+eps
     }
   }
-  else x=bgimg
+  else x=BGimg
   pixdim = RNifti::pixdim(x)
   switch(plane[1], axial = {
     aspect <- pixdim[3]/pixdim[2]
