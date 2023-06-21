@@ -335,13 +335,13 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @param plane Which anatomical plane to visualize.
 #' @param clusterMask logical indicating whether to mask the results with significant clusters.
 #' @param alpha Adjusted p-value threshold to display clusters.
-#' @param crop Whether to crop white space from image. Defaults to FALSE.
+#' @param crop Whether to crop white space from image. Defaults to TRUE.
 #' @param lo Whether to perform layout call to arrange images. Defaults to true.
 #' @param ... Arguments passed to par.
 #' @importFrom utils write.csv
 #' @importFrom graphics text
 #' @export
-image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roi=NULL, index=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, title='', plane=c('axial', 'sagittal', 'coronal'), crop=FALSE, lo=TRUE, ... ){
+image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roi=NULL, index=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, title='', plane=c('axial', 'sagittal', 'coronal'), crop=TRUE, lo=TRUE, ... ){
   # CFT passed as p value or effect size converted to chi-squared threshold
   if(!is.null(cft_s)){
     cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df

@@ -8,7 +8,7 @@
 #' @param limits A lower (and optionally upper length 2 vector) limits to apply to the image, defaults to 0
 #' @param nrow number of rows to display the slices as. NULL is default and it's a square shape determined by length of `index` argument.
 #' @param index Any selected image planes. defaults to NULL
-#' @param crop crop white space from image. Default is FALSE.
+#' @param crop crop white space from image. Default is TRUE.
 #' @param col a vector of colors to use for scaled intensities defaults to a grey scale.
 #' @param colpos a vector of colors to use for positive values.
 #' @param colneg a vector of colors to use for negative values.
@@ -30,7 +30,7 @@
 #' # image(templ)
 #' # image(templ, plane='coronal')
 #'
-image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NULL, crop=FALSE, col = gray(0:64/64),
+image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NULL, crop=TRUE, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",
                                                                                                   "coronal", "sagittal"),
                              title="", axes = FALSE, lo=TRUE, other=function(){}, ...)

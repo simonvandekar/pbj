@@ -10,7 +10,7 @@
   limits = 0,
   nrow = NULL,
   index = NULL,
-  crop = FALSE,
+  crop = TRUE,
   col = gray(0:64/64),
   colpos = pbj:::redyellow(64),
   colneg = pbj:::bluecyan(64),
@@ -28,13 +28,13 @@
 
 \item{BGimg}{background image to use.}
 
-\item{limits}{A lower (and optionally upper length 2 vector) limitsold to apply to the image, defaults to 0}
+\item{limits}{A lower (and optionally upper length 2 vector) limits to apply to the image, defaults to 0}
 
 \item{nrow}{number of rows to display the slices as. NULL is default and it's a square shape determined by length of `index` argument.}
 
 \item{index}{Any selected image planes. defaults to NULL}
 
-\item{crop}{crop white space from image. Default is FALSE.}
+\item{crop}{crop white space from image. Default is TRUE.}
 
 \item{col}{a vector of colors to use for scaled intensities defaults to a grey scale.}
 

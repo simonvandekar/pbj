@@ -17,7 +17,7 @@
   clusterID = TRUE,
   title = "",
   plane = c("axial", "sagittal", "coronal"),
-  crop = FALSE,
+  crop = TRUE,
   lo = TRUE,
   ...
 )
@@ -47,7 +47,7 @@
 
 \item{plane}{Which anatomical plane to visualize.}
 
-\item{crop}{Whether to crop white space from image. Defaults to FALSE.}
+\item{crop}{Whether to crop white space from image. Defaults to TRUE.}
 
 \item{lo}{Whether to perform layout call to arrange images. Defaults to true.}
 
