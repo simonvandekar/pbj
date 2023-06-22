@@ -148,30 +148,25 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, r
                  boots = apply(do.call(rbind, boots), 2, as.list)
                  # add in observed values (plus a constant) to bootstraps. This avoids zero p-values from the empirical CDF
                  #boots = mapply(c, boots, lapply(obsstat, function(x) list(x+1)), SIMPLIFY=FALSE )
-                 margCDF = lapply(boots, function(boot){
+                 unadjCDF = lapply(boots, function(boot){
                    Cs = sapply(boot, length)
-                   if(sum(Cs)==0){
-                     NA
+                   if(sum(Cs)==nboot){
+                     NULL
                    } else {
                      wecdf(unlist(boot), rep(1/Cs, Cs) )
                    }
                  } )
                  # This suppress warnings is for when the bootstrap has no clusters (length zero)
-                 suppressWarnings(globCDF <- lapply(boots, function(boot){
+                 suppressWarnings(fwerCDF <- lapply(boots, function(boot){
                    if(sum(sapply(boot, length))==0){
-                     NA
+                     NULL
                    } else {
                      wecdf(sapply(boot, max))
                    }
                  } ) )
                } else {
-                 Cs = sapply(boots, length)
-                 if(sum(Cs)==0){
-                   margCDF <- globCDF <- 0
-                 } else {
-                   margCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
-                   globCDF = wecdf(sapply(boots, max))
-                 }
+                   unadjCDF = wecdf(unlist(boots), rep(1/Cs, Cs) )
+                   fwerCDF = wecdf(sapply(boots, max))
                }
 
                # reindex ROIs and obsStat
@@ -183,7 +178,7 @@ pbjInferenceFG = function(statMap, statistic = mmeStat, null=TRUE, nboot=5000, r
                #     rois[[ind]][is.na(rois[[ind]][,,])] = 0
                #   }
                # }
-               list(obsStat=obsstat, margCDF=margCDF, globCDF=globCDF, ROIs=rois)},
+               list(obsStat=obsstat, unadjCDF=unadjCDF, fwerCDF=fwerCDF, ROIs=rois)},
              bootstrap=list(obsStat=obsstat, boots=boots) )
   class(out) = c('pbj', 'list')
   statMap$pbj = out

@@ -36,10 +36,10 @@ cluster = function(stat, mask, cft, method=c('extent', 'mass'), kernel='box', ro
   } else {
     ccomps = switch(method,
                     'extent'={
-                      lapply(tmp, function(tm) table(c(mmand::components(tm, k))) )
+                      lapply(tmp, function(tm) c(0, table(c(mmand::components(tm, k))) ) )
                     },
                     'mass'={
-                      lapply(tmp, function(tm) c(by(c(stat), c(mmand::components(tm, k)), sum) ))
+                      lapply(tmp, function(tm) c(0, by(c(stat), c(mmand::components(tm, k)), sum) ))
                     })
     # modifies ccomps attribute in cluster function
     ccomps = lapply(1:length(cft), function(ind){ attributes(ccomps[[ind]]) <- list('cft'=cft[ind]); ccomps[[ind]]})

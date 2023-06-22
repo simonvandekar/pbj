@@ -515,6 +515,9 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   df = x$sqrtSigma$df
   x = x$pbj
   if(is.null(x)){
+    if(is.null(cft) & method!='maxima'){
+      stop('Must specify a cluster forming threshold\n (CFT) if pbjInference has not been run.')
+    }
     x = list()
     cei = list('maxima'=FALSE, 'CEI'=FALSE, 'CMI'=FALSE)
     cei[[grep(method, tolower(names(cei))) ]] = TRUE
@@ -522,6 +525,8 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
     x$ROIs = do.call(mmeStat, c(list(stat=statImg, mask=mask, cft=cft, rois=TRUE), cei) )
   }
   ind = inferenceIndex(x$obsStat, method=method, cft=cft)
+  # hard-coded, but not generally applicable
+  x$obsStat[[ind]] = x$obsStat[[ind]][x$obsStat[[ind]]!=0]
   if(method!='maxima'){
     Table = data.frame('Cluster ID' = 1:length(x$obsStat[[ind]]),
                        'Cluster Extent' = c(x$obsStat[[ind]]),
@@ -535,13 +540,16 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
                        'Coord (vox)' = sapply(1:max(x$ROIs[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
                        check.names=FALSE )
   }
-  if(!is.null(x$margCDF)){
-    Table[,'Unadjusted p-value'] =  (1-x$margCDF[[ind]](c(x$obsStat[[ind]])))
-    Table[,'FWER p-value'] = (1-x$globCDF[[ind]](c(x$obsStat[[ind]])))
+  if(!is.null(x$fwerCDF)){
+    if(!is.null(x$unadjCDF[[ind]])){
+      Table[,'Unadjusted p-value'] =  (1-x$unadjCDF[[ind]](c(x$obsStat[[ind]])))
+    }
+    Table[,'FWER p-value'] = (1-x$fwerCDF[[ind]](c(x$obsStat[[ind]])))
   }
   Table[, 'Max RESI'] = sapply(1:max(x$ROIs[[ind]]), function(ind2, statImg, ROIs, ind, n, df) chisq2S(max(statImg[ROIs[[ind]]==ind2]), df=df, n=n), statImg=statImg, ROIs=x$ROIs, ind=ind, n=n, df=df)
   # sort by the statistical value
   Table = Table[order(Table[,2], decreasing = TRUE),]
+  attr(Table, 'cft') = cft
   Table
 }
 

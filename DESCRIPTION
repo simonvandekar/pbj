@@ -31,7 +31,6 @@ Collate:
     'getPvalues.R'
     'lmPBJ.R'
     'niftiImage.R'
-    'npbjInference.R'
     'palm.R'
     'statmap.R'
     'pbj.R'
@@ -42,7 +41,6 @@ Imports:
   callr,
   PDQutils,
   emmeans,
-  fslr,
   mmand,
   methods,
   oro.nifti,
@@ -50,16 +48,17 @@ Imports:
   pTFCE,
   RESI,
   RNifti,
-  R.rsp,
   scales,
   utils
 RoxygenNote: 7.2.3
 Suggests: 
+    fslr,
     geepack,
     knitr,
     lmtest,
     pain21,
     rmarkdown,
+    R.rsp,
     sandwich,
     testthat
 Remotes: simonvandekar/pain21
