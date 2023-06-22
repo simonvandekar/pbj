@@ -80,7 +80,7 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
     stat = stat[, , zinds]
     if(!is.null(index)){
       # change index to account for cropping
-      index = index - which(diff(!zinds)<0)
+      index = index - max(c(0, which(diff(!zinds)<0)))
     }
   }
   statneg = stat
