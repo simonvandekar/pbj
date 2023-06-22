@@ -7,7 +7,7 @@ pdata = pain$data
 # weights proportional to study sample size
 pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1,
                   W = pdata$n, mask=pain$mask, data=pdata)
-table.statMap(pbjModel2, cft_p=0.01)
+table.statMap(pbjModel2, 'maxima')
 
 
 # p-value thresholding for cluster extent/mass
@@ -20,7 +20,7 @@ pbjModelAll <- pbjInference(pbjModel2, nboot=5, cft_p=0.01,
 head(table.statMap(pbjModelAll, method = 'maxima'))
 head(table.statMap(pbjModelAll, method = 'CEI', cft_p=0.01))
 # returns the first threshold used
-head(table.statMap(pbjModelAll, method = 'CMI'))
+head(table.statMap(pbjModelAll, method = 'CMI', cft_p = 0.01))
 # RESI effect size thresholding for cluster extent/mass
 pbjModel2 = pbjInference(pbjModel2, nboot=2, cft_s=c(0.1, 0.25), CMI=TRUE)
 head(table.statMap(pbjModel2, method = 'CEI', cft_s=0.1))
