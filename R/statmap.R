@@ -533,18 +533,21 @@ table.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
                        'Centroid (vox)' = sapply(1:length(x$obsStat[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
                        check.names=FALSE )
     if(method=='cmi') names(Table) = c('Cluster ID', 'Cluster Mass', 'Centroid (vox)')
+    if(!is.null(x$fwerCDF)){
+      if(!is.null(x$unadjCDF[[ind]])){
+        Table[,'Unadjusted p-value'] =  (1-x$unadjCDF[[ind]](c(x$obsStat[[ind]])))
+      }
+      Table[,'FWER p-value'] = (1-x$fwerCDF[[ind]](c(x$obsStat[[ind]])))
+    }
   } else {
     # 'Chi-square' assumes ROIs are indexed increasing with data frame indexing.
     Table = data.frame('Cluster ID' = 1:max(x$ROIs[[ind]]),
                        'Chi-square' = statImg[x$ROIs[[ind]]>0],
                        'Coord (vox)' = sapply(1:max(x$ROIs[[ind]]), function(ind2) paste(round(colMeans(which(x$ROIs[[ind]]==ind2, arr.ind = TRUE) )), collapse=', ' )), #RNifti::voxelToWorld(
                        check.names=FALSE )
-  }
-  if(!is.null(x$fwerCDF)){
-    if(!is.null(x$unadjCDF[[ind]])){
-      Table[,'Unadjusted p-value'] =  (1-x$unadjCDF[[ind]](c(x$obsStat[[ind]])))
+    if(!is.null(x$fwerCDF)){
+      Table[,'FWER p-value'] = (1-x$fwerCDF[[ind]](c(statImg[x$ROIs[[ind]]>0])))
     }
-    Table[,'FWER p-value'] = (1-x$fwerCDF[[ind]](c(x$obsStat[[ind]])))
   }
   Table[, 'Max RESI'] = sapply(1:max(x$ROIs[[ind]]), function(ind2, statImg, ROIs, ind, n, df) chisq2S(max(statImg[ROIs[[ind]]==ind2]), df=df, n=n), statImg=statImg, ROIs=x$ROIs, ind=ind, n=n, df=df)
   # sort by the statistical value
