@@ -48,12 +48,12 @@ bluecyan = colorRampPalette(c('blue', 'cyan'), space='Lab')
 #' @param outdir the directory to write into
 #' @param images Logical indicating whether or not to write out the nifti images.
 #' @param sqrtSigma Logical indicating whether or not to write out the objects needed for bootstrapping.
-#' @param method Passed to stat.statMap to specify how to write the statistical image. p= -log10(p) * sign(coef), S=RESI, chisq=chi-squared statistic
+#' @param statMethod Passed to stat.statMap to specify how to write the statistical image. p= -log10(p) * sign(coef), S=RESI, chisq=chi-squared statistic
 #' @return a list of what was written
 #' @export
-write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE, method=c('p', 'S', 'chisq')){
-  method = tolower(method[1])
-  statimg  = file.path(outdir, paste0('stat_', method, '.nii.gz') )
+write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE, statMethod=c('p', 'S', 'chisq')){
+  statMethod = tolower(statMethod[1])
+  statimg  = file.path(outdir, paste0('stat_', statMethod, '.nii.gz') )
   coefimg   = file.path(outdir, 'coef.nii.gz')
   res   = file.path(outdir, 'sqrtSigma.rds')
   if(is.character(x$stat)){
@@ -66,7 +66,7 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE, method=c('p', 
     if(images){
       message('Writing stat and coef images.')
       dir.create(outdir, showWarnings=FALSE, recursive=TRUE)
-      writeNifti(stat.statMap(x, method = method), statimg)
+      writeNifti(stat.statMap(x, method = statMethod), statimg)
       writeNifti(coef.statMap(x), coefimg)
     }
 
@@ -85,16 +85,19 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE, method=c('p', 
     #sform = do.call(rbind, RNifti::niftiHeader(x$template)[c('srow_x', 'srow_y', 'srow_z')])
     #voxvol = prod(RNifti::pixdim(x$template))
     message('Writing inference images.')
+    cft = NULL
     for(infType in names(pbj$ROIs)){
-      if(grepl('CEI|CMI', infType)) cft = attr(pbj$obsStat[[infType]], 'cft')
+      if(grepl('CEI|CMI', infType)) cft = attr(pbj$obsStat[[infType]], 'cft') else cft=NULL
       # removes number from name if infType
-      method = gsub("[0-9]", '', infType)
+      method = tolower(gsub("[0-9]", '', infType))
       tab = table.statMap(x, method=method, cft_chisq=cft)
       pmapimg = file.path(outdir, paste0('log10p_', infType, '.nii.gz'))
       clustmapimg = file.path(outdir, paste0('clustIDs_', infType, '.nii.gz'))
       pmap = pbj$ROIs[[infType]]
-      # sets clusters to their p-value. This is wrong currently
-      pmap[ which(pmap!=0) ] = -log10(tab$`FWER p-value`[ pmap[which(pmap!=0)] ])
+      # sets clusters to their p-value.
+      for(ind in tab[,1]){
+        pmap[ which(pmap==ind) ] = -log10(tab$`FWER p-value`[ tab[,1]==ind ])
+      }
       writeNifti(pmap, pmapimg)
       writeNifti(pbj$ROIs[[infType]], clustmapimg)
       inference[[infType]] = c(pmapimg, clustmapimg)
@@ -194,6 +197,7 @@ var.statMap = function(x){
 #' @importFrom stats terms
 #' @importFrom emmeans emmeans ref_grid
 #' @importFrom scales alpha
+#' @importFrom RNifti readNifti
 #' @export
 plot.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roiInds=NULL, ...){
   method = tolower(method[1])
@@ -214,7 +218,7 @@ plot.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cf
 
 
   # load data
-  imgs = RNifti::readNifti(x$images)
+  imgs = readNifti(x$images)
   # fit model on average data
   full = as.formula(x$formulas$full)
   red = as.formula(x$formulas$reduced)
@@ -269,6 +273,7 @@ plot.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cf
 #' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
 #' @param data Data frame with covariates. Optional if available in statMap object.
 #' @return a niftiImage object of the coefficient image
+#' @importFrom RNifti readNifti
 #' @export
 roiMeans = function(statMap, method='CEI', cft=NULL, roiInds=NULL, data=NULL){
   pbjObj = statMap$pbj
@@ -280,7 +285,7 @@ roiMeans = function(statMap, method='CEI', cft=NULL, roiInds=NULL, data=NULL){
   obsstat = pbjObj$obsStat[[ind]]
 
   # load data
-  imgs = RNifti::readNifti(statMap$images)
+  imgs = readNifti(statMap$images)
   if(is.null(data)){
     data = get_all_vars(full, statMap$data)
   } else {
@@ -342,6 +347,7 @@ colorBar <- function(lut, min, max=-min, nticks=4, ticks=seq(min, max, len=ntick
 #' @importFrom graphics text
 #' @export
 image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roi=NULL, index=NULL, alpha=NULL, clusterMask=TRUE, clusterID=TRUE, title='', plane=c('axial', 'sagittal', 'coronal'), crop=TRUE, lo=TRUE, ... ){
+  method = tolower(method[1])
   # CFT passed as p value or effect size converted to chi-squared threshold
   if(!is.null(cft_s)){
     cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
@@ -371,92 +377,71 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
   # if user hasn't run pbj yet visualize using image.niftiImage
   if(is.null(pbjObj)){
     if(is.null(cft)) cft=0
-    image.niftiImage(stat.statMap(x, method=statmethod), BGimg = x$template, limits = thresh, index = index, plane=plane, title=title, lo=lo, ...)
+    image.niftiImage(stat.statMap(x, method=statmethod), BGimg = x$template, limits = thresh, index = index, plane=plane, title=title, lo=lo, crop=crop, ...)
   } else {
     if(is.character(x$mask)){
       x$mask = readNifti(x$mask)
     }
-    ind = grep(method, names(pbjObj$obsStat))
-    # get indices corresponding to this method
-    cfts = sapply(pbjObj$obsStat[ind], attr, which='cft')
-    # maxima don't have cft attribute
-    if(!is.null(cft) & method!='maxima'){
-      ind = ind[which(cfts==cft)]
-      if(length(ind)==0){
-        stop('Specified cft is ', cft, '. Existing cfts are ', paste(cfts, collapse=', '))
-      }
-    } else {
-      cft = cfts[1]
-    }
-    ind = ind[1]
-    if(is.null(cft)) stop("Must specify cft for visualization with method='maxima'")
+    ind = inferenceIndex(pbjObj$obsStat, method=method, cft=cft)
+    if(is.null(cft)) stop("Must specify CFT for visualization with method='maxima'")
 
     st = table.statMap(x, method=method, cft_p=cft_p, cft_s=cft_s)
     imgdims = dim(stat.statMap(x, method=statmethod))
     planenum = switch(plane, "axial"=3, 'sagittal'=1, 'coronal'=2)
     otherplanes = which(!1:3 %in% planenum)
     if(!is.null(alpha)){
-      pbjObj$ROIs[[ind]][ pbjObj$ROIs[[ind]] %in% which(st$`FWER p-value`>alpha) ] = 0
-      x$stat[pbjObj$ROIs[[ind]][ x$mask>0 ] ==0] = 0
+      # Set nonsignificant ROIs to zero
+      pbjObj$ROIs[[ind]][ pbjObj$ROIs[[ind]] %in% st[which(st$`FWER p-value`>alpha),1] ] = 0
+      # subset table to significant ROIs
       st = st[which(st$`FWER p-value`<=alpha),]
-    } else if(clusterMask){
-      # zero values outside of clusterMask
-      x$stat[pbjObj$ROIs[[ind]][ x$mask>0 ]==0] = 0
+    } else if(!is.null(roi)){
+      # set unselected ROIs to zero
+      pbjObj$ROIs[[ind]][ ! pbjObj$ROIs[[ind]] %in% roi ] = 0
+      # subset table to selected ROIs
+      st = st[which(st[,1] %in% roi),]
+    }
+    # zero statMap outside of ROIs
+    x$stat[pbjObj$ROIs[[ind]][ x$mask>0 ]==0] = 0
+
+    # get coordinates from table
+    coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric) )
+    index = coords[,planenum]
+    othercoords = coords[,-planenum]
+
+    # set graphical layout
+    nCol = ceiling(sqrt(length(index)))
+    nrow = ceiling(length(index)/nCol)
+
+
+    par(fg='white', bg='black', mar=c(0,0,0,0), oma=c(0,0,0,0))
+    # layout
+    if(lo){
+      lo = matrix(c(1:length(index), rep(NA, nrow * nCol - length(index) )), nrow=nrow, ncol=nCol, byrow=TRUE)
+      lo[is.na(lo)] = max(lo, na.rm=TRUE)+1
+      layout(lo)
     }
 
-    # image.statMap crops the image, so we need to do that here
-    xoffset = which(apply(x$template!=0, 1, any))
-    xoffset = c(xoffset[1], length(xoffset))+ c(-1, 0)
-    yoffset = which(apply(x$template!=0, 2, any))
-    yoffset = c(yoffset[1], length(yoffset))+ c(-1, 0)
-    zoffset = which(apply(x$template!=0, 3, any))
-    zoffset = c(zoffset[1], length(zoffset))+ c(-1, 0)
-    offsets = list(xoffset, yoffset, zoffset)
-    rm(zoffset, yoffset, xoffset)
+    if(crop){
+      cr = crop(x$template, stat.statMap(x, method=statmethod))
+    }
+
+    indOrd = switch(plane[1], axial = {1:3},
+                    coronal = {c(1, 3, 2)},
+                    sagittal = {c(2, 3, 1)},
+                    stop(paste("Orthogonal plane", plane[1], "is not valid.")))
+
     # if roi is non-null draw single slice with centroid of each selected ROI
-    if(!is.null(roi)){
-      for(ro in roi){
-        # get coordinates from table
-        coords = as.numeric(strsplit(st[ro,3], split=', ')[[1]])
-
-        # slice to display
-        planecoord = coords[planenum]
-        # coordinates to display the cluster index number
-        othercoords = coords[-planenum]
-        if(clusterID){
-          otherfunc=function(){text(othercoords[1]-offsets[[otherplanes[1]]][1]+1, othercoords[2]-offsets[[otherplanes[2]]][1]+1, labels=ro, col='white', font=2)}
-          # trying to debug coordinates
-          #otherfunc=function(){points(othercoords[1]-offsets[[otherplanes[1]]][1], othercoords[2], col='white')}
-          #otherfunc = function(){text(50, seq(1, offsets[[otherplanes[2]]][2], 10), labels=seq(1, offsets[[otherplanes[2]]][2], 10), col='white')}
-          #otherfunc = function(){text(seq(1, offsets[[otherplanes[1]]][2], 10), 50, labels=seq(1, offsets[[otherplanes[1]]][2], 10), col='white')}
-          image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, other=otherfunc, title=title, crop=crop,  lo=lo, ...)
-        } else {
-          image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=coords[planenum]-offsets[[planenum]][1], limits=cft, title=title, crop=crop,  lo=lo, ...)
-        }
+    for (slic in index){
+      if(clusterID){
+        coordInds = which(coords[,planenum]==slic)
+        coordLabels = st[coordInds,1]
+        othercoords = coords[coordInds, , drop=FALSE]
+        image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-cr$offset[indOrd[3]], limits=thresh,
+                         title=title,  lo=FALSE, crop=FALSE, ...)
+        text(othercoords[indOrd[1]]-cr$offset[indOrd[1]], othercoords[indOrd[2]]-cr$offset[indOrd[2]], labels=coordLabels, col=par()$fg, font=2)
+      } else {
+        image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-cr$offset[3], limits=thresh, title=title, lo=FALSE, crop=FALSE, ...)
       }
-    } else if(!is.null(index)){
-      for (slic in index){
-        if(clusterID){
-          coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric))
-          coordInds = which(coords[,planenum]==slic)
-          if(length(coordInds)==0){
-            image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, title=title, crop=crop,  lo=lo, ...)
-          } else {
-            coordLabels = st$`cluster ID`[coordInds]
-            othercoords = coords[coordInds,-planenum, drop=FALSE]
-            otherfunc=function(){text(othercoords[,1]-offsets[[otherplanes[1]]][1], othercoords[,2]-offsets[[otherplanes[2]]][1], labels=coordLabels, col='white', font=2)}
-            image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft,
-                  other=otherfunc, title=title,  lo=lo, ...)
-          }
-        } else {
-          image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-offsets[[planenum]][1], limits=cft, title=title, crop=crop,  lo=lo, ...)
-        }
-      }
-
-      # if roi and index are null, do lightbox view
-    } else {
-      image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, limits=cft, title=title, crop=crop,  lo=lo, ...)
-
     }
   }
 }

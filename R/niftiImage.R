@@ -2,7 +2,6 @@
 #'
 #' modified from oro.nifti:::image.nifti
 #'
-#' @export
 #' @param x the Nifti object to display images of
 #' @param BGimg background image to use.
 #' @param limits A lower (and optionally upper length 2 vector) limits to apply to the image, defaults to 0
@@ -16,11 +15,10 @@
 #' @param title Title for figure drawn in outer margin with `mtext`.
 #' @param axes display axes, defaults to false
 #' @param lo Call layout to arrange images? Default is TRUE.
-#' @param other A function used to add features to the plot.
 #' @param ... additional arguments passed to par
 #' @importFrom grDevices gray
 #' @importFrom graphics par layout
-#' @importFrom RNifti readNifti
+#' @importFrom RNifti readNifti pixdim
 #' @export
 #' @examples
 #' library(RNifti)
@@ -33,7 +31,7 @@
 image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NULL, crop=TRUE, col = gray(0:64/64),
                              colpos = pbj:::redyellow(64), colneg = pbj:::bluecyan(64), plane = c("axial",
                                                                                                   "coronal", "sagittal"),
-                             title="", axes = FALSE, lo=TRUE, other=function(){}, ...)
+                             title="", axes = FALSE, lo=TRUE, ...)
 {
   eps = 10^-6
   limits = limits + eps
@@ -54,7 +52,7 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
     }
   }
   else x=BGimg
-  pixdim = RNifti::pixdim(x)
+  pixdim = pixdim(x)
   switch(plane[1], axial = {
     aspect <- pixdim[3]/pixdim[2]
   }, coronal = {
@@ -69,19 +67,10 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
     aspect <- pixdim[4]/pixdim[3]
   }, stop(paste("Orthogonal plane", plane[1], "is not valid.")))
   if(crop){
-    xinds = apply(x != 0, 1, any)
-    yinds = apply(x != 0, 2, any)
-    zinds = apply(x != 0, 3, any)
-    x = x[xinds, , ]
-    x = x[, yinds, ]
-    x = x[, , zinds]
-    stat = stat[xinds, , ]
-    stat = stat[, yinds, ]
-    stat = stat[, , zinds]
-    if(!is.null(index)){
-      # change index to account for cropping
-      index = index - max(c(0, which(diff(!zinds)<0)))
-    }
+    cr = crop(x, stat)
+    x = cr$mask
+    stat = cr$img
+    index = index - cr$offset[3]
   }
   statneg = stat
   statneg[statneg > -limits[1]] = 0
@@ -110,7 +99,11 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
   }
   # graphical settings
   # These represent all the default plotting options
-  par(fg='white', bg='black', mar=c(0,0,0,0), oma=c(0,0,0,0))
+  # this is a hack to avoid par call when using image.statMap which creates a new device each time for some reason
+  oldpar <- par(no.readonly = TRUE)
+  if(oldpar$fg == 'black' & oldpar$bg=='white'){
+    par(fg='white', bg='black', mar=c(0,0,0,0), oma=c(0,0,0,0))
+  }
   if(lo){
     if (is.null(index)) {
       index = 1:imgdim[3]
@@ -133,7 +126,6 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
     # }
     par(...)
   }
-  oldpar <- par(no.readonly = TRUE)
   for(z in index){
     graphics::image(1:imgdim[1], 1:imgdim[2], x[, , z], col = col,
                     breaks = breaks, asp = aspect, axes = axes, ...)
@@ -162,6 +154,28 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
   # cbWidth = wh[1] * 0.125/(nrow+0.125)
   # #par(oma=c(0,0,0,0), mai=c(marginHeight, cbWidth*0.1, marginHeight, cbWidth*0.02), mgp=c(3,0.6,0), fg=fg, col.axis=fg, col.lab=fg, col.main = fg, col.sub=fg)
   # colorBar(pbj:::redyellow(64), min=limits, max=maxstat, nticks=4, ylab = barLab)
-  # other()
   # invisible()
+}
+
+
+#' Crop niftiImages
+#'
+#' @param mask a mask image to crop with
+#' @param img another image to crop
+#' @importFrom grDevices gray
+#' @importFrom graphics par layout
+#' @importFrom RNifti readNifti
+#' @return A list with the cropped mask and img, and the offsets to adjust image indexing
+crop = function(mask, img){
+  xinds = apply(mask != 0, 1, any)
+  yinds = apply(mask != 0, 2, any)
+  zinds = apply(mask != 0, 3, any)
+  mask = mask[xinds, , ]
+  mask = mask[, yinds, ]
+  mask = mask[, , zinds]
+  img = img[xinds, , ]
+  img = img[, yinds, ]
+  img = img[, , zinds]
+  offsets  = c(max(0, which(diff(!xinds)<0)), max(0, which(diff(!yinds)<0)), max(0, which(diff(!zinds)<0)) )
+  return(list(mask=mask, img=img, offset=offsets))
 }
