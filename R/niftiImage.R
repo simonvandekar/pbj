@@ -70,7 +70,7 @@ image.niftiImage = function (x, BGimg = NULL, limits = 0, nrow=NULL, index = NUL
     cr = crop(x, stat)
     x = cr$mask
     stat = cr$img
-    index = index - cr$offset[3]
+    if(!is.null(index)) index = index - cr$offset[3]
   }
   statneg = stat
   statneg[statneg > -limits[1]] = 0
