@@ -405,7 +405,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
 
     # get coordinates from table
     coords = do.call(rbind, lapply(strsplit(st[,3], split=', '), as.numeric) )
-    index = coords[,planenum]
+    index = unique(coords[,planenum])
     othercoords = coords[,-planenum]
 
     # set graphical layout
@@ -438,7 +438,7 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
         othercoords = coords[coordInds, , drop=FALSE]
         image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-cr$offset[indOrd[3]], limits=thresh,
                          title=title,  lo=FALSE, crop=FALSE, ...)
-        text(othercoords[indOrd[1]]-cr$offset[indOrd[1]], othercoords[indOrd[2]]-cr$offset[indOrd[2]], labels=coordLabels, col=par()$fg, font=2)
+        text(othercoords[,indOrd[1]]-cr$offset[indOrd[1]], othercoords[,indOrd[2]]-cr$offset[indOrd[2]], labels=coordLabels, col=par()$fg, font=2)
       } else {
         image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-cr$offset[3], limits=thresh, title=title, lo=FALSE, crop=FALSE, ...)
       }
