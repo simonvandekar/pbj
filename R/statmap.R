@@ -8,12 +8,20 @@ summary.statMap <- function(object, ...)
   cat("Full formula: ", paste0(as.character(object$formulas[[1]])) )
   cat("\nReduced formula: ", as.character(object$formulas[[2]]), collapse='', '\n')
   cat(sum(if(is.character(object$mask)) readNifti(object$mask) else object$mask), ' voxels in mask')
-  cat("\nStatMap quantiles (0, 0.01, 0.05, 0.95, 0.99, 1):\n [", paste(round(quantile(object$stat, probs = c(0, 0.01, 0.05, 0.95, 0.99, 1)), 2), collapse=', '), "]" )
-  cat("\nsqrtSigma: \n")
-  cat("  [n = ", object$sqrtSigma$n, '; df = ', object$sqrtSigma$df, '; rdf = ', object$sqrtSigma$rdf, ']\n')
-  cat("id variable is:\n")
-  str(object$sqrtSigma$id)
-  cat("lmPBJ inference settings:\n  robust = ", object$sqrtSigma$robust, '; HC3 = ', object$sqrtSigma$HC3, '; transform = ',  object$sqrtSigma$transform)
+  if(is.character(object$stat)){
+    cat("\nStatMap location: \n", object$stat)
+  } else {
+    cat("\nStatMap quantiles (0, 0.01, 0.05, 0.95, 0.99, 1):\n [", paste(round(quantile(object$stat, probs = c(0, 0.01, 0.05, 0.95, 0.99, 1)), 2), collapse=', '), "]" )
+  }
+  if(is.character(object$sqrtSigma)){
+    cat("\nsqrtSigma location: \n", object$sqrtSigma)
+  } else {
+    cat("\nsqrtSigma: \n")
+    cat("  [n = ", object$sqrtSigma$n, '; df = ', object$sqrtSigma$df, '; rdf = ', object$sqrtSigma$rdf, ']\n')
+    cat("id variable is:\n")
+    str(object$sqrtSigma$id)
+    cat("lmPBJ inference settings:\n  robust = ", object$sqrtSigma$robust, '; HC3 = ', object$sqrtSigma$HC3, '; transform = ',  object$sqrtSigma$transform)
+  }
   if(is.null(object$pbj)){
     cat('\npbjInference not run yet.')
   } else {
