@@ -91,8 +91,8 @@ write.statMap <- function(x, outdir, images=TRUE, sqrtSigma=TRUE, statMethod=c('
       # removes number from name if infType
       method = tolower(gsub("[0-9]", '', infType))
       tab = table.statMap(x, method=method, cft_chisq=cft)
-      pmapimg = file.path(outdir, paste0('log10p_', infType, '.nii.gz'))
-      clustmapimg = file.path(outdir, paste0('clustIDs_', infType, '.nii.gz'))
+      pmapimg = file.path(outdir, paste0('log10p_', gsub(' ', '_', infType), '.nii.gz'))
+      clustmapimg = file.path(outdir, paste0('clustIDs_', gsub(' ', '_', infType), '.nii.gz'))
       pmap = pbj$ROIs[[infType]]
       # sets clusters to their p-value.
       for(ind in tab[,1]){
@@ -181,25 +181,28 @@ var.statMap = function(x){
   return(varimg)
 }
 
-#' Plots the tested variables in a statMap object
+#' Creates dataframes, emmeans, and models of the selected ROI data
 #'
 #' Returns a statistical niftiImage object from a statMap object
-#' @param x the statMap object with pbjInference run
+#' @param x the statMap object
 #' @param emForm a formula specifying how to plot the data
 #' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
-#' @param cft_s cluster forming threshold on effect size scale to show cluster p-values for.
-#' @param cft_p cluster forming threshold on p-value scale to show cluster p-values for.
-#' @param cft_chisq cluster forming threshold on chi-square statistic scale to show cluster p-values for.
+#' @param cft_s cluster forming threshold on effect size scale.
+#' @param cft_p cluster forming threshold on p-value scale.
+#' @param cft_chisq cluster forming threshold on chi-square statistic scale.
 #' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
-#' @param ... arguments passed to plot
-#' @return a niftiImage object of the coefficient image
-#' @importFrom graphics polygon points
-#' @importFrom stats terms
+#' @param ... arguments passed to ref_grid
+#' @return a list with a dataframe containing the original data with a column added for
+#' mean ROI values for each subject, an emmeans objects based on the emForm argument,
+#' and model objects of the full model fit to each ROI.
+#' @details Returns ROI summary results if pbjInference has been executed on the statMap object.
+#' If not, it attempts to create a cluster summary table based on the method and cft_* arguments.
+#' emmeans objects can be used for plotting and are returned if emForm is specified.
 #' @importFrom emmeans emmeans ref_grid
-#' @importFrom scales alpha
 #' @importFrom RNifti readNifti
+#' @importFrom sandwich vcovHC
 #' @export
-plot.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roiInds=NULL, ...){
+plotData.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cft_chisq=NULL, roiInds=NULL, ...){
   method = tolower(method[1])
   # CFT passed as p value or effect size converted to chi-squared threshold
   cft = cft_chisq
@@ -209,8 +212,10 @@ plot.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cf
   if(!is.null(cft_s)){
     cft = cft_s^2 * x$sqrtSigma$n + x$sqrtSigma$df
   }
+
+  data = x$data
+  robust = x$sqrtSigma$robust
   pbjObj = x$pbj
-  if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
   st = table.statMap(x, method, cft)
   ind = inferenceIndex(x$pbj$obsStat, method=method, cft=cft)
   rois = pbjObj$ROIs[[ind]]
@@ -222,79 +227,42 @@ plot.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL, cf
   # fit model on average data
   full = as.formula(x$formulas$full)
   red = as.formula(x$formulas$reduced)
-  fullT = terms(full)
-  redT = terms(red)
-  # formula elements to condition on
-  term = attr(fullT, 'term.labels')[!attr(fullT, 'term.labels') %in% attr(redT, 'term.labels') ]
-  condVars = sapply(all.vars(full), function(x) grepl(x, term) )
-  condVars = names(condVars)[condVars]
-  robust = x$sqrtSigma$robust
-  data = get_all_vars(full, data=data)
-  for(roiInd in roiInds){
-    data$y = sapply(imgs, function(img) mean(img[ rois==roiInd]) )
+  if(is.null(roiInds)){
+    roiInds = st[,1]
+  }
 
-    fullModel = lm(update.formula(full, y ~ .), data=data)
-    #redModel = lm(update.formula(red, y ~ .), data=data)
+  data[, paste0('roi', roiInds)] = do.call(cbind,
+                                           lapply(roiInds, function(roiInd){
+                                             sapply(imgs, function(img) mean(img[ rois==roiInd]) )
+                                           }))
+  plotDF = lapply(roiInds, function(roiInd){
+
+    if(is.null(x$sqrtSigma$id)){
+      fullModel = lm(update.formula(full, as.formula(paste0('roi', roiInd, '~ .'))), data=data)
+      #redModel = lm(update.formula(red, y ~ .), data=data)
+    }
 
     # emmeans argument using condVars
     # known warning about as.numeric on characters
-    suppressWarnings(ats <- apply(data[,condVars], 2, function(x) sort(unique(ifelse(is.na(as.numeric(x)), x, as.numeric(x) ) ) ) ))
-    emg = ref_grid(fullModel, at=ats)
-    plotdf = as.data.frame(emmeans(emg, ~ age | sex))
-
-
-    cex=1.5
-    # graphical parameters
-    fgcol = 'white'
-    bgcol = 'black'
-    par(mgp=c(1.7,.7,0), lwd=1.5, lend=2,
-        cex.lab=cex, cex.axis=0.8*cex, cex.main=1*cex,
-        mar=c(3,3,2.2,0), bty='l', oma=c(0,0,0,0), bg=bgcol, fg=fgcol, col.axis=fgcol, col.lab=fgcol, col.main = fgcol, col.sub=fgcol)
-
-    # plot predictions with raw data
-    cols=c('#fb9a99', '#a6cee3', '#e31a1c', '#1f78b4')
-    plot(data[,'age'], data[,'y'], col=cols[2+as.numeric(factor(data[,'sex']))], pch=16, ylab='Gray matter volume (AU)', xlab='Age (Years)', ...)
-    by(plotdf, plotdf$sex, function(df){
-      polygon(c(df$age, rev(df$age)), c(df$lower.CL, rev(df$upper.CL)), col=alpha(cols[as.numeric(df$sex)], alpha=0.8), border=NA)
-      points(df$age, df$emmean, type='l', col=cols[as.numeric(df$sex)+2])
-    } )
-  }
-
-}
-
-
-
-#' Plots the tested variables in a statMap object
-#'
-#' Returns a statistical niftiImage object from a statMap object
-#' @param statMap the statMap object with pbjInference run
-#' @param method A character specifying which inference method to plot results for. One of maxima, CEI, or CMI
-#' @param cft A numeric specifying CFT to plot results for, defaults to the first one
-#' @param roiInds A numeric/integer vector specifying which ROIs to plot results for.
-#' @param data Data frame with covariates. Optional if available in statMap object.
-#' @return a niftiImage object of the coefficient image
-#' @importFrom RNifti readNifti
-#' @export
-roiMeans = function(statMap, method='CEI', cft=NULL, roiInds=NULL, data=NULL){
-  pbjObj = statMap$pbj
-  full = statMap$formulas$full
-  if(is.null(pbjObj)) stop('Must run pbjInference to plot results.')
-  st = table.statMap(statMap, method, cft)
-  ind = inferenceIndex(statMap$pbj$obsStat, method=method, cft=cft)
-  rois = pbjObj$ROIs[[ind]]
-  obsstat = pbjObj$obsStat[[ind]]
-
-  # load data
-  imgs = readNifti(statMap$images)
-  if(is.null(data)){
-    data = get_all_vars(full, statMap$data)
-  } else {
-    data = get_all_vars(full, data=data)
-  }
-  for(roi in roiInds){
-    data[,paste0('roi', roi)] = sapply(imgs, function(img) mean(img[ rois==roi]) )
-    return(data)
-  }
+    if(!is.null(emForm)){
+      if(robust){
+        # assumes HC3 vcov
+        emGrid = ref_grid(fullModel, vcov.=vcovHC, ...)
+      } else {
+        emGrid = ref_grid(fullModel, ...)
+      }
+      plotdf = emmeans(emGrid, as.formula(emForm))
+    } else {
+      plotdf = NULL
+    }
+    list(plotDF=plotdf, model=fullModel)
+  })
+  mods = lapply(plotDF, function(x) x$model)
+  plotDF = lapply(plotDF, function(x) x$plotDF)
+  names(mods) = names(plotDF) = roiInds
+  list(data=data,
+       emmeans=plotDF,
+       models=mods, method=method)
 }
 
 #' Draws a color bar in a figure
