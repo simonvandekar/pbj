@@ -39,7 +39,6 @@
 #'   \item{template}{The background template used for visualization.}
 #'   \item{formulas}{A list containing the full and reduced models.}
 #' }
-#' stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf
 #' @importFrom stats coefficients lm pf pt qnorm qchisq residuals
 #' @importFrom RNifti writeNifti readNifti
 #' @importFrom parallel mclapply
@@ -128,6 +127,8 @@ Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none',
 
   # inverse weights were passed
   if(Winv) W[W!=0] = 1/W[W!=0]
+  # w is returned in output
+  w = W
   X1 = X[,peind]
   W = sqrt(W)
   # this is a pointwise matrix multiplication if W was passed as images
@@ -147,7 +148,7 @@ Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none',
     # used to compute chi-squared statistic
     normedCoef = sweep(sqrtSigma %*% Y, 2, sigmas, FUN='/') # sweep((AsqrtInv%*% coef), 2, sigmas, FUN='/') #
     # In this special case only the residuals vary across voxels, so sqrtSigma can be obtained from the residuals
-    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
+    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, W=w, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform)
     rm(AsqrtInv, Y, res, sigmas, X1res)
   } else {
     # first part of normedCoef
@@ -172,7 +173,7 @@ Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none',
     normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
     #assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
     # Things needed to resample the robust statistics
-    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform, id=id)
+    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, w=W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform, id=id)
     rm(BsqrtInv, Y, res, X1resQ, X1res)
   }
 

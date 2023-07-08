@@ -223,12 +223,17 @@ plotData.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL
 
   data = x$data
   robust = x$sqrtSigma$robust
-  pbjObj = x$pbj
-  st = table.statMap(x, method, cft)
+  data$W = x$sqrtSigma$W
+  if(is.null(x$pbj)){
+    x$pbj = list()
+    mmeStatArgs = as.list(grepl(method, c('maxima', 'cei', 'cmi')))
+    names(mmeStatArgs) = c('maxima', 'CEI', 'CMI')
+    x$pbj$ROIs = do.call(mmeStat, c(list(stat=stat.statMap(x), rois=TRUE, mask=x$mask, cft=cft), mmeStatArgs) )
+    x$pbj$obsStat = do.call(mmeStat, c(list(stat=stat.statMap(x), mask=x$mask, cft=cft), mmeStatArgs) )
+  }
   ind = inferenceIndex(x$pbj$obsStat, method=method, cft=cft)
-  rois = pbjObj$ROIs[[ind]]
-  obsstat = pbjObj$obsStat[[ind]]
-
+  rois = x$pbj$ROIs[[ind]]
+  st = table.statMap(x, method, cft)
 
   # load data
   imgs = readNifti(x$images)
@@ -243,15 +248,13 @@ plotData.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL
                                            lapply(roiInds, function(roiInd){
                                              sapply(imgs, function(img) mean(img[ rois==roiInd]) )
                                            }))
+  # W is found from data$W
   plotDF = lapply(roiInds, function(roiInd){
-
     if(is.null(x$sqrtSigma$id)){
-      fullModel = lm(update.formula(full, as.formula(paste0('roi', roiInd, '~ .'))), data=data)
+      fullModel = lm(update.formula(full, as.formula(paste0('roi', roiInd, '~ .'))), weights=W, data=data)
       #redModel = lm(update.formula(red, y ~ .), data=data)
     }
 
-    # emmeans argument using condVars
-    # known warning about as.numeric on characters
     if(!is.null(emForm)){
       if(robust){
         # assumes HC3 vcov
