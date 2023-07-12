@@ -173,7 +173,7 @@ Winv=NULL, template=NULL, formImages=NULL, robust=TRUE, transform=c('t', 'none',
     normedCoef = matrix(simplify2array( lapply(1:V, function(ind) crossprod(matrix(BsqrtInv[,ind], nrow=df, ncol=df), normedCoef[ind,])) ), nrow=df)
     #assign('normedCoeflmPBJ', normedCoef, envir = .GlobalEnv)
     # Things needed to resample the robust statistics
-    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, w=W, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform, id=id)
+    sqrtSigma = list(res=res, X1res=as.matrix(X1res), QR=QR, XW=X*W, W=w, n=n, df=df, rdf=rdf, robust=robust, HC3=HC3, transform=transform, id=id)
     rm(BsqrtInv, Y, res, X1resQ, X1res)
   }
 
