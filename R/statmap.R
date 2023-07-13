@@ -233,7 +233,7 @@ plotData.statMap = function(x, emForm=NULL, method='CEI', cft_s=NULL, cft_p=NULL
   }
   ind = inferenceIndex(x$pbj$obsStat, method=method, cft=cft)
   rois = x$pbj$ROIs[[ind]]
-  st = table.statMap(x, method, cft)
+  st = table.statMap(x, method, cft_chisq=cft)
 
   # load data
   imgs = readNifti(x$images)
