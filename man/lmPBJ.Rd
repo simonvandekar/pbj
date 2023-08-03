@@ -76,7 +76,6 @@ Returns a list with the following values:
   \item{template}{The background template used for visualization.}
   \item{formulas}{A list containing the full and reduced models.}
 }
-stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf
 }
 \description{
 This function computes a statistical map and residuals which are the

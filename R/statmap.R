@@ -362,7 +362,6 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
       x$mask = readNifti(x$mask)
     }
     ind = inferenceIndex(pbjObj$obsStat, method=method, cft=cft)
-    if(is.null(cft)) stop("Must specify CFT for visualization with method='maxima'")
 
     st = table.statMap(x, method=method, cft_p=cft_p, cft_s=cft_s)
     imgdims = dim(stat.statMap(x, method=statmethod))
@@ -415,8 +414,9 @@ image.statMap = function(x, method=c('CEI', 'maxima', 'CMI'), cft_s=NULL, cft_p=
         coordInds = which(coords[,planenum]==slic)
         coordLabels = st[coordInds,1]
         othercoords = coords[coordInds, , drop=FALSE]
-        image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-cr$offset[indOrd[3]], limits=thresh,
+        image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic, limits=thresh,
                          title=title,  lo=FALSE, crop=FALSE, ...)
+        # text is offset by crop amount
         text(othercoords[,indOrd[1]]-cr$offset[indOrd[1]], othercoords[,indOrd[2]]-cr$offset[indOrd[2]], labels=coordLabels, col=par()$fg, font=2)
       } else {
         image.niftiImage(stat.statMap(x, method=statmethod), BGimg=x$template, plane=plane, index=slic-cr$offset[3], limits=thresh, title=title, lo=FALSE, crop=FALSE, ...)
