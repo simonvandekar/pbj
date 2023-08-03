@@ -14,5 +14,5 @@ vpapx_edgeworth(stat, mu3, mu4)
 \item{mu4}{The fourth moment of the test statistics}
 }
 \description{
-See image.statMap for additional arguments
+A vectorized version of papx_edgeworth
 }

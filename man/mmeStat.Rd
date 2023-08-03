@@ -4,19 +4,18 @@
 \alias{mmeStat}
 \title{Compute maxima, CMI, or CEI inference statistics}
 \usage{
-mmeStat(stat, rois = FALSE, mask, thr, max = FALSE, CMI = FALSE, CEI = TRUE)
+mmeStat(stat, rois = FALSE, mask, cft, maxima = FALSE, CMI = FALSE, CEI = TRUE)
 }
 \arguments{
 \item{stat}{statistical image}
 
-\item{rois}{passed to maxima and cluster functions. Return image with ROI
-indices?}
+\item{rois}{passed to maxima and cluster functions. Returns image with ROI indices.}
 
 \item{mask}{Mask image.}
 
-\item{thr}{Threshold for CEI or CMI.}
+\item{cft}{A single threshold on the scale of the statistical image (chi-squared) for CEI or CMI.}
 
-\item{max}{Compute local maxima?}
+\item{maxima}{Compute local maxima?}
 
 \item{CMI}{Compute cluster masses?}
 
@@ -24,7 +23,7 @@ indices?}
 }
 \value{
 Returns a list with the maxima and CEI for the given image.
-function was used for pbjInference.
+This function is used  as the default `statistic` argument in [pbjInference()].
 }
 \description{
 Compute maxima, CMI, or CEI inference statistics

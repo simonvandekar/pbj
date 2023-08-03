@@ -2,54 +2,57 @@
 % Please edit documentation in R/statmap.R
 \name{image.statMap}
 \alias{image.statMap}
-\title{Create images of a statMap}
+\title{View statMap and pbj results in a statMap object}
 \usage{
 \method{image}{statMap}(
   x,
-  thresh = 2.32,
+  method = c("CEI", "maxima", "CMI"),
+  cft_s = NULL,
+  cft_p = NULL,
+  cft_chisq = NULL,
+  roi = NULL,
   index = NULL,
-  col = gray(0:64/64),
-  colpos = redyellow(64),
-  colneg = bluecyan(64),
-  plane = c("axial", "coronal", "sagittal"),
-  xlab = "",
-  ylab = "",
-  axes = FALSE,
-  oma = rep(0, 4),
-  mar = rep(0, 4),
-  bg = "black",
+  alpha = NULL,
+  clusterMask = TRUE,
+  clusterID = TRUE,
+  title = "",
+  plane = c("axial", "sagittal", "coronal"),
+  crop = TRUE,
+  lo = TRUE,
   ...
 )
 }
 \arguments{
-\item{x}{the statMap object to display images of}
+\item{x}{the statMap that created the pbj object.}
 
-\item{thresh}{A threshold to apply to the image, defaults to 2.32}
+\item{method}{Which inference method to visualize.}
 
-\item{index}{Any selected image indexes to use for the z. defaults to NULL}
+\item{cft_s}{The cluster forming threshold or threshold for visualizing results on the RESI effect size scale.}
 
-\item{col}{a vector of colors to use for scaled intensities defaults to a grey scale.}
+\item{cft_p}{The cluster forming threshold or threshold for visualizing results on the p-value scale.}
 
-\item{colpos}{a vector of colors to use for positive values.}
+\item{cft_chisq}{The cluster forming threshold or threshold for visualizing results on the chi-squared scale.}
 
-\item{colneg}{a vector of colors to use for negative values.}
+\item{roi}{Which ROI index to visualize.}
 
-\item{plane}{the plane to display, can be axial, coronal or sagittal.}
+\item{index}{Which slices to visualize. Default is all slices}
 
-\item{xlab}{a title for the x axis.}
+\item{alpha}{Adjusted p-value threshold to display clusters.}
 
-\item{ylab}{a title for the u axis.}
+\item{clusterMask}{logical indicating whether to mask the results with significant clusters.}
 
-\item{axes}{display axes, defaults to false}
+\item{clusterID}{logical indicating whether to include the clusterID in the figure.}
 
-\item{oma}{A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.}
+\item{title}{Character passed to image.niftiImage}
 
-\item{mar}{A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.}
+\item{plane}{Which anatomical plane to visualize.}
 
-\item{bg}{background color, defaults to black.}
+\item{crop}{Whether to crop white space from image. Defaults to TRUE.}
 
-\item{...}{additional arguments passed to par}
+\item{lo}{Whether to perform layout call to arrange images. Defaults to true.}
+
+\item{...}{Arguments passed to par.}
 }
 \description{
-modified from oro.nifti:::image.nifti
+Uses a statMap with inferences results to visualize CEI, CMI, or maxima
 }

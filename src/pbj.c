@@ -17,7 +17,7 @@ static SEXP pbj_getListElement(SEXP list, const char *str) {
   return elmt;
 }
 
-SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
+SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP idmat, SEXP h, SEXP df) {
   /* Reproduce this:
 
     rsd <- qr.resid(sqrtSigma$QR, sqrtSigma$res)
@@ -44,10 +44,10 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
   */
 
   SEXP qr_qr, qr_qraux, elt, attr, dim, statimg;
-  int *dim_ii, k_i, n_i, ny_i, nrow_i, ncol_i, row_i, col_i, row2_i, col2_i,
-      rsd_idx_i, x1res_idx_i, corge_idx_i, df_i, layer_i, dim_prod_i, x_idx_i,
+  int *dim_ii, arr_idx_i, idval_i, k_i, n_i, ny_i, nrow_i, ncol_i, idncol_i,*idmat_ii, row_i, col_i, row2_i, col2_i,
+      rsd_idx_i, idmat_idx_i, x1res_idx_i, corge_idx_i, df_i, layer_i, dim_prod_i, x_idx_i,
       ldx_i, p_i, *pivot_ii, bsqrtinv_idx_i, idx_i, df_sq_i, one_i;
-  double *rsd_dd, *h_dd, *x1res_dd, *corge_dd, *res_dd, *res2_dd, *x_dd, tol_d,
+  double *rsd_dd, *h_dd, *x1res_dd, *corge_dd, *idres_dd, *res_dd, *res2_dd, *x_dd, tol_d,
          *qraux_dd, *work_dd, *a_dd, *bsqrtinv_dd, one_d, *statimg_dd, zero_d;
 
   /* Type checking for qr */
@@ -112,6 +112,14 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     }
   } else {
     error("res must be a real 2d matrix");
+  }
+
+  /* Type checking for idmat */
+  /* Type checking for h */
+  if(idmat != R_NilValue){
+    if (!isInteger(idmat) || length(idmat) != n_i) {
+      error("id must be NULL or an integer vector with the same length as nrow(res)");
+    }
   }
 
   /* Type checking for df */
@@ -211,6 +219,58 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
   }
   Free(rsd_dd);
 
+
+
+  /* Check if idmat is null if not multiply with corge_dd */
+  if(idmat != R_NilValue){
+
+    /* This creates a copy of idmat */
+    idmat_ii = INTEGER(idmat);
+    /* This will be nrows of res */
+
+    /* get the maximum value of idmat */
+    idncol_i = 0;
+    for(idmat_idx_i=0; idmat_idx_i < nrow_i; idmat_idx_i++){
+      idval_i = idmat_ii[idmat_idx_i];
+      if(idncol_i < idval_i){
+        idncol_i = idval_i;
+      }
+    }
+
+    /* Allocate idres_dd. idncol_i X V X df array*/
+    idres_dd = Calloc(idncol_i * ncol_i * df_i, double);
+
+    idmat_idx_i = 0;
+    corge_idx_i = 0;
+    arr_idx_i=0;
+    for (layer_i = 0; layer_i < df_i; layer_i++) {
+      for (col_i = 0; col_i < ncol_i; col_i++) {
+        for (row_i = 0; row_i < nrow_i; row_i++) {
+          idmat_idx_i = (idmat_ii[row_i]-1) + arr_idx_i;
+          idres_dd[idmat_idx_i] = idres_dd[idmat_idx_i] + corge_dd[corge_idx_i];
+          corge_idx_i++;
+        }
+        /* idncol_i is number of rows of result of idres_dd */
+        /* jump to next column*/
+        arr_idx_i = arr_idx_i + idncol_i;
+      }
+    }
+
+
+
+    /* replace corge_dd with idres_dd */
+    nrow_i = idncol_i;
+    Free(corge_dd);
+    corge_dd = idres_dd;
+    /*
+    printf("%u\n", nrow_i);
+    for(arr_idx_i=0; arr_idx_i< df_i*idncol_i*ncol_i; arr_idx_i++){
+      printf("%f", corge_dd[arr_idx_i]);
+      printf(" ");
+    }
+     */
+  }
+
   /*
     grault <- function(x){
       a <- qr.R(qr(x))
@@ -237,15 +297,16 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     }
 
     /* x <- qr(x) */
+     /* SNV edits: used to set n_i=nrow_i. nrow_i is now equal to idncol_i. n_i is nrow of res */
     ldx_i = nrow_i;
-    n_i = nrow_i;
+    /* n_i = nrow_i; */
     p_i = df_i;
     tol_d = 0.0000001;
     k_i = 0;
     for (idx_i = 0; idx_i < df_i; idx_i++) qraux_dd[idx_i] = 0;
     for (idx_i = 0; idx_i < df_i; idx_i++) pivot_ii[idx_i] = idx_i + 1;
     for (idx_i = 0; idx_i < df_i * 2; idx_i++) work_dd[idx_i] = 0;
-    F77_CALL(dqrdc2)(x_dd, &ldx_i, &n_i, &p_i, &tol_d, &k_i, qraux_dd, pivot_ii, work_dd);
+    F77_CALL(dqrdc2)(x_dd, &ldx_i, &nrow_i, &p_i, &tol_d, &k_i, qraux_dd, pivot_ii, work_dd);
 
     /* a <- qr.R(x) */
     idx_i = 0;
@@ -308,8 +369,8 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
     zero_d = 0.0;
     one_i = 1;
 
-    F77_CALL(dgemv)("T", &nrow_i, &df_i, &one_d, x1res_dd, &nrow_i,
-        res_dd + (col_i * nrow_i), &one_i, &zero_d, x_dd, &one_i FCONE);
+    F77_CALL(dgemv)("T", &n_i, &df_i, &one_d, x1res_dd, &n_i,
+        res_dd + (col_i * n_i), &one_i, &zero_d, x_dd, &one_i FCONE); /* SNV replaced nrow_i with n_i */
 
     /*
       baz <- matrix(BsqrtInv[,ind], nrow=df, ncol=df)
@@ -330,7 +391,7 @@ SEXP pbj_pbjBootRobustX(SEXP qr, SEXP res, SEXP x1res, SEXP h, SEXP df) {
 }
 
 static const R_CallMethodDef callMethods[] = {
-   {"pbj_pbjBootRobustX", (DL_FUNC) &pbj_pbjBootRobustX, 5},
+   {"pbj_pbjBootRobustX", (DL_FUNC) &pbj_pbjBootRobustX, 6},
    {NULL, NULL, 0}
 };
 

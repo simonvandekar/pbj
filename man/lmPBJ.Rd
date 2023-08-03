@@ -9,13 +9,14 @@ lmPBJ(
   form,
   formred = ~1,
   mask,
+  id = NULL,
   data = NULL,
   W = NULL,
   Winv = NULL,
   template = NULL,
   formImages = NULL,
   robust = TRUE,
-  transform = c("none", "t", "edgeworth"),
+  transform = c("t", "none", "f", "edgeworth"),
   outdir = NULL,
   zeros = FALSE,
   HC3 = TRUE,
@@ -35,14 +36,15 @@ column than X.}
 
 \item{mask}{File name for a binary mask file or niftiImage object.}
 
+\item{id}{Vector to identify measurements from the same observation.}
+
 \item{data}{R data frame containing variables in form. If form and formred
 are matrices then this can be NULL.}
 
-\item{W}{Weights for regression model. Can be used to deweight noisy
+\item{W}{Numeric vector of weights for regression model. Can be used to deweight noisy
 observations. Same as what should be passed to lm.}
 
-\item{Winv}{Inverse weights for regression model. Inverse of W. Required when
-passing variance images as the inverse weights.}
+\item{Winv}{Inverse weights for regression model. Inverse of W.}
 
 \item{template}{Template image used for visualization.}
 
@@ -51,8 +53,7 @@ each column corresponds to an imaging covariate. Currently, not supported.}
 
 \item{robust}{Logical, compute robust standard error estimates?}
 
-\item{transform}{character indicating type of transformation to use. "t" or "edgeworth." are currently accepted
-(instead of niftiImage objects; defaults to FALSE).}
+\item{transform}{character indicating type of transformation to use. "none", "t", "f", or "edgeworth" are currently accepted. Edgeworth is slow.}
 
 \item{outdir}{If specified, output is saved as NIfTIs and statMap object is
 saved as strings. This approach conserves memory, but has longer IO time.
@@ -75,12 +76,34 @@ Returns a list with the following values:
   \item{template}{The background template used for visualization.}
   \item{formulas}{A list containing the full and reduced models.}
 }
-stat=stat, sqrtSigma=res, mask=mask, template=template, formulas=list(form, formred), robust=robust, df=df, rdf=rdf
 }
 \description{
 This function computes a statistical map and residuals which are the
  objects necessary to perform the parametric bootstrap joint (PBJ) inference
  procedure.
+}
+\examples{
+# loading example data
+library(pain21)
+pain = pain21()
+pdata = pain$data
+
+# fitting intercept only model, weights proportional to study sample size
+pbjModel1 = lmPBJ(images=pdata$images, form=~1, formred=~0, W = pdata$n,
+                  mask=pain$mask, data=pdata, template = pain$template)
+pbjModel1
+
+
+# image(pbjModel1, index=5:15, nrow=2)
+# image(pbjModel1)
+# par(mfrow=c(1,2))
+# image(pbjModel1, title='Pain Analysis', oma=c(0,0,3,0), crop=TRUE, index=2, lo=FALSE)
+# image(pbjModel1, oma=c(0,0,3,0), crop=FALSE, index=2, lo=FALSE)
+# image(stat.statMap(pbjModel1), title='Pain Analysis', oma=c(0,0,3,0), crop=FALSE, index=45)
+
+# fitting regression of images onto study sample size, weights proportional to study sample size
+pbjModel2 = lmPBJ(images=pdata$images, form=~n, formred=~1, W = pdata$n, mask=pain$mask, data=pdata)
+pbjModel2
 }
 \keyword{bootstrap}
 \keyword{bootstrap,}

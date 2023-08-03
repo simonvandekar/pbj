@@ -4,12 +4,24 @@
 \alias{write.statMap}
 \title{Write the statMap objects out}
 \usage{
-write.statMap(x, outdir)
+write.statMap(
+  x,
+  outdir,
+  images = TRUE,
+  sqrtSigma = TRUE,
+  statMethod = c("p", "S", "chisq")
+)
 }
 \arguments{
 \item{x}{the statMap object to write out}
 
 \item{outdir}{the directory to write into}
+
+\item{images}{Logical indicating whether or not to write out the nifti images.}
+
+\item{sqrtSigma}{Logical indicating whether or not to write out the objects needed for bootstrapping.}
+
+\item{statMethod}{Passed to stat.statMap to specify how to write the statistical image. p= -log10(p) * sign(coef), S=RESI, chisq=chi-squared statistic}
 }
 \value{
 a list of what was written

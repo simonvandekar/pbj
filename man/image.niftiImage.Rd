@@ -6,30 +6,33 @@
 \usage{
 \method{image}{niftiImage}(
   x,
-  bgimg = NULL,
-  thresh = 0,
+  BGimg = NULL,
+  limits = 0,
+  nrow = NULL,
   index = NULL,
+  crop = TRUE,
   col = gray(0:64/64),
   colpos = pbj:::redyellow(64),
   colneg = pbj:::bluecyan(64),
   plane = c("axial", "coronal", "sagittal"),
-  xlab = "",
-  ylab = "",
+  title = "",
   axes = FALSE,
-  oma = rep(0, 4),
-  mar = rep(0, 4),
-  bg = "black",
+  lo = TRUE,
   ...
 )
 }
 \arguments{
 \item{x}{the Nifti object to display images of}
 
-\item{bgimg}{background image to use.}
+\item{BGimg}{background image to use.}
 
-\item{thresh}{A lower (an optionally upper length 2 vector) threshold to apply to the image, defaults to 0}
+\item{limits}{A lower (and optionally upper length 2 vector) limits to apply to the image, defaults to 0}
+
+\item{nrow}{number of rows to display the slices as. NULL is default and it's a square shape determined by length of `index` argument.}
 
 \item{index}{Any selected image planes. defaults to NULL}
+
+\item{crop}{crop white space from image. Default is TRUE.}
 
 \item{col}{a vector of colors to use for scaled intensities defaults to a grey scale.}
 
@@ -39,20 +42,23 @@
 
 \item{plane}{the plane to display, can be axial, coronal or sagittal.}
 
-\item{xlab}{a title for the x axis.}
-
-\item{ylab}{a title for the y axis.}
+\item{title}{Title for figure drawn in outer margin with `mtext`.}
 
 \item{axes}{display axes, defaults to false}
 
-\item{oma}{A vector of the form c(bottom, left, top, right) giving the size of the outer margins in lines of text. Default to 0.}
-
-\item{mar}{A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot. Defaults to 0.}
-
-\item{bg}{background color, defaults to black.}
+\item{lo}{Call layout to arrange images? Default is TRUE.}
 
 \item{...}{additional arguments passed to par}
 }
 \description{
 modified from oro.nifti:::image.nifti
+}
+\examples{
+library(RNifti)
+library(pain21)
+pain = pain21()
+templ = readNifti(pain$template)
+# image(templ)
+# image(templ, plane='coronal')
+
 }
