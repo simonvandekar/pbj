@@ -1,0 +1,169 @@
+---
+title: "pbj package Mini Tutorial"
+author: "Simon Vandekar"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+format:
+  html:
+    toc: true
+    margin-header: |
+      ![pbj Logo](pbj_rotated.jpg)
+editor: visual
+---
+
+```{r, echo=FALSE}
+knitr::knit_hooks$set(GPs=function(before, options, envir){
+if (before){
+  cex=1.5
+par(mgp=c(1.7,.7,0), lwd=1.5, lend=2,
+    cex.lab=0.8*cex, cex.axis=0.8*cex, cex.main=1*cex,
+    mar=c(2.8,2.8,1.8,.2), bty='l', oma=c(0,0,2,0))}
+})
+knitr::opts_chunk$set(echo =  TRUE, fig.height =3, fig.width =3, cache=FALSE, GPs=TRUE)
+set.seed(12345)
+```
+
+## Introduction
+
+In this tutorial, we will use the `pbj` R package to perform an image meta-analysis. `pbj` is a semi-parametric bootstrap joint inference procedure for neuroimages. Meta-analysis is the processes of analyzing results from independent studies across multiple studies. Instead of each unit of measurement being a study participant, each unit is an image result from a study. The data set we'll use is available through an R package called `pain21` that is available on [Neuroconductor](https://neuroconductor.org/), [here](https://neuroconductor.org/package/pain21).
+
+TL;DR:
+
+-   We will perform a meta-analysis of several pain imaging studies using the `pain21` R package.
+
+-   We will combine results across studies to see which regions are consistently activated during pain tasks using the `pbj` package for group-level neuroimage analysis.
+
+## Installing the `pbj` R package
+
+The latest stable version of the `pbj` package can be installed from github by specifying the `master` branch. Currently, the `longitudinal` branch includes some formatting changes and has edits to accommodate longitudinal data.
+
+```{r installPBJ, eval=FALSE}
+devtools::install_github('simonvandekar/pbj', ref='longitudinal')
+```
+
+## Getting the pain21 data set
+
+The pain21 data set is a collection of study results researching pain response in the MRI scanner that were downloaded from [Neurovault](https://neurovault.org/).
+
+```{r installPain21, eval=FALSE}
+source("https://neuroconductor.org/neurocLite.R")
+# Default Install
+neuro_install('pain21')
+neuro_install('papayaWidget')
+```
+
+```{r pain21load}
+library(pain21) # the data
+library(RNifti) # For nifti image IO
+library(papayaWidget) # for interactive visualization
+library(pbj) # for group-level neuroimage analysis
+library(callr) # to run things in the background
+
+# loads teh data
+pain = pain21::pain21()
+# look at the image names in the data set
+# These are the estimated coefficient images
+head(basename(pain$data$images))
+# These are the estimated variance images
+head(basename(pain$data$varimages))
+
+# compute average variance across the image
+mask = readNifti(pain$mask)
+pain$data$variances = sapply(pain$data$varimages, function(x) mean(readNifti(x)[mask>0]) )
+pain$data$means = sapply(pain$data$images, function(x) mean(readNifti(x)[mask>0]) )
+```
+
+## Quality checking
+
+```{r QC, fig.cap="log(Sample size) versus log(variance). Variances should be approximately proportional to the sample size, so their log plot should be approximately linear."}
+plot(-log(pain$data$n), log(pain$data$variances), xlab='log(Sample size)', ylab='log(variance)')
+#plot(sqrt(pain$data$variances), pain$data$means)
+#abline(a=0, b=1)
+#plot(pain$data$means/sqrt(pain$data$variances))
+```
+
+We can use the papaya widget to visualize the input data to check if there are any issues.
+
+```{r dataVisualization}
+# visualizes the first two images overlayed on the template image
+papaya(c(pain$template, pain$data$images[1:2] ))
+```
+
+## Fitting a linear model with `lmPBJ`
+
+Performing a meta analysis fits the simplest possible model, estimation of a single mean. The model and hypothesis tests are specified using a full/reduced models convention. The full model includes all covariates and the reduced model includes all covariates except those that are to be tested. The mode and test statistic image are computed with the `lmPBJ` function in the `pbj` package. The function takes as input:
+
+1.  `images` - the image outcome variable.
+2.  `form` - the full model formula. For estimating a single mean, it is `~ 1`.
+3.  `formred` - the null model formula. For testing the mean, it is `~ -1`.
+4.  `mask` - a mask file in which to perform the analysis.
+5.  `data` - a data frame with the covariates.
+6.  `template` - the template image for visualizing the results later.
+7.  `Winv` - inverse weights. The inverse of the weight should be approximately proportional to the inverse variance.
+8.  `transform` - What type of transform to use on the test statistics to try to improve small sample performance. `t` uses a $t \to Z$ conversion to convert t-statistics marginally to normal.
+9.  Other options are specified automatically. In particular, `robust=TRUE`, uses heteroskedasticity consistent covariance estimates .
+
+```{r lmPBJfit}
+form = '~ 1'
+formred = '~ -1'
+pain$data$normedImages = file.path(tempdir(), basename(pain$data$images))
+imgouts = mapply(function(img, var, mask, outimg){img = readNifti(img); img[mask!=1]=0; sqrtVar=sqrt(readNifti(var)[mask==1]); img[mask==1]=img[mask==1]/ifelse(sqrtVar==0, 1, sqrtVar); writeNifti(img, file = outimg)}, img=pain$data$images, var=pain$data$varimages, outimg=pain$data$normedImages, MoreArgs=list(mask=readNifti(pain$mask) ) )
+statmap <- lmPBJ(pain$data$normedImages, form = form,
+formred=formred, mask=pain$mask,
+data = pain$data,
+template=pain$template,
+Winv = pain$data$n, transform='t')
+summary(statmap)
+```
+
+We can visualize the results again with the `papaya` function.
+
+```{r statmapVis}
+# effect size threshold. Equal to 1/2 Cohen's d
+S = 0.25
+chisq = S^2 * statmap$sqrtSigma$n + statmap$sqrtSigma$df
+# creates temporary
+statmapFolder = tempdir()
+files = write.statMap(statmap, outdir=statmapFolder)
+papaya(c(pain$template, files$stat) )
+```
+
+```{r, echo=FALSE, eval=FALSE}
+pain$data$vox = simplify2array(lapply(pain$data$normedImages, readNifti))[18,48,48,]
+plot(sqrt(pain$data$variances), pain$data$vox)
+abline(a=0, b=1)
+voxmod = lm(vox ~ 1, data=pain$data, weights = 1/pain$data$variances)
+voxmodred = lm(vox ~ -1, data=pain$data, weights = 1/pain$data$variances)
+# these should be the same, I think
+car::Anova(voxmod, voxmodred, vcov=sandwich::vcovHC)
+statmapSimple = lmPBJ(pain$data$images, form = form, formred=formred, mask=pain$mask, data = pain$data, template=pain$template, Winv = pain$data$variances, transform='none')
+stat.statMap(statmapSimple)[18,48,48]
+#image(stat.statMap(statmap), statmap$template, thresh = 20, slice=42)
+#
+```
+
+## Neuroimaging statistical inference with `pbjInference`
+
+The `pbjInference` function computes p-values using various statistical inference methods for neuroimages. The most common method is cluster extent inference. This approach first thresholds the statistical image at a given value and then computes a p-value for each supra-threshold contiguous cluster in the image based on the size of the cluster.
+
+```{r runPBJ, cache=TRUE, run=FALSE}
+cftp = pchisq(chisq, statmap$sqrtSigma$df, lower.tail = FALSE)
+rdsFile = '~/Downloads/pbjInference.rds'
+bgResults <- pbjInferenceBG(statmap, rdata_rds = rdsFile, nboot=1000, mask=statmap$mask, cft=chisq, max=TRUE)
+```
+
+```{r loadPBJ}
+rdsFile = '~/Downloads/pbjInference.rds'
+statmap = readRDS(rdsFile)
+statmap
+```
+
+```{r tablePBJ}
+tab = table.statMap(statmap, method = 'max')
+names(tab) = c('cluster ID', 'Maxima', 'Coord', 'Unadjusted p-value', 'FWER p-value')
+tab[1:5,]
+
+```
+
+```{r visualizePBJ}
+image(statmap, cft=chisq, alpha=0.05, method = 'CEI')
+```
