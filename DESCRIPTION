@@ -62,5 +62,7 @@ Suggests:
     R.rsp,
     sandwich,
     testthat
-Remotes: simonvandekar/pain21
+Remotes:
+  simonvandekar/pain21,
+  spisakt/pTFCE
 VignetteBuilder: R.rsp
